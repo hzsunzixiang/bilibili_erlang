@@ -74,7 +74,7 @@
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]lb.north west) {
         \textcolor{erlgreen!70!black}{-module(counter\_server).}\\
         \textcolor{erlgreen!70!black}{-behaviour(gen\_server).}\\[3pt]
-        init/1\\
+        \textcolor{erlyellow!80!black}{\textbf{init/1}}\\
         handle\_call/3\\
         handle\_cast/2\\
         handle\_info/2\\
@@ -89,7 +89,7 @@
     \node[font=\scriptsize, text width=4.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
         \textcolor{erlblue!80!black}{\textbf{启动流程：}}\\
         \texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link}\\
-        $\rightarrow$ \texttt{init\_it} $\rightarrow$ \texttt{Mod:init/1}\\[3pt]
+        $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlyellow!80!black}{\textbf{\texttt{Mod:init/1}}}\\[3pt]
         \textcolor{erlblue!80!black}{\textbf{运行时核心：}}\\
         \textcolor{erlred!80!black}{\textbf{存储 Module $\rightarrow$ 缓存函数引用}}\\
         \texttt{receive} $\rightarrow$ \texttt{Mod:handle\_call/3} ...
