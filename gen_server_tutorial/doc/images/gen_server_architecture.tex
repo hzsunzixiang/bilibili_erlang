@@ -40,17 +40,18 @@
     \node[draw=erlpurple!60, fill=erlpurple!3, rounded corners=6pt,
           minimum width=7cm, minimum height=11cm] (leftframe) at (-5.5, -0.3) {};
     \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {调用方 / 外部};
+    \node[font=\small\ttfamily\bfseries\color{erlpurple!70}, anchor=north west] at ([xshift=3pt, yshift=-3pt]leftframe.north west) {counter\_server.erl};
 
     % Right half
     \node[draw=erlblue!60, fill=erlblue!3, rounded corners=6pt,
           minimum width=7cm, minimum height=11cm] (rightframe) at (5.5, -0.3) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {gen\_server Process};
+    \node[font=\small\ttfamily\bfseries\color{erlblue!70}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rightframe.north west) {gen\_server.erl};
 
     % ---- Left-Top: Client API ----
     \node[draw=erlpurple, fill=erlpurple!8, rounded corners=5pt,
           minimum width=6.2cm, minimum height=4.8cm, text width=5.8cm, align=left] (lt) at (-5.5, 2.3) {};
     \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {Client API};
-    \node[font=\tiny\ttfamily\color{erlpurple!60}, anchor=north east] at ([xshift=-3pt, yshift=-3pt]lt.north east) {counter\_server.erl};
     % Highlight start_link with a special box
     \node[draw=erlred!70, fill=erlred!8, rounded corners=3pt,
           font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north west]
@@ -67,7 +68,6 @@
     \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
           minimum width=6.2cm, minimum height=4.8cm, text width=5.8cm, align=left] (lb) at (-5.5, -2.8) {};
     \node[font=\small\bfseries\color{erlgreen!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Callback Module（用户编写）};
-    \node[font=\tiny\ttfamily\color{erlgreen!60}, anchor=north east] at ([xshift=-3pt, yshift=-3pt]lb.north east) {counter\_server.erl};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]lb.north west) {
         \textcolor{erlgreen!70!black}{-module(counter\_server).}\\
         \textcolor{erlgreen!70!black}{-behaviour(gen\_server).}\\[3pt]
@@ -83,7 +83,6 @@
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
           minimum width=6.2cm, minimum height=4.8cm, text width=5.8cm, align=left] (rt) at (5.5, 2.3) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server};
-    \node[font=\tiny\ttfamily\color{erlblue!60}, anchor=north east] at ([xshift=-3pt, yshift=-3pt]rt.north east) {gen\_server.erl};
     \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
         消息循环 (\texttt{loop/4})\\
         消息路由与分发\\
@@ -114,9 +113,9 @@
 
     % Arrow ①: start_link — the KEY arrow, from Client API to Generic Server
     \draw[-{Stealth[length=6pt]}, ultra thick, erlred!80!black, line width=1.6pt, densely dashed]
-        ([yshift=14mm]lt.east) -- node[above, font=\scriptsize\bfseries, align=center, text=erlred!80!black]
+        ([yshift=14mm]lt.east) -- node[above, font=\tiny\bfseries, align=center, text=erlred!80!black]
         {\ding{172} \texttt{start\_link(?MODULE, Args, Opts)}\\[1pt]
-         \tiny 传递模块名 $\rightarrow$ 绑定回调函数} ([yshift=14mm]rt.west);
+         \fontsize{4pt}{5pt}\selectfont 传递模块名 $\rightarrow$ 绑定回调函数} ([yshift=14mm]rt.west);
 
     % Arrow ②: Function registration — Callback source -> Bound Callbacks (via ?MODULE)
     \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt, dashed]
