@@ -1,0 +1,17 @@
+# Compiled Erlang files
+*.beam
+
+# Erlang crash dumps
+erl_crash.dump
+
+# Rebar3 build directory
+_build/
+
+# Rebar lock file (optional, uncomment if needed)
+# rebar.lock
+
+# Editor and OS files
+*.swp
+*.swo
+*~
+.DS_Store
