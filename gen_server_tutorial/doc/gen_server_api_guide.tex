@@ -258,15 +258,17 @@
 
 \begin{notebox}[图中箭头说明]
 \begin{itemize}[leftmargin=2em, itemsep=2pt]
+    \item[\textbf{启动阶段}]~
     \item \ding{172} \textbf{★ start\_link}（粗虚线，最关键）：调用 \texttt{gen\_server:start\_link(?MODULE, Args, Opts)} 时，
           \texttt{?MODULE} 编译期展开为模块原子名，传入 Generic Server。Server 将其缓存为
           \texttt{fun Mod:handle\_call/3} 等函数引用，从此所有消息都路由到该模块的回调函数
-    \item \ding{182} \textbf{API 调用}：Client 通过 \texttt{gen\_server:call/cast} 向 Server 发送消息
-    \item \ding{183} \textbf{回复}：Generic Server 将处理结果返回给 Client
-    \item \ding{184} \textbf{回调}：Generic Server 收到消息后，通过缓存的函数引用调用已绑定的回调函数
-    \item \ding{185} \textbf{返回值}：Callback Module 通过 \texttt{\{reply, Reply, NewState\}} 等元组返回结果
-    \item \ding{186} \textbf{函数注册}（虚线）：左下角用户编写的回调函数，通过 \texttt{?MODULE} 传递，
+    \item \ding{173} \textbf{函数注册}（虚线）：左下角用户编写的回调函数（\texttt{counter\_server.erl}），通过 \texttt{?MODULE} 传递，
           在右下角变为 \texttt{fun counter\_server:handle\_call/3} 等函数引用——\textbf{代码在左边写，在右边执行}
+    \item[\textbf{运行阶段}]~
+    \item \ding{174} \textbf{API 调用}：Client 通过 \texttt{gen\_server:call/cast} 向 Server 发送消息
+    \item \ding{175} \textbf{回调}：Generic Server 收到消息后，通过缓存的函数引用调用已绑定的回调函数
+    \item \ding{176} \textbf{返回值}：Callback Module 通过 \texttt{\{reply, Reply, NewState\}} 等元组返回结果
+    \item \ding{177} \textbf{回复}：Generic Server 将处理结果返回给 Client
 \end{itemize}
 \end{notebox}
 
