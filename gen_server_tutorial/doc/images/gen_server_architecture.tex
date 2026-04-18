@@ -86,11 +86,10 @@
 
     % ---- Right-Top: Generic Server ----
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
-          minimum width=5.8cm, minimum height=3.5cm, text width=5.4cm, align=left] (rt) at (6.4, 2.0) {};
+          minimum width=6.2cm, minimum height=3.5cm, text width=5.8cm, align=left] (rt) at (6.4, 2.0) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server};
-    \node[font=\scriptsize, text width=5.0cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
-        \textcolor{erlblue!80!black}{\textbf{启动流程：}}\\
-        {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}}}\\[3pt]
+    \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
+        \textcolor{erlblue!80!black}{\textbf{启动流程：}}        {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}}}\\[3pt]
         \textcolor{erlblue!80!black}{\textbf{运行时核心：}}\\
 {\tiny\textcolor{erlred!80!black}{\textbf{存储\kern1pt\textcolor{erlmodule}{\texttt{?MODULE}}\kern1pt 信息 $\rightarrow$ 缓存函数引用}}}\\
         {\tiny\texttt{receive} $\rightarrow$ \texttt{Mod:handle\_call/3} ...}
@@ -98,9 +97,9 @@
 
     % ---- Right-Bottom: Bound Callbacks (registered via ?MODULE) ----
     \node[draw=erlgreen!70!black, fill=erlgreen!5, rounded corners=5pt,
-          minimum width=5.8cm, minimum height=3.4cm, text width=5.4cm, align=left] (rb) at (6.4, -2.5) {};
+          minimum width=6.2cm, minimum height=3.4cm, text width=5.8cm, align=left] (rb) at (6.4, -2.5) {};
     \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {已绑定的回调（运行时）};
-    \node[font=\scriptsize, text width=5.0cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
+    \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
         \textcolor{erlred!80!black}{\texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, ...)}} 之后：\\[3pt]
         \texttt{fun counter\_server:init/1}\\
         \texttt{fun counter\_server:handle\_call/3}\\
@@ -157,7 +156,7 @@
          \ding{72} \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 使得 Server 知道调用哪个模块的回调函数};
 
     % Right bottom annotation (inside right outer frame, below dashed line)
-    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.4cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
+    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
         {\ding{72} \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}} 启动时即调用用户编写的 \textcolor{erlinit}{\textbf{\texttt{init/1}}}\\
          \ding{72} 函数式编程：行为的延迟绑定};
 
