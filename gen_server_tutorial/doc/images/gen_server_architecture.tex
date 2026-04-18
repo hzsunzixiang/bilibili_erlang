@@ -26,6 +26,7 @@
 \definecolor{erlyellow}{HTML}{F9A825}
 \definecolor{erlpurple}{HTML}{6A1B9A}
 \definecolor{erlmodule}{HTML}{D84315}  % dedicated color for ?MODULE
+\definecolor{erlinit}{HTML}{00897B}    % dedicated vivid teal color for init/1
 
 % ============================================================
 % Architecture Diagram
@@ -39,13 +40,13 @@
     % ---- Outer frames ----
     % Left half
     \node[draw=erlpurple!60, fill=erlpurple!3, rounded corners=6pt,
-          minimum width=6.6cm, minimum height=9.9cm] (leftframe) at (-4.8, -0.7) {};
+          minimum width=6.6cm, minimum height=9.4cm] (leftframe) at (-4.8, -0.55) {};
     \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {客户端(Client)};
     \node[font=\small\ttfamily\bfseries\color{erlpurple!70}, anchor=north west] at ([xshift=3pt, yshift=-1pt]leftframe.north west) {counter\_server.erl};
 
     % Right half
     \node[draw=erlblue!60, fill=erlblue!3, rounded corners=6pt,
-          minimum width=6.6cm, minimum height=9.9cm] (rightframe) at (6.4, -0.7) {};
+          minimum width=6.6cm, minimum height=9.4cm] (rightframe) at (6.4, -0.55) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {服务端(Server)};
     \node[font=\small\ttfamily\bfseries\color{erlblue!70}, anchor=north west] at ([xshift=3pt, yshift=-1pt]rightframe.north west) {gen\_server.erl};
 
@@ -70,12 +71,12 @@
 
     % ---- Left-Bottom: Callback Module (User Code — source) ----
     \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
-          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (lb) at (-4.8, -2.5) {};
+          minimum width=6.2cm, minimum height=3.4cm, text width=5.8cm, align=left] (lb) at (-4.8, -2.5) {};
     \node[font=\small\bfseries\color{erlgreen!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Callback Module（用户编写）};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]lb.north west) {
         \textcolor{erlgreen!70!black}{-module(counter\_server).}\\
         \textcolor{erlgreen!70!black}{-behaviour(gen\_server).}\\[3pt]
-        \textcolor{erlyellow!80!black}{\textbf{init/1}}\\
+\textcolor{erlinit}{\textbf{init/1}}\\
         handle\_call/3\\
         handle\_cast/2\\
         handle\_info/2\\
@@ -88,16 +89,16 @@
           minimum width=5.8cm, minimum height=3.5cm, text width=5.4cm, align=left] (rt) at (6.4, 2.0) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server};
     \node[font=\scriptsize, text width=5.0cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
-        \textcolor{erlblue!80!black}{\textbf{启动流程：}}        \texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link}\\
-        $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlyellow!80!black}{\textbf{\texttt{Mod:init/1}}}\\[3pt]
+        \textcolor{erlblue!80!black}{\textbf{启动流程：}}\\
+        {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}}}\\[3pt]
         \textcolor{erlblue!80!black}{\textbf{运行时核心：}}\\
-        \textcolor{erlred!80!black}{\textbf{存储 Module $\rightarrow$ 缓存函数引用}}\\
-        \texttt{receive} $\rightarrow$ \texttt{Mod:handle\_call/3} ...
+{\tiny\textcolor{erlred!80!black}{\textbf{存储\kern1pt\textcolor{erlmodule}{\texttt{?MODULE}}\kern1pt 信息 $\rightarrow$ 缓存函数引用}}}\\
+        {\tiny\texttt{receive} $\rightarrow$ \texttt{Mod:handle\_call/3} ...}
     };
 
     % ---- Right-Bottom: Bound Callbacks (registered via ?MODULE) ----
     \node[draw=erlgreen!70!black, fill=erlgreen!5, rounded corners=5pt,
-          minimum width=5.8cm, minimum height=4.2cm, text width=5.4cm, align=left] (rb) at (6.4, -2.5) {};
+          minimum width=5.8cm, minimum height=3.4cm, text width=5.4cm, align=left] (rb) at (6.4, -2.5) {};
     \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {已绑定的回调（运行时）};
     \node[font=\scriptsize, text width=5.0cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
         \textcolor{erlred!80!black}{\texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, ...)}} 之后：\\[3pt]
@@ -107,7 +108,7 @@
         \texttt{fun counter\_server:handle\_info/2}\\
         \texttt{fun counter\_server:handle\_continue/2}\\
         \texttt{fun counter\_server:terminate/2}\\[3pt]
-        {\tiny\textcolor{gray}{\textcolor{erlmodule}{\textbf{?MODULE}}的信息缓存在 \texttt{\#server\_data\{\}} 中}}
+        {\tiny\textcolor{gray}{\textcolor{erlmodule}{\textbf{\texttt{?MODULE}}}\kern1pt 的信息缓存在 \texttt{\#server\_data\{\}} 中}}
     };
 
     % ==== Arrows ====
@@ -157,7 +158,7 @@
 
     % Right bottom annotation (inside right outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.4cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
-        {\ding{72} \texttt{Mod:init/1} 启动时即调用用户编写的 \texttt{init/1}\\
+        {\ding{72} \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}} 启动时即调用用户编写的 \textcolor{erlinit}{\textbf{\texttt{init/1}}}\\
          \ding{72} 函数式编程：行为的延迟绑定};
 
 \end{tikzpicture}
