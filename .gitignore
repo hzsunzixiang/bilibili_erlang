@@ -10,6 +10,18 @@ _build/
 # Rebar lock file (optional, uncomment if needed)
 # rebar.lock
 
+# LaTeX intermediate files
+*.aux
+*.log
+*.out
+*.toc
+*.nav
+*.snm
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.pdf
+
 # Editor and OS files
 *.swp
 *.swo
