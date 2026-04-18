@@ -44,7 +44,7 @@
 
     % Right half
     \node[draw=erlblue!60, fill=erlblue!3, rounded corners=6pt,
-          minimum width=5.8cm, minimum height=9cm] (rightframe) at (6.4, -0.25) {};
+          minimum width=6.6cm, minimum height=9cm] (rightframe) at (6.4, -0.25) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {服务端(Server)};
     \node[font=\small\ttfamily\bfseries\color{erlblue!70}, anchor=north west] at ([xshift=3pt, yshift=-1pt]rightframe.north west) {gen\_server.erl};
 
@@ -84,11 +84,10 @@
 
     % ---- Right-Top: Generic Server ----
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
-          minimum width=5.0cm, minimum height=3.5cm, text width=4.6cm, align=left] (rt) at (6.4, 2.0) {};
+          minimum width=5.8cm, minimum height=3.5cm, text width=5.4cm, align=left] (rt) at (6.4, 2.0) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server};
-    \node[font=\scriptsize, text width=4.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
-        \textcolor{erlblue!80!black}{\textbf{启动流程：}}\\
-        \texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link}\\
+    \node[font=\scriptsize, text width=5.0cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
+        \textcolor{erlblue!80!black}{\textbf{启动流程：}}        \texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link}\\
         $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlyellow!80!black}{\textbf{\texttt{Mod:init/1}}}\\[3pt]
         \textcolor{erlblue!80!black}{\textbf{运行时核心：}}\\
         \textcolor{erlred!80!black}{\textbf{存储 Module $\rightarrow$ 缓存函数引用}}\\
@@ -97,9 +96,9 @@
 
     % ---- Right-Bottom: Bound Callbacks (registered via ?MODULE) ----
     \node[draw=erlgreen!70!black, fill=erlgreen!5, rounded corners=5pt,
-          minimum width=5.0cm, minimum height=4.2cm, text width=4.6cm, align=left] (rb) at (6.4, -2.5) {};
+          minimum width=5.8cm, minimum height=4.2cm, text width=5.4cm, align=left] (rb) at (6.4, -2.5) {};
     \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {已绑定的回调（运行时）};
-    \node[font=\scriptsize, text width=4.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
+    \node[font=\scriptsize, text width=5.0cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
         \textcolor{erlred!80!black}{\texttt{start\_link(?MODULE, ...)}} 之后：\\[3pt]
         \texttt{fun counter\_server:init/1}\\
         \texttt{fun counter\_server:handle\_call/3}\\
