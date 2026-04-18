@@ -1,0 +1,145 @@
+% gen_server Architecture Diagram (Standalone)
+% Compile with: xelatex gen_server_architecture.tex
+\documentclass[border=10pt]{standalone}
+
+% ============================================================
+% Packages
+% ============================================================
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont[BoldFont=STHeiti, ItalicFont=STKaiti]{STSong}
+\setCJKsansfont{STHeiti}
+\setCJKmonofont{STFangsong}
+
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pifont}  % for \ding symbols (circled numbers)
+
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, calc, backgrounds, decorations.pathreplacing}
+
+% ============================================================
+% Color Definitions (same as gen_server_api_guide.tex)
+% ============================================================
+\definecolor{erlred}{HTML}{A4070A}
+\definecolor{erlblue}{HTML}{2B5EA7}
+\definecolor{erlgreen}{HTML}{2E7D32}
+\definecolor{erlyellow}{HTML}{F9A825}
+\definecolor{erlpurple}{HTML}{6A1B9A}
+
+% ============================================================
+% Architecture Diagram
+% ============================================================
+\begin{document}
+
+\begin{tikzpicture}[scale=0.68, every node/.style={scale=0.68},
+    quadrant/.style={minimum width=6.5cm, minimum height=4.5cm, text width=5.8cm, align=left, font=\small},
+    api/.style={font=\scriptsize\ttfamily, inner sep=2pt},
+]
+    % ---- Outer frames ----
+    % Left half
+    \node[draw=erlpurple!60, fill=erlpurple!3, rounded corners=6pt,
+          minimum width=7cm, minimum height=11cm] (leftframe) at (-5.5, -0.3) {};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {调用方 / 外部};
+
+    % Right half
+    \node[draw=erlblue!60, fill=erlblue!3, rounded corners=6pt,
+          minimum width=7cm, minimum height=11cm] (rightframe) at (5.5, -0.3) {};
+    \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {gen\_server Process};
+
+    % ---- Left-Top: Client API ----
+    \node[draw=erlpurple, fill=erlpurple!8, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=4.8cm, text width=5.8cm, align=left] (lt) at (-5.5, 2.3) {};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {Client API};
+    % Highlight start_link with a special box
+    \node[draw=erlred!70, fill=erlred!8, rounded corners=3pt,
+          font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north west]
+        (startlink) at ([xshift=6pt, yshift=-16pt]lt.north west)
+        {\textcolor{erlred!80!black}{\ding{72} gen\_server:start\_link(?MODULE, Args, Opts)}};
+    \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-38pt]lt.north west) {
+        gen\_server:call/2,3\\
+        gen\_server:cast/2\\
+        gen\_server:send\_request/2\\
+        gen\_server:stop/1,3
+    };
+
+    % ---- Left-Bottom: Callback Module (User Code — source) ----
+    \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=4.8cm, text width=5.8cm, align=left] (lb) at (-5.5, -2.8) {};
+    \node[font=\small\bfseries\color{erlgreen!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Callback Module（用户编写）};
+    \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]lb.north west) {
+        \textcolor{erlgreen!70!black}{-module(counter\_server).}\\
+        \textcolor{erlgreen!70!black}{-behaviour(gen\_server).}\\[3pt]
+        init/1\\
+        handle\_call/3\\
+        handle\_cast/2\\
+        handle\_info/2\\
+        handle\_continue/2\\
+        terminate/2
+    };
+
+    % ---- Right-Top: Generic Server ----
+    \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=4.8cm, text width=5.8cm, align=left] (rt) at (5.5, 2.3) {};
+    \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server (gen\_server.erl)};
+    \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
+        消息循环 (\texttt{loop/4})\\
+        消息路由与分发\\
+        超时 / 休眠处理\\
+        错误处理 \& crash report\\
+        \textcolor{erlred!80!black}{\textbf{存储 Module $\rightarrow$ 缓存函数引用}}\\
+        \textcolor{erlred!80!black}{\texttt{fun Mod:handle\_call/3 ...}}
+    };
+
+    % ---- Right-Bottom: Bound Callbacks (registered via ?MODULE) ----
+    \node[draw=erlgreen!70!black, fill=erlgreen!5, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=4.8cm, text width=5.8cm, align=left] (rb) at (5.5, -2.8) {};
+    \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {已绑定的回调（运行时）};
+    \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
+        \textcolor{erlred!80!black}{\texttt{start\_link(?MODULE, ...)}} 之后：\\[3pt]
+        \texttt{fun counter\_server:init/1}\\
+        \texttt{fun counter\_server:handle\_call/3}\\
+        \texttt{fun counter\_server:handle\_cast/2}\\
+        \texttt{fun counter\_server:handle\_info/2}\\
+        \texttt{fun counter\_server:handle\_continue/2}\\
+        \texttt{fun counter\_server:terminate/2}\\[3pt]
+        \textcolor{gray}{缓存在 \texttt{\#server\_data\{\}} 中}
+    };
+
+    % ==== Arrows ====
+
+    % Arrow 0 (★): start_link — the KEY arrow, from Client API top to Generic Server top
+    \draw[-{Stealth[length=6pt]}, ultra thick, erlred!80!black, line width=1.6pt, densely dashed]
+        ([yshift=14mm]lt.east) -- node[above, font=\scriptsize\bfseries, align=center, text=erlred!80!black]
+        {\ding{172} \texttt{start\_link(?MODULE, Args, Opts)}\\[1pt]
+         \tiny 传递模块名 $\rightarrow$ 绑定回调函数} ([yshift=14mm]rt.west);
+
+    % Arrow 1: Client API -> Generic Server (call / cast / send_request)
+    \draw[-{Stealth[length=5pt]}, thick, erlblue, line width=1.2pt]
+        ([yshift=2mm]lt.east) -- node[api, above, align=center, text width=2.2cm] {\textcolor{erlblue}{\ding{182} call / cast /\\send\_request}} ([yshift=2mm]rt.west);
+
+    % Arrow 2: Generic Server -> Client API (Reply)
+    \draw[-{Stealth[length=5pt]}, thick, erlred, line width=1.2pt]
+        ([yshift=-8mm]rt.west) -- node[api, below] {\textcolor{erlred}{\ding{183} Reply}} ([yshift=-8mm]lt.east);
+
+    % Arrow 3: Generic Server -> Callback Module (callback invocation)
+    \draw[-{Stealth[length=5pt]}, thick, erlblue!70, line width=1pt]
+        ([xshift=-15mm]rt.south) -- node[left, font=\tiny\itshape, text=erlblue!70] {\ding{184} callback} ([xshift=-15mm]rb.north);
+
+    % Arrow 4: Callback Module -> Generic Server (return value)
+    \draw[-{Stealth[length=5pt]}, thick, erlgreen!70, line width=1pt]
+        ([xshift=15mm]rb.north) -- node[right, font=\tiny\itshape, text=erlgreen!70] {\ding{185} return value} ([xshift=15mm]rt.south);
+
+    % Arrow 5: Callback Module (source) -> Bound Callbacks (registered via ?MODULE)
+    \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt, dashed]
+        (lb.east) -- node[api, above, align=center, text width=3cm, text=erlgreen!70!black]
+        {\scriptsize\bfseries \ding{186} 函数注册\\[1pt]
+         \tiny \texttt{?MODULE} $\rightarrow$ \texttt{fun Mod:F/A}} (rb.west);
+
+    % Bottom annotation
+    \node[font=\tiny\color{erlred!70!black}, anchor=north, text width=10cm, align=center] at (0, -5.3)
+        {\ding{72} \texttt{start\_link} 是连接左右两半的关键桥梁：\texttt{?MODULE} 使得 Server 知道调用哪个模块的回调函数\\
+         函数式编程：行为的延迟绑定};
+
+\end{tikzpicture}
+
+\end{document}
