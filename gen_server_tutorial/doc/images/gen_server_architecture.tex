@@ -93,7 +93,7 @@
         {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}}}\\[22pt]
         \textcolor{erlblue!80!black}{\ding{72} \textbf{运行时核心：}}\\
         {\tiny\textcolor{erlred!80!black}{\textbf{存储\kern1pt\textcolor{erlmodule}{\texttt{?MODULE}}\kern1pt 信息 $\rightarrow$ 缓存函数引用}}}\\
-        {\tiny\texttt{receive} $\rightarrow$ \texttt{Mod:handle\_call/3} ...}
+        {\tiny\texttt{receive} $\rightarrow$ \texttt{Mod:handle\_call/3} \ldots}
     };
 
     % ---- Right-Bottom: Bound Callbacks (registered via ?MODULE) ----
@@ -118,32 +118,32 @@
     % Arrow ①: start_link — the KEY arrow, from Client API to Generic Server
     \draw[-{Stealth[length=6pt]}, ultra thick, erlred!80!black, line width=1.6pt, densely dashed]
         ([yshift=9.5mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlred!80!black]
-        {\ding{172} 传递模块名 $\rightarrow$ 绑定回调函数\\[1pt]
+        {\textcolor{black}{\ding{172}} 传递模块名 $\rightarrow$ 绑定回调函数\\[1pt]
          \texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}} ([yshift=9.5mm]rt.west);
 
     % Arrow ②: Function registration — Callback source -> Bound Callbacks (via ?MODULE)
     \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt, dashed]
         (lb.east) -- node[api, above, align=center, text width=3cm, text=erlgreen!70!black]
-        {\scriptsize\bfseries \ding{173} 函数注册\\[1pt]
+        {\scriptsize\bfseries \textcolor{black}{\ding{173}} 函数注册\\[1pt]
          \tiny \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} $\rightarrow$ \texttt{fun Mod:F/A}} (rb.west);
 
     % ==== Phase 2: Runtime ====
 
     % Arrow ③: Client API -> Generic Server (call / cast / send_request)
     \draw[-{Stealth[length=5pt]}, thick, erlblue, line width=1.2pt]
-        ([yshift=-4mm]lt.east) -- node[api, above, align=center, text width=2.2cm] {\textcolor{erlblue}{\ding{174} call / cast /\\send\_request}} ([yshift=-4mm]rt.west);
+        ([yshift=-4mm]lt.east) -- node[api, above, align=center] {\textcolor{black}{\ding{174}} \textcolor{erlblue}{call / cast / send\_request}} ([yshift=-4mm]rt.west);
 
     % Arrow ④: Generic Server -> Bound Callbacks (callback invocation)
     \draw[-{Stealth[length=5pt]}, thick, erlblue!70, line width=1pt]
-        ([xshift=-5mm]rt.south) -- node[left, font=\scriptsize, text=erlblue!70] {\ding{175} callback} ([xshift=-5mm]rb.north);
+        ([xshift=-5mm]rt.south) -- node[left, font=\scriptsize, text=erlblue!70] {\textcolor{black}{\ding{175}} callback} ([xshift=-5mm]rb.north);
 
     % Arrow ⑤: Bound Callbacks -> Generic Server (return value)
     \draw[-{Stealth[length=5pt]}, thick, erlgreen!70, line width=1pt]
-        ([xshift=5mm]rb.north) -- node[right, font=\scriptsize, text=erlgreen!70] {\ding{176} return value} ([xshift=5mm]rt.south);
+        ([xshift=5mm]rb.north) -- node[right, font=\scriptsize, text=erlgreen!70] {\textcolor{black}{\ding{176}} return value} ([xshift=5mm]rt.south);
 
     % Arrow ⑥: Generic Server -> Client API (Reply)
     \draw[-{Stealth[length=5pt]}, thick, erlred, line width=1.2pt]
-        ([yshift=-14mm]rt.west) -- node[api, below] {\textcolor{erlred}{\ding{177} Reply}} ([yshift=-14mm]lt.east);
+        ([yshift=-14mm]rt.west) -- node[api, below] {\textcolor{black}{\ding{177}} \textcolor{erlred}{Reply}} ([yshift=-14mm]lt.east);
 
     % ---- Dashed separator lines below inner boxes ----
     \draw[dashed, erlpurple!40, line width=0.6pt]
