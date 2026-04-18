@@ -39,14 +39,14 @@
     % Left half
     \node[draw=erlpurple!60, fill=erlpurple!3, rounded corners=6pt,
           minimum width=6.6cm, minimum height=9cm] (leftframe) at (-4.8, -0.25) {};
-    \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {调用方 / 外部};
-    \node[font=\small\ttfamily\bfseries\color{erlpurple!70}, anchor=north west] at ([xshift=3pt, yshift=-3pt]leftframe.north west) {counter\_server.erl};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {客户端(Client)};
+    \node[font=\small\ttfamily\bfseries\color{erlpurple!70}, anchor=north west] at ([xshift=3pt, yshift=-1pt]leftframe.north west) {counter\_server.erl};
 
     % Right half
     \node[draw=erlblue!60, fill=erlblue!3, rounded corners=6pt,
           minimum width=5.8cm, minimum height=9cm] (rightframe) at (6.4, -0.25) {};
-    \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {gen\_server Process};
-    \node[font=\small\ttfamily\bfseries\color{erlblue!70}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rightframe.north west) {gen\_server.erl};
+    \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {服务端(Server)};
+    \node[font=\small\ttfamily\bfseries\color{erlblue!70}, anchor=north west] at ([xshift=3pt, yshift=-1pt]rightframe.north west) {gen\_server.erl};
 
     % ---- Left-Top: Client API ----
     \node[draw=erlpurple, fill=erlpurple!8, rounded corners=5pt,
@@ -63,6 +63,9 @@
         gen\_server:send\_request/2\\
         gen\_server:stop/1,3
     };
+    % Note: ?MODULE = counter_server
+    \node[font=\tiny\color{gray}, anchor=south west] at ([xshift=6pt, yshift=3pt]lt.south west)
+        {备注：\texttt{?MODULE} 即 \texttt{counter\_server}};
 
     % ---- Left-Bottom: Callback Module (User Code — source) ----
     \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
@@ -113,9 +116,9 @@
 
     % Arrow ①: start_link — the KEY arrow, from Client API to Generic Server
     \draw[-{Stealth[length=6pt]}, ultra thick, erlred!80!black, line width=1.6pt, densely dashed]
-        ([yshift=8mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlred!80!black]
+        ([yshift=9.5mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlred!80!black]
         {\ding{172} 传递模块名 $\rightarrow$ 绑定回调函数\\[1pt]
-         \texttt{start\_link(?MODULE, Args, Opts)}} ([yshift=8mm]rt.west);
+         \texttt{start\_link(?MODULE, Args, Opts)}} ([yshift=9.5mm]rt.west);
 
     % Arrow ②: Function registration — Callback source -> Bound Callbacks (via ?MODULE)
     \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt, dashed]
@@ -131,11 +134,11 @@
 
     % Arrow ④: Generic Server -> Bound Callbacks (callback invocation)
     \draw[-{Stealth[length=5pt]}, thick, erlblue!70, line width=1pt]
-        ([xshift=-15mm]rt.south) -- node[left, font=\tiny\itshape, text=erlblue!70] {\ding{175} callback} ([xshift=-15mm]rb.north);
+        ([xshift=-5mm]rt.south) -- node[left, font=\tiny\itshape, text=erlblue!70] {\ding{175} callback} ([xshift=-5mm]rb.north);
 
     % Arrow ⑤: Bound Callbacks -> Generic Server (return value)
     \draw[-{Stealth[length=5pt]}, thick, erlgreen!70, line width=1pt]
-        ([xshift=15mm]rb.north) -- node[right, font=\tiny\itshape, text=erlgreen!70] {\ding{176} return value} ([xshift=15mm]rt.south);
+        ([xshift=5mm]rb.north) -- node[right, font=\tiny\itshape, text=erlgreen!70] {\ding{176} return value} ([xshift=5mm]rt.south);
 
     % Arrow ⑥: Generic Server -> Client API (Reply)
     \draw[-{Stealth[length=5pt]}, thick, erlred, line width=1.2pt]
