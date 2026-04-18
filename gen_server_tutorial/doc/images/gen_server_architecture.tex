@@ -25,6 +25,7 @@
 \definecolor{erlgreen}{HTML}{2E7D32}
 \definecolor{erlyellow}{HTML}{F9A825}
 \definecolor{erlpurple}{HTML}{6A1B9A}
+\definecolor{erlmodule}{HTML}{D84315}  % dedicated color for ?MODULE
 
 % ============================================================
 % Architecture Diagram
@@ -38,13 +39,13 @@
     % ---- Outer frames ----
     % Left half
     \node[draw=erlpurple!60, fill=erlpurple!3, rounded corners=6pt,
-          minimum width=6.6cm, minimum height=9cm] (leftframe) at (-4.8, -0.25) {};
+          minimum width=6.6cm, minimum height=9.9cm] (leftframe) at (-4.8, -0.7) {};
     \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {客户端(Client)};
     \node[font=\small\ttfamily\bfseries\color{erlpurple!70}, anchor=north west] at ([xshift=3pt, yshift=-1pt]leftframe.north west) {counter\_server.erl};
 
     % Right half
     \node[draw=erlblue!60, fill=erlblue!3, rounded corners=6pt,
-          minimum width=6.6cm, minimum height=9cm] (rightframe) at (6.4, -0.25) {};
+          minimum width=6.6cm, minimum height=9.9cm] (rightframe) at (6.4, -0.7) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {服务端(Server)};
     \node[font=\small\ttfamily\bfseries\color{erlblue!70}, anchor=north west] at ([xshift=3pt, yshift=-1pt]rightframe.north west) {gen\_server.erl};
 
@@ -54,9 +55,9 @@
     \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {Client API};
     % Highlight start_link with a special box
     \node[draw=erlred!70, fill=erlred!8, rounded corners=3pt,
-          font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north west]
-        (startlink) at ([xshift=6pt, yshift=-16pt]lt.north west)
-        {\textcolor{erlred!80!black}{\ding{72} gen\_server:start\_link(?MODULE, Args, Opts)}};
+          font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north]
+        (startlink) at ([yshift=-16pt]lt.north)
+        {\textcolor{erlred!80!black}{\ding{72} gen\_server:start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-38pt]lt.north west) {
         gen\_server:call/2,3\\
         gen\_server:cast/2\\
@@ -65,7 +66,7 @@
     };
     % Note: ?MODULE = counter_server
     \node[font=\tiny\color{gray}, anchor=south west] at ([xshift=6pt, yshift=3pt]lt.south west)
-        {备注：\texttt{?MODULE} 即 \texttt{counter\_server}};
+        {备注：\texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 即 \texttt{counter\_server}};
 
     % ---- Left-Bottom: Callback Module (User Code — source) ----
     \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
@@ -99,14 +100,14 @@
           minimum width=5.8cm, minimum height=4.2cm, text width=5.4cm, align=left] (rb) at (6.4, -2.5) {};
     \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {已绑定的回调（运行时）};
     \node[font=\scriptsize, text width=5.0cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
-        \textcolor{erlred!80!black}{\texttt{start\_link(?MODULE, ...)}} 之后：\\[3pt]
+        \textcolor{erlred!80!black}{\texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, ...)}} 之后：\\[3pt]
         \texttt{fun counter\_server:init/1}\\
         \texttt{fun counter\_server:handle\_call/3}\\
         \texttt{fun counter\_server:handle\_cast/2}\\
         \texttt{fun counter\_server:handle\_info/2}\\
         \texttt{fun counter\_server:handle\_continue/2}\\
         \texttt{fun counter\_server:terminate/2}\\[3pt]
-        \textcolor{gray}{缓存在 \texttt{\#server\_data\{\}} 中}
+        {\tiny\textcolor{gray}{\textcolor{erlmodule}{\textbf{?MODULE}}的信息缓存在 \texttt{\#server\_data\{\}} 中}}
     };
 
     % ==== Arrows ====
@@ -117,13 +118,13 @@
     \draw[-{Stealth[length=6pt]}, ultra thick, erlred!80!black, line width=1.6pt, densely dashed]
         ([yshift=9.5mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlred!80!black]
         {\ding{172} 传递模块名 $\rightarrow$ 绑定回调函数\\[1pt]
-         \texttt{start\_link(?MODULE, Args, Opts)}} ([yshift=9.5mm]rt.west);
+         \texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}} ([yshift=9.5mm]rt.west);
 
     % Arrow ②: Function registration — Callback source -> Bound Callbacks (via ?MODULE)
     \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt, dashed]
         (lb.east) -- node[api, above, align=center, text width=3cm, text=erlgreen!70!black]
         {\scriptsize\bfseries \ding{173} 函数注册\\[1pt]
-         \tiny \texttt{?MODULE} $\rightarrow$ \texttt{fun Mod:F/A}} (rb.west);
+         \tiny \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} $\rightarrow$ \texttt{fun Mod:F/A}} (rb.west);
 
     % ==== Phase 2: Runtime ====
 
@@ -133,20 +134,31 @@
 
     % Arrow ④: Generic Server -> Bound Callbacks (callback invocation)
     \draw[-{Stealth[length=5pt]}, thick, erlblue!70, line width=1pt]
-        ([xshift=-5mm]rt.south) -- node[left, font=\tiny\itshape, text=erlblue!70] {\ding{175} callback} ([xshift=-5mm]rb.north);
+        ([xshift=-5mm]rt.south) -- node[left, font=\scriptsize, text=erlblue!70] {\ding{175} callback} ([xshift=-5mm]rb.north);
 
     % Arrow ⑤: Bound Callbacks -> Generic Server (return value)
     \draw[-{Stealth[length=5pt]}, thick, erlgreen!70, line width=1pt]
-        ([xshift=5mm]rb.north) -- node[right, font=\tiny\itshape, text=erlgreen!70] {\ding{176} return value} ([xshift=5mm]rt.south);
+        ([xshift=5mm]rb.north) -- node[right, font=\scriptsize, text=erlgreen!70] {\ding{176} return value} ([xshift=5mm]rt.south);
 
     % Arrow ⑥: Generic Server -> Client API (Reply)
     \draw[-{Stealth[length=5pt]}, thick, erlred, line width=1.2pt]
         ([yshift=-14mm]rt.west) -- node[api, below] {\textcolor{erlred}{\ding{177} Reply}} ([yshift=-14mm]lt.east);
 
-    % Bottom annotation
-    \node[font=\tiny\color{erlred!70!black}, anchor=north, text width=10cm, align=center] at (0, -4.8)
-        {\ding{72} \texttt{start\_link} 是连接左右两半的关键桥梁：\texttt{?MODULE} 使得 Server 知道调用哪个模块的回调函数\\
-         函数式编程：行为的延迟绑定};
+    % ---- Dashed separator lines below inner boxes ----
+    \draw[dashed, erlpurple!40, line width=0.6pt]
+        ([yshift=-6pt]lb.south west) -- ([yshift=-6pt]lb.south east);
+    \draw[dashed, erlblue!40, line width=0.6pt]
+        ([yshift=-6pt]rb.south west) -- ([yshift=-6pt]rb.south east);
+
+    % Left bottom annotation (inside left outer frame, below dashed line)
+    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]lb.south west)
+        {\ding{72} \texttt{start\_link} 是连接左右两半的关键桥梁：\\
+         \ding{72} \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 使得 Server 知道调用哪个模块的回调函数};
+
+    % Right bottom annotation (inside right outer frame, below dashed line)
+    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.4cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
+        {\ding{72} \texttt{Mod:init/1} 启动时即调用用户编写的 \texttt{init/1}\\
+         \ding{72} 函数式编程：行为的延迟绑定};
 
 \end{tikzpicture}
 
