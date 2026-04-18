@@ -249,26 +249,26 @@
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[
+\begin{tikzpicture}[scale=0.72, every node/.style={scale=0.72},
     quadrant/.style={minimum width=6.5cm, minimum height=4.5cm, text width=5.8cm, align=left, font=\small},
     api/.style={font=\scriptsize\ttfamily, inner sep=2pt},
 ]
     % ---- Outer frames ----
-    % Left half
+    % Left half (moved further left for more gap)
     \node[draw=erlpurple!60, fill=erlpurple!3, rounded corners=6pt,
-          minimum width=6.8cm, minimum height=10cm] (leftframe) at (-3.8, 0) {};
+          minimum width=6.8cm, minimum height=10cm] (leftframe) at (-5.2, 0) {};
     \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {调用方 / 外部};
 
-    % Right half
+    % Right half (moved further right for more gap)
     \node[draw=erlblue!60, fill=erlblue!3, rounded corners=6pt,
-          minimum width=6.8cm, minimum height=10cm] (rightframe) at (3.8, 0) {};
+          minimum width=6.8cm, minimum height=10cm] (rightframe) at (5.2, 0) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {gen\_server Process};
 
     % ---- Left-Top: Client API ----
     \node[draw=erlpurple, fill=erlpurple!8, rounded corners=5pt,
-          minimum width=6cm, minimum height=4cm, text width=5.5cm, align=left] (lt) at (-3.8, 2.3) {};
-    \node[font=\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {Client API};
-    \node[font=\small\ttfamily, text width=5.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lt.north west) {
+          minimum width=6cm, minimum height=4cm, text width=5.5cm, align=left] (lt) at (-5.2, 2.3) {};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {Client API};
+    \node[font=\scriptsize\ttfamily, text width=5.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]lt.north west) {
         gen\_server:start\_link/3,4\\
         gen\_server:call/2,3\\
         gen\_server:cast/2\\
@@ -278,9 +278,9 @@
 
     % ---- Left-Bottom: User / Developer ----
     \node[draw=gray, fill=gray!5, rounded corners=5pt,
-          minimum width=6cm, minimum height=4cm, text width=5.5cm, align=left] (lb) at (-3.8, -2.3) {};
-    \node[font=\bfseries\color{gray!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {User / Developer};
-    \node[font=\small, text width=5.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lb.north west) {
+          minimum width=6cm, minimum height=4cm, text width=5.5cm, align=left] (lb) at (-5.2, -2.3) {};
+    \node[font=\small\bfseries\color{gray!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {User / Developer};
+    \node[font=\scriptsize, text width=5.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]lb.north west) {
         编写 Callback Module\\
         定义业务逻辑\\
         通过 \texttt{start\_link(Mod, ...)} 将\\
@@ -289,9 +289,9 @@
 
     % ---- Right-Top: Generic Server ----
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
-          minimum width=6cm, minimum height=4cm, text width=5.5cm, align=left] (rt) at (3.8, 2.3) {};
-    \node[font=\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server (gen\_server.erl)};
-    \node[font=\small, text width=5.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]rt.north west) {
+          minimum width=6cm, minimum height=4cm, text width=5.5cm, align=left] (rt) at (5.2, 2.3) {};
+    \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server (gen\_server.erl)};
+    \node[font=\scriptsize, text width=5.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
         消息循环 (\texttt{loop/4})\\
         消息路由与分发\\
         超时 / 休眠处理\\
@@ -301,9 +301,9 @@
 
     % ---- Right-Bottom: Callback Module ----
     \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
-          minimum width=6cm, minimum height=4cm, text width=5.5cm, align=left] (rb) at (3.8, -2.3) {};
-    \node[font=\bfseries\color{erlgreen}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {Callback Module (Your Code)};
-    \node[font=\small\ttfamily, text width=5.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]rb.north west) {
+          minimum width=6cm, minimum height=4cm, text width=5.5cm, align=left] (rb) at (5.2, -2.3) {};
+    \node[font=\small\bfseries\color{erlgreen}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {Callback Module (Your Code)};
+    \node[font=\scriptsize\ttfamily, text width=5.2cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
         init/1\\
         handle\_call/3\\
         handle\_cast/2\\
@@ -313,26 +313,26 @@
     };
 
     % ---- Arrows (numbered for cross-reference with Section 1.3) ----
-    % Arrow 1: Client API -> Generic Server (API calls)
-    \draw[-{Stealth[length=6pt]}, thick, erlblue, line width=1.5pt]
-        ([yshift=8mm]lt.east) -- node[api, above] {\textcolor{erlblue}{\ding{182} call / cast / send\_request}} ([yshift=8mm]rt.west);
+    % Arrow 1: Client API -> Generic Server (API calls) — label with line break
+    \draw[-{Stealth[length=5pt]}, thick, erlblue, line width=1.2pt]
+        ([yshift=8mm]lt.east) -- node[api, above, align=center, text width=2.2cm] {\textcolor{erlblue}{\ding{182} call / cast /\\send\_request}} ([yshift=8mm]rt.west);
 
     % Arrow 2: Generic Server -> Client API (Reply)
-    \draw[-{Stealth[length=6pt]}, thick, erlred, line width=1.5pt]
+    \draw[-{Stealth[length=5pt]}, thick, erlred, line width=1.2pt]
         ([yshift=-4mm]rt.west) -- node[api, below] {\textcolor{erlred}{\ding{183} Reply}} ([yshift=-4mm]lt.east);
 
     % Arrow 3: Generic Server -> Callback Module (callback invocation)
-    \draw[-{Stealth[length=6pt]}, thick, erlblue!70, line width=1.2pt]
-        ([xshift=-15mm]rt.south) -- node[left, font=\scriptsize\itshape, text=erlblue!70] {\ding{184} callback} ([xshift=-15mm]rb.north);
+    \draw[-{Stealth[length=5pt]}, thick, erlblue!70, line width=1pt]
+        ([xshift=-15mm]rt.south) -- node[left, font=\tiny\itshape, text=erlblue!70] {\ding{184} callback} ([xshift=-15mm]rb.north);
 
     % Arrow 4: Callback Module -> Generic Server (return value)
-    \draw[-{Stealth[length=6pt]}, thick, erlgreen!70, line width=1.2pt]
-        ([xshift=15mm]rb.north) -- node[right, font=\scriptsize\itshape, text=erlgreen!70] {\ding{185} return value} ([xshift=15mm]rt.south);
+    \draw[-{Stealth[length=5pt]}, thick, erlgreen!70, line width=1pt]
+        ([xshift=15mm]rb.north) -- node[right, font=\tiny\itshape, text=erlgreen!70] {\ding{185} return value} ([xshift=15mm]rt.south);
 
-    % Arrow 0: User/Developer -> Callback Module (function registration, happens at start_link time)
-    \draw[-{Stealth[length=6pt]}, thick, erlpurple, line width=1.2pt, dashed]
-        (lb.east) -- node[api, above] {\textcolor{erlpurple}{\ding{172} 函数注册：Module 作为参数传递}} (rb.west);
-    \node[font=\scriptsize\color{erlpurple!70}, anchor=north] at (0, -4.6) {函数式编程：行为的延迟绑定（详见 \S\ref{subsec:arch-annotation}）};
+    % Arrow 0: User/Developer -> Callback Module (function registration) — label with line break
+    \draw[-{Stealth[length=5pt]}, thick, erlpurple, line width=1pt, dashed]
+        (lb.east) -- node[api, above, align=center, text width=2.8cm] {\textcolor{erlpurple}{\ding{172} 函数注册：\\Module 作为\\参数传递}} (rb.west);
+    \node[font=\tiny\color{erlpurple!70}, anchor=north] at (0, -4.8) {函数式编程：行为的延迟绑定（详见 \S\ref{subsec:arch-annotation}）};
 
 \end{tikzpicture}
 \caption{gen\_server 四象限架构图}
@@ -440,11 +440,9 @@ try_handle_call(#server_data{handle_call = HandleCall},
 counter_server:handle_call(decrement, From, State)
 \end{lstlisting}
 
-\subsubsection{完整流程时序图}
-
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[
+\begin{tikzpicture}[scale=0.78, every node/.style={scale=0.78},
     node distance=0.8cm,
 ]
     % Lifelines
@@ -515,18 +513,16 @@ counter_server:handle_call(decrement, From, State)
 
 \begin{table}[H]
 \centering
-\small
-\begin{tabular}{@{}clc@{}}
+\footnotesize
+\begin{tabular}{@{}cp{8.5cm}c@{}}
 \toprule
 \textbf{阶段} & \textbf{发生了什么} & \textbf{涉及模块名？} \\
 \midrule
-Phase 1: \texttt{start\_link} & \texttt{counter\_server} 作为参数传入，被存入 \texttt{\#server\_data.module}， & \checkmark \\
- & 同时 \texttt{fun counter\_server:handle\_call/3} 等函数引用被缓存 & \\
+Phase 1 & \texttt{counter\_server} 作为参数传入，被存入 \texttt{\#server\_data.module}，同时 \texttt{fun counter\_server:handle\_call/3} 等函数引用被缓存 & \checkmark \\
 \midrule
-Phase 2: \texttt{call} & 客户端只向 Pid 发送 \texttt{\{'\$gen\_call', From, decrement\}} 消息 & --- \\
+Phase 2 & 客户端只向 Pid 发送 \texttt{\{'\$gen\_call', From, decrement\}} 消息 & --- \\
 \midrule
-Phase 3: dispatch & 框架从 \texttt{\#server\_data} 中取出缓存的 \texttt{HandleCall} & \checkmark \\
- & 函数引用，直接调用 \texttt{counter\_server:handle\_call/3} & (from cache) \\
+Phase 3 & 框架从 \texttt{\#server\_data} 中取出缓存的 \texttt{HandleCall} 函数引用，直接调用 \texttt{counter\_server:handle\_call/3} & \checkmark \\
 \bottomrule
 \end{tabular}
 \caption{三个阶段中模块名的角色}
@@ -1023,31 +1019,31 @@ gen_server:call(ServerRef, Request, Timeout) -> Reply.
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[
+\begin{tikzpicture}[scale=0.85, every node/.style={scale=0.85},
     node distance=0.8cm,
 ]
     \draw[thick, erlblue!50] (0, 0) -- (0, -7) node[below, font=\small] {Client};
-    \draw[thick, erlred!50] (10, 0) -- (10, -7) node[below, font=\small] {Server};
+    \draw[thick, erlred!50] (9, 0) -- (9, -7) node[below, font=\small] {Server};
 
     % call
     \draw[-{Stealth[length=5pt]}, thick, erlblue]
-        (0, -0.5) -- node[above, font=\scriptsize\ttfamily] {call(Pid, \{slow\_op, 3000\}, 1000)} (10, -0.5);
+        (0, -0.5) -- node[above, font=\scriptsize\ttfamily] {call(Pid, \{slow\_op, 3000\}, 1000)} (9, -0.5);
 
     % timeout line
-    \draw[dashed, erlred, thick] (-1, -2) -- (5, -2);
-    \node[font=\scriptsize\bfseries\color{erlred}, anchor=east] at (-1.2, -2) {1000ms timeout!};
+    \draw[dashed, erlred, thick] (-0.5, -2) -- (4.5, -2);
+    \node[font=\scriptsize\bfseries\color{erlred}, anchor=east] at (-0.7, -2) {1000ms timeout!};
     \node[font=\scriptsize\color{erlred}, anchor=west] at (0.2, -2.5) {Client crashes with \{timeout,...\}};
 
     % Server still working
     \draw[thick, erlgreen, decorate, decoration={brace, amplitude=5pt, mirror}]
-        (10.3, -0.5) -- (10.3, -4.5)
-        node[midway, right=8pt, font=\scriptsize, text width=3cm] {Server still processing... (3000ms sleep)};
+        (9.3, -0.5) -- (9.3, -4.5)
+        node[midway, right=6pt, font=\scriptsize, text width=2.5cm] {Server still processing... (3000ms sleep)};
 
     % Late reply
     \draw[-{Stealth[length=5pt]}, thick, gray, dashed]
-        (10, -5) -- node[above, font=\scriptsize\ttfamily\color{gray}] {late reply (discarded)} (0, -5);
+        (9, -5) -- node[above, font=\scriptsize\ttfamily\color{gray}] {late reply (discarded)} (0, -5);
 
-    \node[font=\scriptsize\color{gray}] at (5, -5.8) {Reply arrives at dead/restarted client};
+    \node[font=\scriptsize\color{gray}] at (4.5, -5.8) {Reply arrives at dead/restarted client};
 \end{tikzpicture}
 \caption{call 超时后的时序：服务器继续运行，回复变成残留消息}
 \label{fig:call-timeout}
@@ -1361,32 +1357,32 @@ ReqIdCol3 = gen_server:send_request(
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[
+\begin{tikzpicture}[scale=0.78, every node/.style={scale=0.78},
     node distance=0.5cm,
 ]
     \draw[thick, erlblue!50] (0, 0) -- (0, -8) node[below, font=\small] {Client};
-    \draw[thick, erlred!50] (8, 0) -- (8, -8) node[below, font=\small] {Server1};
-    \draw[thick, erlgreen!50] (11, 0) -- (11, -8) node[below, font=\small] {Server2};
-    \draw[thick, erlpurple!50] (14, 0) -- (14, -8) node[below, font=\small] {Server3};
+    \draw[thick, erlred!50] (7, 0) -- (7, -8) node[below, font=\small] {Server1};
+    \draw[thick, erlgreen!50] (10, 0) -- (10, -8) node[below, font=\small] {Server2};
+    \draw[thick, erlpurple!50] (13, 0) -- (13, -8) node[below, font=\small] {Server3};
 
     % Send all requests (non-blocking)
     \draw[-{Stealth[length=4pt]}, thick, erlred]
-        (0, -0.5) -- node[above, font=\tiny\ttfamily] {send\_request} (8, -0.8);
+        (0, -0.5) -- node[above, font=\tiny\ttfamily] {send\_request} (7, -0.8);
     \draw[-{Stealth[length=4pt]}, thick, erlgreen]
-        (0, -1.0) -- node[above, font=\tiny\ttfamily] {send\_request} (11, -1.5);
+        (0, -1.0) -- node[above, font=\tiny\ttfamily] {send\_request} (10, -1.5);
     \draw[-{Stealth[length=4pt]}, thick, erlpurple]
-        (0, -1.5) -- node[above, font=\tiny\ttfamily] {send\_request} (14, -2.2);
+        (0, -1.5) -- node[above, font=\tiny\ttfamily] {send\_request} (13, -2.2);
 
     % Client does other work
     \node[font=\scriptsize\color{gray}, anchor=west] at (0.2, -2.5) {do other work...};
 
     % Replies come back
     \draw[-{Stealth[length=4pt]}, thick, erlgreen]
-        (11, -4) -- node[above, font=\tiny\ttfamily] {reply} (0, -4.5);
+        (10, -4) -- node[above, font=\tiny\ttfamily] {reply} (0, -4.5);
     \draw[-{Stealth[length=4pt]}, thick, erlred]
-        (8, -4.5) -- node[above, font=\tiny\ttfamily] {reply} (0, -5.2);
+        (7, -4.5) -- node[above, font=\tiny\ttfamily] {reply} (0, -5.2);
     \draw[-{Stealth[length=4pt]}, thick, erlpurple]
-        (14, -5.5) -- node[above, font=\tiny\ttfamily] {reply} (0, -6.2);
+        (13, -5.5) -- node[above, font=\tiny\ttfamily] {reply} (0, -6.2);
 
     % receive_response calls
     \node[font=\scriptsize\ttfamily\color{erlblue}, anchor=west] at (0.2, -5) {receive\_response};
@@ -1998,9 +1994,9 @@ ok
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[
+\begin{tikzpicture}[scale=0.82, every node/.style={scale=0.82},
     reg/.style={draw=#1, fill=#1!8, rounded corners=6pt,
-                minimum width=5cm, minimum height=2.5cm, text width=4.5cm, align=center},
+                minimum width=4.5cm, minimum height=2.5cm, text width=4cm, align=center},
 ]
     \node[reg=erlblue] (local) at (0, 0) {
         \textbf{\textsf{\{local, Name\}}}\\[4pt]
@@ -2008,13 +2004,13 @@ ok
         \small \texttt{erlang:register/2}\\
         \small Name 必须是 atom
     };
-    \node[reg=erlred] (global) at (6, 0) {
+    \node[reg=erlred] (global) at (5.5, 0) {
         \textbf{\textsf{\{global, Name\}}}\\[4pt]
         \small 所有连接节点可见\\
         \small \texttt{global:register\_name/2}\\
         \small Name 可以是任意 term
     };
-    \node[reg=erlpurple] (via) at (12, 0) {
+    \node[reg=erlpurple] (via) at (11, 0) {
         \textbf{\textsf{\{via, Mod, Name\}}}\\[4pt]
         \small 自定义注册模块\\
         \small 如 gproc, syn\\
