@@ -1,4 +1,4 @@
-.PHONY: all pdf clean help view stats
+.PHONY: all pdf clean distclean help view draft stats
 
 # Default target: build PDF
 all: pdf
@@ -34,46 +34,25 @@ view: pdf
 		echo "PDF not found. Run 'make pdf' first."; \
 	fi
 
-# ============================================================
-# HTML Generation (optional, requires pandoc)
-# ============================================================
-html: gen_server_tutorial.html
-
-gen_server_tutorial.html: gen_server_tutorial.md
-	@which pandoc > /dev/null 2>&1 && \
-		pandoc -f markdown -t html5 \
-			--standalone \
-			--toc \
-			--toc-depth=3 \
-			--metadata title="gen_server 完全教程" \
-			--css=style.css \
-			-o $@ $< && \
-		echo "Generated $@" || \
-		echo "pandoc not found. Install with: brew install pandoc"
-
-# View markdown directly (requires glow or bat)
-view_md:
-	@which glow > /dev/null 2>&1 && glow gen_server_tutorial.md || \
-	 which bat > /dev/null 2>&1 && bat gen_server_tutorial.md || \
-	 cat gen_server_tutorial.md
-
 # Word count and stats
 stats:
 	@echo "=== Document Statistics ==="
 	@wc -l gen_server_tutorial.tex | awk '{print "Lines (tex): " $$1}'
-	@wc -l gen_server_tutorial.md  | awk '{print "Lines (md):  " $$1}'
 	@if [ -f $(PDF) ]; then \
 		ls -lh $(PDF) | awk '{print "PDF size:    " $$5}'; \
 	fi
 
-# Clean all generated files
+# Clean intermediate files (keep PDF)
 clean:
-	rm -f gen_server_tutorial.pdf gen_server_tutorial.html
 	rm -f gen_server_tutorial.aux gen_server_tutorial.log
 	rm -f gen_server_tutorial.out gen_server_tutorial.toc
 	rm -f gen_server_tutorial.nav gen_server_tutorial.snm
 	rm -f gen_server_tutorial.fdb_latexmk gen_server_tutorial.fls
 	rm -f gen_server_tutorial.synctex.gz
+
+# Clean everything including PDF
+distclean: clean
+	rm -f gen_server_tutorial.pdf
 
 help:
 	@echo "Available targets:"
@@ -81,7 +60,6 @@ help:
 	@echo "  make pdf      - Build PDF from LaTeX (requires xelatex)"
 	@echo "  make draft    - Quick single-pass PDF (no TOC update)"
 	@echo "  make view     - Build and open PDF"
-	@echo "  make html     - Generate HTML from Markdown (requires pandoc)"
-	@echo "  make view_md  - View Markdown in terminal"
 	@echo "  make stats    - Show document statistics"
-	@echo "  make clean    - Remove all generated files"
+	@echo "  make clean     - Remove intermediate files (keep PDF)"
+	@echo "  make distclean - Remove all generated files including PDF"
