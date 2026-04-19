@@ -54,7 +54,7 @@
 
     % ---- Left-Top: Callback Module (User Code — source) ----
     \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
-          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (lt) at (-4.8, 1.65) {};
+          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (lt) at (-4.8, 1.75) {};
     \node[font=\small\bfseries\color{erlgreen!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {Callback Module（用户编写）};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lt.north west) {
         \textcolor{erlgreen!70!black}{-module(counter\_server).}\\
@@ -90,14 +90,19 @@
 
     % ---- Right-Top: Generic Server ----
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
-          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (rt) at (6.4, 1.65) {};
+          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (rt) at (6.4, 1.75) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server};
     \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
         \textcolor{erlblue!80!black}{\ding{72} \textbf{运行时核心：}}\\
         {\tiny\textcolor{erlred!80!black}{\textbf{存储\kern1pt\textcolor{erlmodule}{\texttt{?MODULE}}\kern1pt 信息 $\rightarrow$ 缓存函数引用}}}\\
-        {\tiny\texttt{receive} $\rightarrow$ \texttt{Mod:handle\_call/3} \ldots}\\[22pt]
+        {\tiny\texttt{receive} $\rightarrow$ \texttt{Mod:handle\_call/3} \ldots}\\[6pt]
         \textcolor{erlblue!80!black}{\ding{72} \textbf{启动流程：}}\\
-        {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}}}
+        {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}}}\\[6pt]
+        \textcolor{erlblue!80!black}{\ding{72} \textbf{\texttt{\#server\_data\{\}} 记录：}}\\
+        {\tiny\texttt{parent}\,=\,父进程Pid,\; \texttt{module}\,=\,\textcolor{erlmodule}{\textbf{Mod}}}\\
+        {\tiny\texttt{handle\_call}\,=\,\texttt{fun Mod:handle\_call/3}}\\
+        {\tiny\texttt{handle\_cast}\,=\,\texttt{fun Mod:handle\_cast/2},\;\ldots}\\
+        {\tiny\textcolor{erlinit}{\textbf{注意：}}\texttt{init/1} 返回的 \texttt{State} 不在此记录中}
     };
 
     % ---- Right-Bottom: Bound Callbacks (registered via ?MODULE) ----
@@ -110,7 +115,7 @@
         \texttt{fun counter\_server:handle\_call/3}\\
         \texttt{fun counter\_server:handle\_cast/2}\\
         \texttt{fun counter\_server:handle\_info/2}\\
-        \texttt{\ldots\ldots}\\[3pt]
+        \texttt{\ldots\ldots}\\[0pt]
         {\tiny\textcolor{gray}{\textcolor{erlmodule}{\textbf{\texttt{?MODULE}}}\kern1pt 的信息缓存在 \texttt{\#server\_data\{\}} 中}}
     };
 
@@ -162,7 +167,9 @@
     % Right bottom annotation (inside right outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
         {\ding{72} \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}} 启动时即调用用户编写的 \textcolor{erlinit}{\textbf{\texttt{init/1}}}\\
-         \ding{72} 启动成功后返回 \textcolor{erlpid}{\textbf{\texttt{\{ok, Pid\}}}}，Pid 即新进程标识};
+         \ding{72} 启动成功后返回 \textcolor{erlpid}{\textbf{\texttt{\{ok, Pid\}}}}，Pid 即新进程标识\\
+         \ding{72} \textcolor{erlblue}{\textbf{State}} 保存用户业务数据，作为 \texttt{loop} 递归的参数在栈帧中流转\\
+         \ding{72} \textcolor{erlinit}{\textbf{\texttt{init/1}}} 提供 \textcolor{erlblue}{\textbf{State}} 的初始值，是 State 生命周期的起点};
 
 \end{tikzpicture}
 
