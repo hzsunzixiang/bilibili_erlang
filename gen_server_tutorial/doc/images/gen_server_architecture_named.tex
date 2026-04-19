@@ -1,6 +1,6 @@
-% gen_server Architecture Diagram — with Pid Return (Standalone)
-% Based on gen_server_architecture.tex, adds the {ok, Pid} return arrow.
-% Compile with: xelatex gen_server_architecture_pid.tex
+% gen_server Architecture Diagram — with Named Registration (Standalone)
+% Based on gen_server_architecture_pid.tex, uses start_link/4 with ServerName.
+% Compile with: xelatex gen_server_architecture_named.tex
 \documentclass[border=10pt]{standalone}
 
 % ============================================================
@@ -29,6 +29,7 @@
 \definecolor{erlmodule}{HTML}{D84315}  % dedicated color for ?MODULE
 \definecolor{erlinit}{HTML}{00897B}    % dedicated vivid teal color for init/1
 \definecolor{erlpid}{HTML}{E65100}     % dedicated color for Pid return
+\definecolor{erlname}{HTML}{6A1B9A}    % dedicated color for ServerName
 
 % ============================================================
 % Architecture Diagram
@@ -43,7 +44,7 @@
     % Left half
     \node[draw=erlpurple!60, fill=erlpurple!3, rounded corners=6pt,
           minimum width=6.6cm, minimum height=10.4cm] (leftframe) at (-4.8, -0.55) {};
-    \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {用户定义模块（Server的启动）};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {用户定义模块（Server的启动 — 注册名字）};
 \node[font=\small\ttfamily\bfseries\itshape\color{black}, anchor=north west] at ([xshift=3pt, yshift=-1pt]leftframe.north west) {counter\_server.erl};
     \draw[dashed, black, line width=0.5pt]
         ([xshift=3pt, yshift=-13pt]leftframe.north west) -- ([xshift=-3pt, yshift=-13pt]leftframe.north east);
@@ -73,7 +74,7 @@
     \node[draw=erlred!70, fill=erlred!8, rounded corners=3pt,
           font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north]
         (startlink) at ([yshift=-42pt]lt.north)
-        {\textcolor{erlred!80!black}{\ding{72} gen\_server:start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}};
+        {\textcolor{erlred!80!black}{\ding{72} gen\_server:start\_link(\textcolor{erlname}{\textbf{Name}}, \textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-60pt]lt.north west) {
 \textcolor{erlinit}{\textbf{init/1}}\\
         handle\_call/3\\
@@ -99,16 +100,16 @@
     % ---- Left-Bottom: Client API (runtime communication via Pid) ----
     \node[draw=erlpurple, fill=erlpurple!8, rounded corners=5pt,
           minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (lb) at (-4.8, -2.85) {};
-    \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Client进程（使用者）};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Client进程（使用者 — 通过名字调用）};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lb.north west) {
-        gen\_server:call/2,3\\
-        gen\_server:cast/2\\
-        gen\_server:send\_request/2\\
-        gen\_server:stop/1,3
+        gen\_server:call(\textcolor{erlname}{\textbf{Name}}, Req)\\
+        gen\_server:cast(\textcolor{erlname}{\textbf{Name}}, Msg)\\
+        gen\_server:send\_request(\textcolor{erlname}{\textbf{Name}}, Req)\\
+        gen\_server:stop(\textcolor{erlname}{\textbf{Name}})
     };
-    % Note: ?MODULE = counter_server
+    % Note: Name = {local, counter_server} or counter_server
     \node[font=\tiny\color{gray}, anchor=south west] at ([xshift=6pt, yshift=3pt]lb.south west)
-        {备注：\texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 即 \texttt{counter\_server}};
+        {备注：\textcolor{erlname}{\textbf{Name}} = \texttt{\{local, counter\_server\}} 或 \texttt{counter\_server}};
 
     % ---- Right-Top: Generic Server ----
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
@@ -116,12 +117,13 @@
     \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server Library};
     \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
         \textcolor{erlblue!80!black}{\ding{72} \textbf{运行时核心：}}\\
-        {\tiny\textcolor{erlred!80!black}{\textbf{存储\kern1pt\textcolor{erlmodule}{\texttt{?MODULE}}\kern1pt 信息 $\rightarrow$ 缓存函数引用}}}\\
+        {\tiny\textcolor{erlred!80!black}{\textbf{存储\kern1pt\textcolor{erlmodule}{\texttt{?MODULE}}\kern1pt 信息 $\rightarrow$ 缓存函数引用 + \textcolor{erlname}{名字注册}}}}\\
         {\tiny\texttt{receive} $\rightarrow$ \texttt{Mod:handle\_call/3} \ldots}\\[6pt]
         \textcolor{erlblue!80!black}{\ding{72} \textbf{启动流程：}}\\
-        {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}}}\\[6pt]
+        {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it}}\\[1pt]
+        {\tiny\quad$\rightarrow$ \textcolor{erlname}{\textbf{\texttt{register(Name, Pid)}}} $\rightarrow$ \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}}}\\[6pt]
         \textcolor{erlblue!80!black}{\ding{72} \textbf{\texttt{\#server\_data\{\}} 记录：}}\\
-        {\tiny\texttt{parent}\,=\,父进程Pid,\; \texttt{module}\,=\,\textcolor{erlmodule}{\textbf{Mod}}}\\
+        {\tiny\texttt{parent}\,=\,父进程Pid,\; \texttt{module}\,=\,\textcolor{erlmodule}{\textbf{Mod}},\; \textcolor{erlname}{\textbf{name}}\,=\,\textcolor{erlname}{Name}}\\
         {\tiny\texttt{handle\_call}\,=\,\texttt{fun Mod:handle\_call/3}}\\
         {\tiny\texttt{handle\_cast}\,=\,\texttt{fun Mod:handle\_cast/2},\;\ldots}\\
         {\tiny\textcolor{erlinit}{\textbf{注意：}}\texttt{init/1} 返回的 \texttt{State} 不在此记录中}
@@ -132,7 +134,7 @@
           minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (rb) at (6.4, -2.8) {};
     \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {已绑定的回调（运行时）};
     \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
-        \textcolor{erlred!80!black}{\texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, ...)}} 之后：\\[3pt]
+        \textcolor{erlred!80!black}{\texttt{start\_link(\textcolor{erlname}{\textbf{Name}}, \textcolor{erlmodule}{\textbf{?MODULE}}, ...)}} 之后：\\[3pt]
         \texttt{fun counter\_server:init/1}\\
         \texttt{fun counter\_server:handle\_call/3}\\
         \texttt{fun counter\_server:handle\_cast/2}\\
@@ -149,15 +151,15 @@
     % Aligned with startlink node center: yshift=3.8mm from lt.east
     \draw[-{Stealth[length=6pt]}, ultra thick, erlred!80!black, line width=1.6pt]
         ([yshift=3.8mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlred!80!black]
-        {\textcolor{black}{\ding{172}} 启动服务 $\rightarrow$ 传递模块名\\[1pt]
-         \texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}} ([yshift=3.8mm]rt.west);
+        {\textcolor{black}{\ding{172}} 启动服务 $\rightarrow$ 传递\textcolor{erlname}{\textbf{名字}}+模块名\\[1pt]
+         \texttt{start\_link(\textcolor{erlname}{\textbf{Name}}, \textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}} ([yshift=3.8mm]rt.west);
 
     % Arrow ③: Return {ok, Pid} — from Generic Server back to Callback Module
     % Both endpoints shifted down by 0.8cm: yshift=1.5mm-8mm=-6.5mm
     \draw[-{Stealth[length=6pt]}, ultra thick, erlpid!90!black, line width=1.6pt]
         ([yshift=-6.5mm]rt.west) -- node[below, font=\scriptsize, align=center, text=erlpid!80!black]
-        {\textcolor{black}{\ding{174}} 返回 \texttt{\textcolor{erlpid}{\textbf{\{ok, Pid\}}}}\\[1pt]
-         {\tiny \textcolor{erlinit}{\textbf{init/1}} 成功后通过 \texttt{init\_ack} 返回 Pid}} ([yshift=-6.5mm]lt.east);
+        {\textcolor{black}{\ding{174}} 返回 \texttt{\textcolor{erlpid}{\textbf{\{ok, Pid\}}}}（进程已\textcolor{erlname}{\textbf{注册名字}}）\\[1pt]
+         {\tiny \textcolor{erlinit}{\textbf{init/1}} 成功后通过 \texttt{init\_ack} 返回 Pid，进程已注册为 \textcolor{erlname}{\textbf{Name}}}} ([yshift=-6.5mm]lt.east);
 
     % ==== Phase 2: Runtime ====
 
@@ -200,15 +202,17 @@
 
     % Left bottom annotation (inside left outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]lb.south west)
-        {\ding{72} \texttt{start\_link} 是连接左右两半的关键桥梁：\\
-         \ding{72} \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 使得 Server 知道调用哪个模块的回调函数};
+        {\ding{72} \texttt{start\_link/4} 是连接左右两半的关键桥梁：\\
+         \ding{72} \textcolor{erlname}{\textbf{Name}} 使进程注册到本地/全局名字表\\
+         \ding{72} Client 可通过 \textcolor{erlname}{\textbf{Name}} 而非 Pid 调用服务};
 
     % Right bottom annotation (inside right outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
         {\ding{72} \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}} 启动时即调用用户编写的 \textcolor{erlinit}{\textbf{\texttt{init/1}}}\\
          \ding{72} \textcolor{erlinit}{\textbf{\texttt{init/1}}} 提供 \textcolor{erlblue}{\textbf{State}} 的初始值，是 State 生命周期的起点\\
          \ding{72} \textcolor{erlblue}{\textbf{State}} 保存用户业务数据，作为 \texttt{loop} 递归的参数在栈帧中流转\\
-         \ding{72} 启动成功后返回 \textcolor{erlpid}{\textbf{\texttt{\{ok, Pid\}}}}，Pid 即新进程标识};
+         \ding{72} 启动成功后返回 \textcolor{erlpid}{\textbf{\texttt{\{ok, Pid\}}}}，进程同时注册为 \textcolor{erlname}{\textbf{Name}}\\
+         \ding{72} Client 可通过 \textcolor{erlname}{\textbf{Name}}（而非 Pid）调用 \texttt{call/cast} 等};
 
 \end{tikzpicture}
 
