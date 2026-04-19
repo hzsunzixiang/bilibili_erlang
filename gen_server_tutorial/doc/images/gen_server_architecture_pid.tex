@@ -167,9 +167,9 @@
     % Right bottom annotation (inside right outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
         {\ding{72} \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}} 启动时即调用用户编写的 \textcolor{erlinit}{\textbf{\texttt{init/1}}}\\
-         \ding{72} 启动成功后返回 \textcolor{erlpid}{\textbf{\texttt{\{ok, Pid\}}}}，Pid 即新进程标识\\
+         \ding{72} \textcolor{erlinit}{\textbf{\texttt{init/1}}} 提供 \textcolor{erlblue}{\textbf{State}} 的初始值，是 State 生命周期的起点\\
          \ding{72} \textcolor{erlblue}{\textbf{State}} 保存用户业务数据，作为 \texttt{loop} 递归的参数在栈帧中流转\\
-         \ding{72} \textcolor{erlinit}{\textbf{\texttt{init/1}}} 提供 \textcolor{erlblue}{\textbf{State}} 的初始值，是 State 生命周期的起点};
+         \ding{72} 启动成功后返回 \textcolor{erlpid}{\textbf{\texttt{\{ok, Pid\}}}}，Pid 即新进程标识};
 
 \end{tikzpicture}
 
