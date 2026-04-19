@@ -1,0 +1,802 @@
+% gen_server Usage Guide
+% A complete introduction to gen_server with architecture diagrams and examples.
+% Compile with: xelatex gen_server_architecture_pid.tex (run twice for TOC)
+\documentclass[a4paper,11pt]{article}
+
+% ============================================================
+% Packages
+% ============================================================
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont[BoldFont=STHeiti, ItalicFont=STKaiti]{STSong}
+\setCJKsansfont{STHeiti}
+\setCJKmonofont{STFangsong}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{pifont}  % for \ding symbols (circled numbers)
+
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, calc, backgrounds, decorations.pathreplacing}
+
+\tcbuselibrary{listings, skins, breakable}
+
+% ============================================================
+% Color Definitions
+% ============================================================
+\definecolor{erlred}{HTML}{A4070A}
+\definecolor{erlblue}{HTML}{2B5EA7}
+\definecolor{erlgreen}{HTML}{2E7D32}
+\definecolor{erlyellow}{HTML}{F9A825}
+\definecolor{erlpurple}{HTML}{6A1B9A}
+\definecolor{erlmodule}{HTML}{D84315}
+\definecolor{erlinit}{HTML}{00897B}
+\definecolor{erlpid}{HTML}{E65100}
+\definecolor{erlname}{HTML}{6A1B9A}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeborder}{HTML}{CCCCCC}
+\definecolor{tipbg}{HTML}{E8F5E9}
+\definecolor{warnbg}{HTML}{FFF3E0}
+\definecolor{notebg}{HTML}{E3F2FD}
+\definecolor{darkgray}{HTML}{333333}
+
+% ============================================================
+% Hyperref Setup
+% ============================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=erlblue,
+    urlcolor=erlpurple,
+    citecolor=erlgreen,
+    pdftitle={gen\_server 用法指南},
+    pdfauthor={Erlang OTP Tutorial},
+    bookmarksnumbered=true,
+}
+
+% ============================================================
+% Code Listing Style
+% ============================================================
+\lstdefinelanguage{erlang}{
+    morekeywords={module, export, import, behaviour, behavior, spec, type,
+        record, define, include, ifdef, ifndef, else, endif, undef,
+        case, of, end, if, receive, after, when, fun, try, catch, throw,
+        begin, spawn, spawn_link, register, self, send, ok, error,
+        true, false, undefined, infinity, timeout, noreply, reply, stop,
+        hibernate, ignore, normal, process_flag, trap_exit, monitor_node},
+    sensitive=true,
+    morecomment=[l]{\%},
+    morestring=[b]",
+    morestring=[b]',
+}
+
+\lstdefinestyle{erlangstyle}{
+    language=erlang,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{erlblue}\bfseries,
+    commentstyle=\color{erlgreen}\itshape,
+    stringstyle=\color{erlred},
+    numberstyle=\tiny\color{gray},
+    numbers=left,
+    numbersep=8pt,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeborder},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    showstringspaces=false,
+    captionpos=b,
+    xleftmargin=1.5em,
+    framexleftmargin=1em,
+    aboveskip=1em,
+    belowskip=0.8em,
+}
+
+\lstdefinestyle{shellstyle}{
+    basicstyle=\ttfamily\small\color{white},
+    backgroundcolor=\color{darkgray},
+    rulecolor=\color{darkgray},
+    frame=single,
+    breaklines=true,
+    showstringspaces=false,
+    xleftmargin=1.5em,
+    framexleftmargin=1em,
+    aboveskip=1em,
+    belowskip=0.8em,
+}
+
+\lstset{style=erlangstyle}
+
+% ============================================================
+% Custom tcolorbox Environments
+% ============================================================
+\newtcolorbox{tipbox}[1][]{
+    colback=tipbg, colframe=erlgreen!80!black,
+    fonttitle=\bfseries, title={#1},
+    arc=2mm, boxrule=0.8pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+    breakable,
+}
+
+\newtcolorbox{warnbox}[1][]{
+    colback=warnbg, colframe=erlyellow!80!black,
+    fonttitle=\bfseries, title={#1},
+    arc=2mm, boxrule=0.8pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+    breakable,
+}
+
+\newtcolorbox{notebox}[1][]{
+    colback=notebg, colframe=erlblue!80!black,
+    fonttitle=\bfseries, title={#1},
+    arc=2mm, boxrule=0.8pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+    breakable,
+}
+
+% ============================================================
+% Header / Footer
+% ============================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{gen\_server 用法指南}}
+\fancyhead[R]{\small\textit{Erlang/OTP}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ============================================================
+% Title Formatting
+% ============================================================
+\titleformat{\section}
+    {\LARGE\bfseries\color{erlblue}}
+    {\thesection}{1em}{}[\vspace{-0.5em}\rule{\textwidth}{0.8pt}]
+
+\titleformat{\subsection}
+    {\Large\bfseries\color{erlblue!80!black}}
+    {\thesubsection}{0.8em}{}
+
+\titleformat{\subsubsection}
+    {\large\bfseries\color{erlblue!60!black}}
+    {\thesubsubsection}{0.6em}{}
+
+% ============================================================
+% Document Begin
+% ============================================================
+\begin{document}
+
+% ---- Title Page ----
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+
+{\fontsize{42}{48}\selectfont\bfseries\color{erlblue} gen\_server}\\[12pt]
+{\fontsize{24}{28}\selectfont\color{erlblue!70!black} 用法指南}
+
+\vspace{2cm}
+
+\begin{tikzpicture}
+    \node[draw=erlblue, fill=erlblue!10, rounded corners=8pt, minimum width=3.5cm, minimum height=1.8cm, font=\large\bfseries] (client) at (0,0) {Client};
+    \node[draw=erlred, fill=erlred!10, rounded corners=8pt, minimum width=3.5cm, minimum height=1.8cm, font=\large\bfseries] (server) at (8,0) {Server};
+
+    \draw[-{Stealth[length=8pt]}, line width=2pt, erlblue]
+        ([yshift=3mm]client.east) -- node[above, font=\small] {request} ([yshift=3mm]server.west);
+    \draw[-{Stealth[length=8pt]}, line width=2pt, erlred]
+        ([yshift=-3mm]server.west) -- node[below, font=\small] {reply} ([yshift=-3mm]client.east);
+
+    \node[below=5mm of client, font=\small\color{gray}] {gen\_server:call/2};
+    \node[below=5mm of server, font=\small\color{gray}] {handle\_call/3};
+\end{tikzpicture}
+
+\vspace{3cm}
+
+{\large\color{darkgray} 以 counter\_server 为例，从架构到实践}
+
+\vspace{1cm}
+
+{\normalsize\color{gray} Erlang/OTP $\cdot$ Behavior Pattern $\cdot$ Concurrent Programming}
+
+\vfill
+{\small\today}
+\end{titlepage}
+
+% ---- Table of Contents ----
+\newpage
+\tableofcontents
+\newpage
+
+
+% ============================================================
+% Section 1: Overview
+% ============================================================
+\section{概述}
+
+\subsection{什么是 gen\_server？}
+
+\texttt{gen\_server} 是 OTP 框架中最核心的行为模式（behavior）之一。它将 Erlang 中常见的客户端--服务器（Client-Server）模式抽象为一个通用的库模块，开发者只需实现回调函数即可获得一个健壮的并发服务器。
+
+\begin{tipbox}[核心思想]
+\textbf{gen\_server = Generic Part + Specific Part}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Generic Part}（\texttt{gen\_server.erl}）：消息循环、错误处理、超时、sys 集成等通用逻辑
+    \item \textbf{Specific Part}（你的回调模块）：\texttt{init/1}、\texttt{handle\_call/3} 等业务逻辑
+\end{itemize}
+\end{tipbox}
+
+\subsection{gen\_server 提供的能力}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{能力} & \textbf{说明} \\
+\midrule
+同步调用 (call)    & 客户端发送请求并等待回复 \\
+异步调用 (cast)    & 客户端发送请求后立即返回 \\
+超时机制           & 支持 call 超时和空闲超时 \\
+错误处理           & 自动生成崩溃报告 \\
+sys 模块集成       & 支持 trace、statistics、suspend/resume \\
+热代码升级         & 通过 code\_change/3 支持运行时升级 \\
+进程链接           & 配合 supervisor 实现容错 \\
+\bottomrule
+\end{tabular}
+\caption{gen\_server 提供的能力}
+\end{table}
+
+\subsection{OTP 源码中的工作流}
+
+以下直接对应 \texttt{gen\_server.erl} 源码中的注释：
+
+\begin{tcolorbox}[colback=codebg, colframe=codeborder, arc=2mm, boxrule=0.5pt,
+                  title={\textbf{gen\_server.erl --- Work Flow}},
+                  fonttitle=\bfseries\ttfamily, width=\textwidth]
+\small\ttfamily
+\begin{tabular}{@{}lcl@{}}
+gen\_server module &  & Callback module \\
+\textsf{-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-} & & \textsf{-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-} \\
+gen\_server:start\_link & -{}-{}-{}-{}-> & Module:init/1 \\
+gen\_server:stop       & -{}-{}-{}-{}-> & Module:terminate/2 \\
+gen\_server:call       & -{}-{}-{}-{}-> & Module:handle\_call/3 \\
+gen\_server:cast       & -{}-{}-{}-{}-> & Module:handle\_cast/2 \\
+-                     & -{}-{}-{}-{}-> & Module:handle\_info/2 \\
+-                     & -{}-{}-{}-{}-> & Module:handle\_continue/2 \\
+-                     & -{}-{}-{}-{}-> & Module:code\_change/3 \\
+\end{tabular}
+\end{tcolorbox}
+
+
+% ============================================================
+% Section 2: Architecture Diagrams
+% ============================================================
+\section{架构图}
+
+下面两张架构图分别展示了 gen\_server 的两种典型使用方式：通过 PID 引用和通过注册名字引用。
+
+\subsection{方式一：通过 PID 引用（start\_link/3）}
+
+使用 \texttt{gen\_server:start\_link(?MODULE, Args, Opts)} 启动，不注册名字，通过返回的 Pid 来调用服务。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/gen_server_architecture_pid.pdf}
+\caption{架构图（方式一）：通过 PID 引用 --- \texttt{start\_link/3}}
+\label{fig:arch-pid}
+\end{figure}
+
+
+\subsection{方式二：通过注册名字引用（start\_link/4）}
+
+使用 \texttt{gen\_server:start\_link(ServerName, ?MODULE, Args, Opts)} 启动，将进程注册到名字表，Client 通过名字调用服务。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/gen_server_architecture_named.pdf}
+\caption{架构图（方式二）：通过注册名字引用 --- \texttt{start\_link/4}}
+\label{fig:arch-named}
+\end{figure}
+
+
+% ============================================================
+% Section 3: Example — counter_server
+% ============================================================
+\section{实例：counter\_server}
+
+\begin{notebox}[源码文件]
+\texttt{src/counter\_server.erl}
+\end{notebox}
+
+以一个计数器服务器为例，完整展示 gen\_server 的用法。
+
+\subsection{模块声明}
+
+\begin{lstlisting}[style=erlangstyle, caption={模块声明与行为模式}]
+-module(counter_server).
+-behaviour(gen_server).
+
+%% Client API
+-export([start_link/0, start_link/1, start/0, start/1]).
+-export([increment/1, decrement/1, get_count/1, reset/1]).
+-export([slow_operation/2, crash/1]).
+
+%% gen_server callbacks
+-export([init/1, handle_call/3, handle_cast/2,
+         handle_info/2, handle_continue/2,
+         terminate/2, code_change/3, format_status/2]).
+\end{lstlisting}
+
+\subsection{启动函数}
+
+\begin{lstlisting}[style=erlangstyle, caption={启动函数 --- start\_link 与 start}]
+start_link() ->
+    gen_server:start_link(?MODULE, 0, []).
+%%                        ^^^^^^  ^  ^^
+%%                        Module  Arg Options
+
+start_link(InitCount) ->
+    gen_server:start_link(?MODULE, InitCount, []).
+
+start() ->
+    gen_server:start(?MODULE, 0, []).
+
+start(InitCount) ->
+    gen_server:start(?MODULE, InitCount, []).
+\end{lstlisting}
+
+\begin{tipbox}[start\_link vs start]
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{start\_link}：与调用者进程链接，一方崩溃另一方也会收到通知。生产环境配合 supervisor 使用。
+    \item \texttt{start}：不链接，独立生命周期。适合开发测试。
+\end{itemize}
+\end{tipbox}
+
+\subsection{客户端 API}
+
+\begin{lstlisting}[style=erlangstyle, caption={客户端 API --- 对 gen\_server 调用的封装}]
+increment(Server) ->
+    gen_server:call(Server, increment).     %% sync
+
+decrement(Server) ->
+    gen_server:call(Server, decrement).     %% sync
+
+get_count(Server) ->
+    gen_server:call(Server, get_count).     %% sync
+
+reset(Server) ->
+    gen_server:cast(Server, reset).         %% async
+
+slow_operation(Server, Duration) ->
+    gen_server:call(Server, {slow_op, Duration}).
+
+crash(Server) ->
+    gen_server:cast(Server, crash).
+\end{lstlisting}
+
+\begin{warnbox}[注意]
+客户端 API 是\textbf{薄封装}（thin wrapper），它们运行在\textbf{调用者进程}中，而非 gen\_server 进程中。
+\end{warnbox}
+
+\subsection{init/1 --- 初始化}
+
+\begin{lstlisting}[style=erlangstyle, caption={init/1 --- 初始化回调}]
+init(InitCount) when is_integer(InitCount) ->
+    process_flag(trap_exit, true),
+    io:format("[counter] init: count=~p, pid=~p~n",
+              [InitCount, self()]),
+    {ok, #{count => InitCount, history => []},
+     {continue, post_init}};
+init(_) ->
+    {stop, {error, bad_init_arg}}.
+\end{lstlisting}
+
+要点：
+\begin{itemize}[leftmargin=2em]
+    \item State 使用 Map：\texttt{\#\{count => 0, history => []\}}
+    \item \texttt{process\_flag(trap\_exit, true)}：捕获 EXIT 信号，使 \texttt{terminate/2} 能被调用
+    \item \texttt{\{continue, post\_init\}}：init 返回后立即触发 \texttt{handle\_continue/2}
+\end{itemize}
+
+\subsection{handle\_continue/2 --- 延续处理}
+
+\begin{lstlisting}[style=erlangstyle, caption={handle\_continue/2 --- 初始化后的延续}]
+handle_continue(post_init, State) ->
+    io:format("[counter] post_init complete~n"),
+    {noreply, State}.
+\end{lstlisting}
+
+\begin{tipbox}[为什么用 handle\_continue？]
+\texttt{init/1} 应该尽快返回（因为调用者在等待 \texttt{\{ok, Pid\}}）。耗时的初始化工作可以放到 \texttt{handle\_continue/2} 中异步完成。
+\end{tipbox}
+
+\subsection{handle\_call/3 --- 同步请求}
+
+\begin{lstlisting}[style=erlangstyle, caption={handle\_call/3 --- 处理同步请求}]
+handle_call(increment, _From, #{count := C} = State) ->
+    NewCount = C + 1,
+    {reply, NewCount, State#{count := NewCount,
+        history := [{increment, NewCount} |
+                    maps:get(history, State)]}};
+
+handle_call(decrement, _From, #{count := C} = State) ->
+    NewCount = C - 1,
+    {reply, NewCount, State#{count := NewCount,
+        history := [{decrement, NewCount} |
+                    maps:get(history, State)]}};
+
+handle_call(get_count, _From, #{count := C} = State) ->
+    {reply, C, State};
+
+handle_call({slow_op, Duration}, _From, State) ->
+    timer:sleep(Duration),
+    {reply, {ok, done_after, Duration}, State};
+
+handle_call(_Request, _From, State) ->
+    {reply, {error, unknown_request}, State}.
+\end{lstlisting}
+
+\subsection{handle\_cast/2 --- 异步请求}
+
+\begin{lstlisting}[style=erlangstyle, caption={handle\_cast/2 --- 处理异步请求}]
+handle_cast(reset, State) ->
+    io:format("[counter] reset to 0~n"),
+    {noreply, State#{count := 0, history := []}};
+
+handle_cast(crash, _State) ->
+    error(deliberate_crash);
+
+handle_cast(_Msg, State) ->
+    {noreply, State}.
+\end{lstlisting}
+
+\subsection{handle\_info/2 --- 其他消息}
+
+\begin{lstlisting}[style=erlangstyle, caption={handle\_info/2 --- 处理非 call/cast 消息}]
+handle_info(timeout, State) ->
+    io:format("[counter] timeout fired~n"),
+    {noreply, State};
+
+handle_info({custom_msg, Payload}, State) ->
+    io:format("[counter] received custom_msg: ~p~n", [Payload]),
+    {noreply, State};
+
+handle_info({'EXIT', Pid, Reason}, State) ->
+    io:format("[counter] linked process ~p exited: ~p~n",
+              [Pid, Reason]),
+    {noreply, State};
+
+handle_info(Info, State) ->
+    io:format("[counter] unexpected info: ~p~n", [Info]),
+    {noreply, State}.
+\end{lstlisting}
+
+\subsection{terminate/2 --- 终止清理}
+
+\begin{lstlisting}[style=erlangstyle, caption={terminate/2 --- 进程终止时的清理}]
+terminate(Reason, #{count := C}) ->
+    io:format("[counter] terminating: reason=~p, "
+              "final_count=~p~n", [Reason, C]),
+    ok.
+\end{lstlisting}
+
+\subsection{format\_status/2 --- 自定义状态显示}
+
+\begin{lstlisting}[style=erlangstyle, caption={format\_status/2 --- 自定义 sys:get\_status 输出}]
+format_status(_Opt, [_PDict, #{count := C, history := H}]) ->
+    [{data, [{"State",
+              #{count => C,
+                history_length => length(H)}}]}].
+\end{lstlisting}
+
+\begin{tipbox}[安全提示]
+\texttt{format\_status/2} 可用于隐藏敏感信息（如密码、token），使其不出现在崩溃日志和 \texttt{sys:get\_status/1} 输出中。
+\end{tipbox}
+
+
+% ============================================================
+% Section 4: Message Flow
+% ============================================================
+\section{消息流转}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[scale=0.88, every node/.style={scale=0.88},
+    actor/.style={draw, rounded corners=4pt, fill=#1!10, draw=#1!60,
+                  minimum width=2.5cm, minimum height=1cm, font=\bfseries},
+    msg/.style={-{Stealth[length=5pt]}, thick, #1},
+    lbl/.style={font=\small\ttfamily, fill=white, inner sep=2pt},
+]
+    \node[actor=erlblue] (client) at (0, 0) {Client};
+    \node[actor=erlred] (server) at (10, 0) {gen\_server};
+
+    \draw[thick, erlblue!50] (0, -0.7) -- (0, -12);
+    \draw[thick, erlred!50] (10, -0.7) -- (10, -12);
+
+    % === call ===
+    \node[font=\small\bfseries\color{erlblue}, anchor=east] at (-0.3, -1.5) {call};
+    \draw[msg=erlblue] (0, -1.5) -- node[lbl, above] {gen\_server:call(Server, Req)} (10, -1.5);
+    \node[font=\scriptsize\ttfamily, anchor=west, text=erlred] at (10.3, -2.5) {handle\_call(Req, From, State)};
+    \node[font=\scriptsize\ttfamily, anchor=west, text=erlred] at (10.3, -3.1) {\{reply, Reply, NewState\}};
+    \draw[msg=erlred] (10, -3.5) -- node[lbl, above] {Reply} (0, -3.5);
+
+    % === cast ===
+    \node[font=\small\bfseries\color{erlblue}, anchor=east] at (-0.3, -5) {cast};
+    \draw[msg=erlblue] (0, -5) -- node[lbl, above] {gen\_server:cast(Server, Msg)} (10, -5);
+    \node[font=\scriptsize\ttfamily, anchor=west, text=erlred] at (10.3, -5.8) {handle\_cast(Msg, State)};
+    \node[font=\scriptsize\ttfamily, anchor=west, text=erlred] at (10.3, -6.4) {\{noreply, NewState\}};
+    \node[font=\scriptsize\itshape\color{gray}] at (5, -5.8) {(no reply)};
+
+    % === info ===
+    \node[font=\small\bfseries\color{erlpurple}, anchor=east] at (-0.3, -8) {info};
+    \draw[msg=erlpurple] (0, -8) -- node[lbl, above] {Server ! SomeMessage} (10, -8);
+    \node[font=\scriptsize\ttfamily, anchor=west, text=erlred] at (10.3, -8.8) {handle\_info(Msg, State)};
+    \node[font=\scriptsize\ttfamily, anchor=west, text=erlred] at (10.3, -9.4) {\{noreply, NewState\}};
+
+    % Dashed separators
+    \draw[dashed, gray!50] (-1.5, -4.3) -- (12, -4.3);
+    \draw[dashed, gray!50] (-1.5, -7.3) -- (12, -7.3);
+\end{tikzpicture}
+\caption{gen\_server 三种消息类型的流转过程}
+\label{fig:message-flow}
+\end{figure}
+
+
+% ============================================================
+% Section 5: Callback Return Values
+% ============================================================
+\section{回调函数返回值}
+
+\subsection{init/1}
+
+\begin{lstlisting}[style=erlangstyle]
+init(Args) ->
+    {ok, State}                  %% Normal start
+  | {ok, State, Timeout}         %% Start with timeout
+  | {ok, State, hibernate}       %% Start and hibernate
+  | {ok, State, {continue, Info}} %% Start with continuation
+  | {stop, Reason}               %% Start failed
+  | ignore.                      %% Ignore start
+\end{lstlisting}
+
+\subsection{handle\_call/3}
+
+\begin{lstlisting}[style=erlangstyle]
+handle_call(Request, From, State) ->
+    {reply, Reply, NewState}              %% Reply and continue
+  | {reply, Reply, NewState, Timeout}     %% Reply, set timeout
+  | {reply, Reply, NewState, hibernate}   %% Reply, hibernate
+  | {reply, Reply, NewState, {continue, Info}} %% Reply, continue
+  | {noreply, NewState}                   %% No reply (manual)
+  | {noreply, NewState, Timeout}
+  | {stop, Reason, Reply, NewState}       %% Reply then stop
+  | {stop, Reason, NewState}.             %% Stop (no reply)
+\end{lstlisting}
+
+\subsection{handle\_cast/2}
+
+\begin{lstlisting}[style=erlangstyle]
+handle_cast(Msg, State) ->
+    {noreply, NewState}
+  | {noreply, NewState, Timeout}
+  | {noreply, NewState, hibernate}
+  | {noreply, NewState, {continue, Info}}
+  | {stop, Reason, NewState}.
+\end{lstlisting}
+
+\subsection{handle\_info/2}
+
+返回值与 \texttt{handle\_cast/2} 相同。
+
+\subsection{terminate/2}
+
+\begin{lstlisting}[style=erlangstyle]
+terminate(Reason, State) ->
+    ok.  %% Return value is ignored
+\end{lstlisting}
+
+\begin{warnbox}[注意]
+\texttt{terminate/2} 只在以下情况被调用：
+\begin{itemize}
+    \item 回调函数返回 \texttt{\{stop, ...\}}
+    \item 进程收到 EXIT 信号且设置了 \texttt{process\_flag(trap\_exit, true)}
+    \item \texttt{gen\_server:stop/1,3} 被调用
+\end{itemize}
+\end{warnbox}
+
+
+% ============================================================
+% Section 6: Process Registration
+% ============================================================
+\section{进程注册方式}
+
+gen\_server 支持多种进程注册方式：
+
+\subsection{不注册（使用 PID）}
+
+\begin{lstlisting}[style=erlangstyle]
+{ok, Pid} = gen_server:start_link(?MODULE, Args, []).
+%% Call by PID: gen_server:call(Pid, Request)
+%% Can start multiple instances!
+\end{lstlisting}
+
+\subsection{本地注册}
+
+\begin{lstlisting}[style=erlangstyle]
+gen_server:start_link({local, counter}, ?MODULE, Args, []).
+%% Call by name: gen_server:call(counter, Request)
+%% Only visible on current node
+\end{lstlisting}
+
+\subsection{全局注册}
+
+\begin{lstlisting}[style=erlangstyle]
+gen_server:start_link({global, counter}, ?MODULE, Args, []).
+%% Call: gen_server:call({global, counter}, Request)
+%% Visible on all connected nodes (distributed)
+\end{lstlisting}
+
+\subsection{server\_ref() 完整类型}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{类型} & \textbf{说明} \\
+\midrule
+\texttt{pid()} & 直接 PID 引用 \\
+\texttt{atom()} & 本地注册名 \\
+\texttt{\{Name, Node\}} & 远程节点的本地注册名 \\
+\texttt{\{global, GlobalName\}} & 全局注册名 \\
+\texttt{\{via, RegMod, ViaName\}} & 自定义注册模块 \\
+\bottomrule
+\end{tabular}
+\caption{server\_ref() 类型一览}
+\end{table}
+
+
+% ============================================================
+% Section 7: Common Pitfalls
+% ============================================================
+\section{常见陷阱}
+
+\subsection{陷阱 1：在 Shell 中使用 start\_link}
+
+\begin{lstlisting}[style=erlangstyle]
+%% Shell process and gen_server are linked!
+1> {ok, Pid} = counter_server:start_link().
+{ok,<0.83.0>}
+2> counter_server:crash(Pid).
+** exception exit: ...
+3> self().
+<0.88.0>   %% Shell process has changed!
+\end{lstlisting}
+
+Shell 进程与 gen\_server 链接，gen\_server 崩溃会导致 Shell 也崩溃（然后自动重启）。开发测试时建议使用 \texttt{start/0}。
+
+\subsection{陷阱 2：在 handle\_call 中调用自己}
+
+\begin{lstlisting}[style=erlangstyle]
+%% DEADLOCK! gen_server is single-process
+handle_call(request1, _From, State) ->
+    Result = gen_server:call(self(), request2),  %% DEADLOCK!
+    {reply, Result, State}.
+\end{lstlisting}
+
+gen\_server 是单进程的，在处理消息时无法再接收新消息。
+
+\subsection{陷阱 3：call 超时后的残留消息}
+
+\begin{lstlisting}[style=erlangstyle]
+%% After timeout, server's reply may still arrive later
+try
+    gen_server:call(Server, Request, 1000)
+catch
+    exit:{timeout, _} ->
+        %% Server may reply later, message stays in queue!
+        ok
+end.
+\end{lstlisting}
+
+超时时\textbf{客户端崩溃}，但\textbf{服务器继续运行}并可能稍后发送回复。
+
+\subsection{陷阱 4：handle\_call 中的长时间操作}
+
+\begin{lstlisting}[style=erlangstyle]
+%% BAD: blocks the gen_server for Duration ms
+handle_call({slow_op, Duration}, _From, State) ->
+    timer:sleep(Duration),  %% All other requests are blocked!
+    {reply, ok, State}.
+\end{lstlisting}
+
+gen\_server 是顺序处理消息的，长时间操作会阻塞所有其他请求。解决方案：
+\begin{itemize}[leftmargin=2em]
+    \item 使用 \texttt{cast} + 异步通知
+    \item spawn 子进程处理耗时任务
+    \item 使用 \texttt{gen\_server:reply/2} 先回复再处理
+\end{itemize}
+
+
+% ============================================================
+% Section 8: Debugging
+% ============================================================
+\section{调试工具}
+
+gen\_server 内置了 \texttt{sys} 模块集成，提供强大的调试能力：
+
+\begin{lstlisting}[style=erlangstyle, caption={sys 模块调试工具}]
+%% Get server status
+sys:get_status(Pid).
+
+%% Trace messages (print all incoming messages)
+sys:trace(Pid, true).
+sys:trace(Pid, false).  %% stop tracing
+
+%% Get statistics
+sys:statistics(Pid, true).   %% start collecting
+sys:statistics(Pid, get).    %% get stats
+
+%% Suspend / Resume
+sys:suspend(Pid).
+sys:resume(Pid).
+\end{lstlisting}
+
+
+% ============================================================
+% Section 9: Quick Reference
+% ============================================================
+\section{快速参考}
+
+\subsection{客户端函数}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{@{}llp{5.5cm}@{}}
+\toprule
+\textbf{函数} & \textbf{类型} & \textbf{说明} \\
+\midrule
+\texttt{call(Ref, Req)} & 同步 & 默认5秒超时 \\
+\texttt{call(Ref, Req, Timeout)} & 同步 & 自定义超时 \\
+\texttt{cast(Ref, Msg)} & 异步 & 无返回值 \\
+\texttt{reply(From, Reply)} & --- & 显式回复 \\
+\texttt{stop(Ref)} & 同步 & 停止服务器 \\
+\texttt{stop(Ref, Reason, Timeout)} & 同步 & 带原因停止 \\
+\texttt{send\_request(Ref, Req)} & 异步 & 异步请求（OTP 23+） \\
+\texttt{multi\_call(Nodes, Name, Req)} & 同步 & 多节点调用 \\
+\texttt{abcast(Nodes, Name, Msg)} & 异步 & 多节点广播 \\
+\bottomrule
+\end{tabular}
+\caption{gen\_server 客户端函数}
+\end{table}
+
+\subsection{回调函数返回值速查}
+
+\begin{tcolorbox}[colback=codebg, colframe=codeborder, arc=2mm, boxrule=0.5pt,
+                  title={\textbf{Callback Return Values Quick Reference}},
+                  fonttitle=\bfseries\ttfamily, width=\textwidth]
+\small\ttfamily
+\textbf{init/1:} \\
+\quad \{ok, State\} | \{ok, State, Timeout\} | \{ok, State, \{continue, Info\}\} \\
+\quad | \{stop, Reason\} | ignore \\[6pt]
+\textbf{handle\_call/3:} \\
+\quad \{reply, Reply, State [, Timeout | hibernate | \{continue, Info\}]\} \\
+\quad \{noreply, State [, Timeout | hibernate | \{continue, Info\}]\} \\
+\quad \{stop, Reason, Reply, State\} | \{stop, Reason, State\} \\[6pt]
+\textbf{handle\_cast/2 \& handle\_info/2:} \\
+\quad \{noreply, State [, Timeout | hibernate | \{continue, Info\}]\} \\
+\quad \{stop, Reason, State\} \\[6pt]
+\textbf{terminate/2:} ok (return value ignored) \\[4pt]
+\textbf{code\_change/3:} \{ok, NewState\}
+\end{tcolorbox}
+
+\end{document}

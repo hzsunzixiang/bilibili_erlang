@@ -39,7 +39,7 @@ view: $(ARCH_PID_PDF) $(ARCH_NAMED_PDF)
 # Clean intermediate files (keep PDFs)
 clean:
 	rm -f *.aux *.log *.out *.toc *.nav *.snm
-	rm -f *.fdb_latexmk *.fls *.synctex.gz
+	rm -f *.xdv *.fdb_latexmk *.fls *.synctex.gz
 
 # Clean everything including PDFs
 distclean: clean
