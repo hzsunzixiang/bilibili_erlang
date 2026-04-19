@@ -121,9 +121,8 @@
         \textcolor{erlblue!80!black}{\ding{72} \textbf{启动流程：}}\\
         {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it} $\rightarrow$ \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}}}\\[6pt]
         \textcolor{erlblue!80!black}{\ding{72} \textbf{\texttt{\#server\_data\{\}} 记录：}}\\
-        {\tiny\texttt{parent}\,=\,父进程Pid,\; \texttt{module}\,=\,\textcolor{erlmodule}{\textbf{Mod}}}\\
-        {\tiny\texttt{handle\_call}\,=\,\texttt{fun Mod:handle\_call/3}}\\
-        {\tiny\texttt{handle\_cast}\,=\,\texttt{fun Mod:handle\_cast/2},\;\ldots}\\
+        {\tiny\texttt{parent}\,=\,父进程Pid,\; \texttt{module}\,=\,\textcolor{erlmodule}{\textbf{\texttt{?MODULE}}}}\\
+        {\tiny\texttt{handle\_call}\,=\,\texttt{fun Mod:handle\_call/3}}        {\tiny\texttt{handle\_cast}\,=\,\texttt{fun Mod:handle\_cast/2},\;\ldots}\\
         {\tiny\textcolor{erlinit}{\textbf{注意：}}\texttt{init/1} 返回的 \texttt{State} 不在此记录中}
     };
 

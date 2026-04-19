@@ -124,8 +124,8 @@
         {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it}}\\[1pt]
         {\tiny\quad$\rightarrow$ \textcolor{erlname}{\textbf{\texttt{register(ServerName, Pid)}}} $\rightarrow$ \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}}}\\[6pt]
         \textcolor{erlblue!80!black}{\ding{72} \textbf{\texttt{\#server\_data\{\}} 记录：}}\\
-        \makebox[0pt][l]{\tiny\texttt{parent}\,=\,父进程Pid,\,\texttt{module}\,=\,\textcolor{erlmodule}{\textbf{Mod}},\,\textcolor{erlname}{\textbf{name}}\,=\,\textcolor{erlname}{ServerName}}\\
-        {\tiny\texttt{handle\_call}\,=\,\texttt{fun Mod:handle\_call/3}}\\
+        {\tiny\makebox[0pt][l]{\texttt{parent\!=\!}父进程Pid,\;\texttt{module\!=\!}\textcolor{erlmodule}{\textbf{\texttt{?MODULE}}},\;\textcolor{erlname}{\textbf{name}}\!\texttt{=}\!\textcolor{erlname}{ServerName}}}\\
+        {\tiny\texttt{handle\_call}\,=\,\texttt{fun Mod:handle\_call/3}}
         {\tiny\texttt{handle\_cast}\,=\,\texttt{fun Mod:handle\_cast/2},\;\ldots}\\
         {\tiny\textcolor{erlinit}{\textbf{注意：}}\texttt{init/1} 返回的 \texttt{State} 不在此记录中}
     };
