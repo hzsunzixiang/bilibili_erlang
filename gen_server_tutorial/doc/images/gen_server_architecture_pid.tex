@@ -43,15 +43,24 @@
     % Left half
     \node[draw=erlpurple!60, fill=erlpurple!3, rounded corners=6pt,
           minimum width=6.6cm, minimum height=10.4cm] (leftframe) at (-4.8, -0.55) {};
-    \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {Server的启动和客户端调用};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {用户定义模块（Server的启动）};
 \node[font=\small\ttfamily\bfseries\itshape\color{black}, anchor=north west] at ([xshift=3pt, yshift=-1pt]leftframe.north west) {counter\_server.erl};
+    \draw[dashed, black, line width=0.5pt]
+        ([xshift=3pt, yshift=-13pt]leftframe.north west) -- ([xshift=-3pt, yshift=-13pt]leftframe.north east);
 
     % Right half
     \node[draw=erlblue!60, fill=erlblue!3, rounded corners=6pt,
           minimum width=6.6cm, minimum height=10.4cm] (rightframe) at (6.4, -0.55) {};
     \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {gen\_server库（非独立进程）};
 \node[font=\small\ttfamily\bfseries\itshape\color{black}, anchor=north west] at ([xshift=3pt, yshift=-1pt]rightframe.north west) {gen\_server.erl};
+    \draw[dashed, black, line width=0.5pt]
+        ([xshift=3pt, yshift=-13pt]rightframe.north west) -- ([xshift=-3pt, yshift=-13pt]rightframe.north east);
 
+    % Connect the two dashed lines in the middle
+    \draw[dashed, black, line width=0.5pt]
+        ([xshift=-3pt, yshift=-13pt]leftframe.north east) -- ([xshift=3pt, yshift=-13pt]rightframe.north west);
+
+    % ---- Left-Top
     % ---- Left-Top: Callback Module (User Code — source) ----
     \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
           minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (lt) at (-4.8, 1.75) {};
@@ -73,6 +82,19 @@
         handle\_continue/2\\
         terminate/2
     };
+
+    % Vertical dashed line from left endpoint of the dashed line down to just below lt.south
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=3pt, yshift=-13pt]leftframe.north west),
+            \p2 = ([yshift=-6pt]lt.south)
+        in (\p1) -- (\x1, \y2);
+
+    % Horizontal dashed line from the bottom of the vertical line to near right outer frame left edge
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=3pt, yshift=-13pt]leftframe.north west),
+            \p2 = ([yshift=-6pt]lt.south),
+            \p3 = ([xshift=-3pt]rightframe.west)
+        in (\x1, \y2) -- (\x3, \y2);
 
     % ---- Left-Bottom: Client API (runtime communication via Pid) ----
     \node[draw=erlpurple, fill=erlpurple!8, rounded corners=5pt,
@@ -131,33 +153,50 @@
          \texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}} ([yshift=3.8mm]rt.west);
 
     % Arrow ③: Return {ok, Pid} — from Generic Server back to Callback Module
-    % Both endpoints at y=1.8 for horizontal line: both yshift=1.5mm
+    % Both endpoints shifted down by 0.8cm: yshift=1.5mm-8mm=-6.5mm
     \draw[-{Stealth[length=6pt]}, ultra thick, erlpid!90!black, line width=1.6pt]
-        ([yshift=1.5mm]rt.west) -- node[below, font=\scriptsize, align=center, text=erlpid!80!black]
+        ([yshift=-6.5mm]rt.west) -- node[below, font=\scriptsize, align=center, text=erlpid!80!black]
         {\textcolor{black}{\ding{174}} 返回 \texttt{\textcolor{erlpid}{\textbf{\{ok, Pid\}}}}\\[1pt]
-         {\tiny \textcolor{erlinit}{\textbf{init/1}} 成功后通过 \texttt{init\_ack} 返回 Pid}} ([yshift=1.5mm]lt.east);
+         {\tiny \textcolor{erlinit}{\textbf{init/1}} 成功后通过 \texttt{init\_ack} 返回 Pid}} ([yshift=-6.5mm]lt.east);
 
     % ==== Phase 2: Runtime ====
 
-    % Arrow ③: Client API (lb) -> Callback Module (lt) (call / cast / send_request)
+    % Arrow ④: Client API (lb) -> Callback Module (lt) (call / cast / send_request)
     \draw[-{Stealth[length=5pt]}, thick, erlblue, line width=1.2pt]
-        ([xshift=-5mm]lb.north) -- node[left, font=\scriptsize, align=center] {\textcolor{black}{\ding{174}} \textcolor{erlblue}{call / cast /}\\[1pt]\textcolor{erlblue}{send\_request}} ([xshift=-5mm]lt.south);
+        ([xshift=-4mm]lb.north) -- node[left, font=\scriptsize, align=center, anchor=north east, yshift=6pt] {\textcolor{black}{\ding{175}} \textcolor{erlblue}{call / cast /}\\[1pt]\textcolor{erlblue}{send\_request}} ([xshift=-4mm]lt.south);
 
     % Arrow ②: Generic Server -> Bound Callbacks (function registration)
     \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt]
-        ([xshift=0mm]rt.south) -- node[right, font=\scriptsize, align=center, text=erlgreen!70!black]
+        ([xshift=0mm]rt.south) -- node[right, font=\scriptsize, align=left, text=erlgreen!70!black]
         {\scriptsize\bfseries \textcolor{black}{\ding{173}} 函数注册\\[1pt]
          \tiny \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} $\rightarrow$ \texttt{fun Mod:F/A}} ([xshift=0mm]rb.north);
 
-    % Arrow ④: Callback Module (lt) -> Client API (lb) (Reply)
+    % Arrow ⑤: Callback Module (lt) -> Client API (lb) (Reply)
     \draw[-{Stealth[length=5pt]}, thick, erlred, line width=1.2pt]
-        ([xshift=5mm]lt.south) -- node[right, font=\scriptsize, align=center] {\textcolor{black}{\ding{175}} \textcolor{erlred}{Reply}} ([xshift=5mm]lb.north);
+        ([xshift=4mm]lt.south) -- node[right, font=\scriptsize, align=center, anchor=north west, yshift=6pt] {\textcolor{black}{\ding{176}} \textcolor{erlred}{Reply}} ([xshift=4mm]lb.north);
 
     % ---- Dashed separator lines below inner boxes ----
     \draw[dashed, erlpurple!40, line width=0.6pt]
         ([yshift=-6pt]lb.south west) -- ([yshift=-6pt]lb.south east);
-    \draw[dashed, erlblue!40, line width=0.6pt]
-        ([yshift=-6pt]rb.south west) -- ([yshift=-6pt]rb.south east);
+    \draw[dashed, black, line width=0.6pt]
+        let \p1 = ([xshift=-3pt]rightframe.west),
+            \p2 = ([yshift=-6pt]rb.south west),
+            \p3 = ([xshift=-3pt]rightframe.east)
+        in (\x1, \y2) -- (\x3, \y2);
+
+    % Vertical dashed line from the right endpoint of horizontal dashed line down to the right bottom dashed line
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=-3pt]rightframe.west),
+            \p2 = ([yshift=-6pt]lt.south),
+            \p3 = ([yshift=-6pt]rb.south)
+        in (\x1, \y2) -- (\x1, \y3);
+
+    % Vertical dashed line from top dashed line right endpoint down to right bottom dashed line right endpoint
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=-3pt, yshift=-13pt]rightframe.north east),
+            \p2 = ([yshift=-6pt]rb.south),
+            \p3 = ([xshift=-3pt]rightframe.east)
+        in (\x3, \y1) -- (\x3, \y2);
 
     % Left bottom annotation (inside left outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]lb.south west)
