@@ -204,13 +204,15 @@
         in (\x3, \y1) -- (\x3, \y2);
 
     % Left bottom annotation (inside left outer frame, below dashed line)
-    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]lb.south west)
+    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-7pt]lb.south west)
         {\ding{72} \texttt{start\_link/4} 是连接左右两半的关键桥梁：\\
+         \ding{72} 这里 \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 是宏，指的是 \texttt{counter\_server}\\
          \ding{72} \textcolor{erlname}{\textbf{ServerName}} 使进程注册到本地/全局名字表\\
-         \ding{72} Client 可通过 \textcolor{erlname}{\textbf{ServerName}} 而非 Pid 调用服务};
+         \ding{72} Client 可通过 \textcolor{erlname}{\textbf{ServerName}} 而非 Pid 调用服务\\
+         \ding{72} 当 \textcolor{erlname}{\textbf{ServerRef}} 是全局名字表时，即是分布式通信};
 
     % Right bottom annotation (inside right outer frame, below dashed line)
-    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
+    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-8pt]rb.south west)
         {\ding{72} \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}} 启动时即调用用户编写的 \textcolor{erlinit}{\textbf{\texttt{init/1}}}\\
          \ding{72} \textcolor{erlinit}{\textbf{\texttt{init/1}}} 提供 \textcolor{erlblue}{\textbf{State}} 的初始值，是 State 生命周期的起点\\
          \ding{72} \textcolor{erlblue}{\textbf{State}} 保存用户业务数据，作为 \texttt{loop} 递归的参数在栈帧中流转\\

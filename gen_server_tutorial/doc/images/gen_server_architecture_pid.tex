@@ -101,14 +101,14 @@
           minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (lb) at (-4.8, -2.85) {};
     \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Client进程（使用者）};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lb.north west) {
-        gen\_server:call/2,3\\
-        gen\_server:cast/2\\
-        gen\_server:send\_request/2\\
-        gen\_server:stop/1,3
+        gen\_server:call(\textcolor{erlpid}{\textbf{ServerRef}}, Req)\\
+        gen\_server:cast(\textcolor{erlpid}{\textbf{ServerRef}}, Msg)\\
+        gen\_server:send\_request(\textcolor{erlpid}{\textbf{ServerRef}}, Req)\\
+        gen\_server:stop(\textcolor{erlpid}{\textbf{ServerRef}})
     };
     % Note: ?MODULE = counter_server
     \node[font=\tiny\color{gray}, anchor=south west] at ([xshift=6pt, yshift=3pt]lb.south west)
-        {备注：\texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 即 \texttt{counter\_server}};
+        {备注：\texttt{\textcolor{erlpid}{\textbf{ServerRef}}} = \texttt{pid()}};
 
     % ---- Right-Top: Generic Server ----
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
@@ -201,7 +201,8 @@
     % Left bottom annotation (inside left outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]lb.south west)
         {\ding{72} \texttt{start\_link} 是连接左右两半的关键桥梁：\\
-         \ding{72} \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 使得 Server 知道调用哪个模块的回调函数};
+         \ding{72} \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 使得 Server 知道调用哪个模块的回调函数\\
+         \ding{72} 这里 \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 是宏，指的是 \texttt{counter\_server}};
 
     % Right bottom annotation (inside right outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
