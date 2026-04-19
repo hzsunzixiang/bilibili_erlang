@@ -295,6 +295,92 @@ gen\_server:cast       & -{}-{}-{}-{}-> & Module:handle\_cast/2 \\
 \label{fig:arch-pid}
 \end{figure}
 
+\subsubsection{不注册（使用 PID）}
+
+\begin{lstlisting}[style=erlangstyle]
+{ok, Pid} = gen_server:start_link(?MODULE, Args, []).
+%% Call by PID: gen_server:call(Pid, Request)
+%% Can start multiple instances!
+\end{lstlisting}
+
+\subsubsection{实验演示：本地 PID 场景}
+
+在同一个 Erlang 节点上启动 \texttt{counter\_server}，通过返回的 PID 直接调用。本地进程的 PID 第一位数字始终为 \texttt{0}。
+
+\begin{lstlisting}[style=shellstyle, caption={本地 PID 场景 --- 在 apple 节点上操作}]
+[ericksun@ERICKSUN-MC1:src] (main) $ erl -sname apple
+Erlang/OTP 26 [erts-14.2.5.12] [source] [64-bit] [smp:12:12]
+              [ds:12:12:10] [async-threads:1] [jit] [dtrace]
+
+Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
+(apple@ERICKSUN-MC1)1> {ok, Server}=counter_server:start_link().
+[counter] init: count=0, pid=<0.93.0>
+[counter] post_init complete
+{ok,<0.93.0>}
+(apple@ERICKSUN-MC1)2> counter_server:get_count(Server).
+0
+(apple@ERICKSUN-MC1)3> counter_server:increment(Server).
+1
+(apple@ERICKSUN-MC1)4> counter_server:increment(Server).
+2
+(apple@ERICKSUN-MC1)5> counter_server:get_count(Server).
+2
+\end{lstlisting}
+
+\begin{notebox}[PID 结构]
+PID 的格式为 \texttt{<A.B.C>}：
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{A}（第一位）：节点标识。本地节点上始终为 \texttt{0}
+    \item \textbf{B}（中间位）：进程在创建节点上的唯一序号，\textbf{无论从哪个节点观察都不变}
+    \item \textbf{C}（第三位）：序号溢出后的高位计数器（通常为 \texttt{0}）
+\end{itemize}
+上例中 \texttt{<0.93.0>} 表示：本地节点（\texttt{0}）、进程序号 \texttt{93}、高位 \texttt{0}。
+\end{notebox}
+
+\subsubsection{实验演示：分布式 PID 场景（跨节点访问）}
+
+在另一个 Erlang 节点（\texttt{pear}）上，通过 PID 远程访问 \texttt{apple} 节点上的 \texttt{counter\_server}。关键特性：\textbf{PID 中间的数字在远程节点上看到的不变}，但第一位数字从 \texttt{0} 变为非零值。
+
+\begin{lstlisting}[style=shellstyle, caption={分布式 PID 场景 --- 从 pear 节点远程访问 apple 节点}]
+[ericksun@ERICKSUN-MC1:src] (main) $ erl -sname pear
+Erlang/OTP 26 [erts-14.2.5.12] [source] [64-bit] [smp:12:12]
+              [ds:12:12:10] [async-threads:1] [jit] [dtrace]
+
+Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
+(pear@ERICKSUN-MC1)1> net_adm:ping('apple@ERICKSUN-MC1').
+pong
+(pear@ERICKSUN-MC1)2> nodes().
+['apple@ERICKSUN-MC1']
+(pear@ERICKSUN-MC1)3> [Server | _] = lists:filter(
+    fun(P) ->
+        case string:tokens(pid_to_list(P), ".<>") of
+            [_, M, _] -> list_to_integer(M) =:= 93;
+            _ -> false
+        end
+    end,
+    rpc:call('apple@ERICKSUN-MC1', erlang, processes, [])).
+[<10244.93.0>]
+(pear@ERICKSUN-MC1)4> Server.
+<10244.93.0>
+(pear@ERICKSUN-MC1)5> counter_server:get_count(Server).
+2
+(pear@ERICKSUN-MC1)6> counter_server:increment(Server).
+3
+(pear@ERICKSUN-MC1)7> counter_server:decrement(Server).
+2
+(pear@ERICKSUN-MC1)8> counter_server:get_count(Server).
+2
+\end{lstlisting}
+
+\begin{tipbox}[分布式 PID 的关键观察]
+\begin{itemize}[leftmargin=1.5em]
+    \item 在 \texttt{apple} 节点上，PID 显示为 \texttt{<0.93.0>}（第一位为 \texttt{0}，表示本地）
+    \item 在 \texttt{pear} 节点上，同一进程的 PID 显示为 \texttt{<10244.93.0>}（第一位为 \texttt{10244}，表示远程节点在本地连接表中的编号）
+    \item \textbf{中间数字 93 始终不变}，这是进程在其创建节点上的唯一标识
+    \item Erlang 运行时根据 PID 中的节点信息自动路由消息，\textbf{调用方式与本地完全相同}
+\end{itemize}
+\end{tipbox}
+
 
 \subsection{方式二：通过注册名字引用（start\_link/4）}
 
@@ -620,14 +706,6 @@ terminate(Reason, State) ->
 \section{进程注册方式}
 
 gen\_server 支持多种进程注册方式：
-
-\subsection{不注册（使用 PID）}
-
-\begin{lstlisting}[style=erlangstyle]
-{ok, Pid} = gen_server:start_link(?MODULE, Args, []).
-%% Call by PID: gen_server:call(Pid, Request)
-%% Can start multiple instances!
-\end{lstlisting}
 
 \subsection{本地注册}
 
