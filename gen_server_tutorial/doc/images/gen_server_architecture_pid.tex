@@ -55,7 +55,7 @@
     % ---- Left-Top: Callback Module (User Code — source) ----
     \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
           minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (lt) at (-4.8, 1.75) {};
-    \node[font=\small\bfseries\color{erlgreen!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {Callback Module（用户编写）};
+    \node[font=\small\bfseries\color{erlgreen!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {Server进程（启动gen\_server）};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lt.north west) {
         \textcolor{erlgreen!70!black}{-module(counter\_server).}\\
         \textcolor{erlgreen!70!black}{-behaviour(gen\_server).}
@@ -77,7 +77,7 @@
     % ---- Left-Bottom: Client API (runtime communication via Pid) ----
     \node[draw=erlpurple, fill=erlpurple!8, rounded corners=5pt,
           minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (lb) at (-4.8, -2.85) {};
-    \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Client API};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Client进程（使用者）};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lb.north west) {
         gen\_server:call/2,3\\
         gen\_server:cast/2\\
@@ -91,7 +91,7 @@
     % ---- Right-Top: Generic Server ----
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
           minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (rt) at (6.4, 1.75) {};
-    \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server};
+    \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Server Library};
     \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
         \textcolor{erlblue!80!black}{\ding{72} \textbf{运行时核心：}}\\
         {\tiny\textcolor{erlred!80!black}{\textbf{存储\kern1pt\textcolor{erlmodule}{\texttt{?MODULE}}\kern1pt 信息 $\rightarrow$ 缓存函数引用}}}\\
