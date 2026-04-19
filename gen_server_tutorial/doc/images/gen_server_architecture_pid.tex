@@ -138,8 +138,8 @@
     \draw[-{Stealth[length=5pt]}, thick, erlblue, line width=1.2pt]
         ([xshift=-5mm]lb.north) -- node[left, font=\scriptsize, align=center] {\textcolor{black}{\ding{174}} \textcolor{erlblue}{call / cast /}\\[1pt]\textcolor{erlblue}{send\_request}} ([xshift=-5mm]lt.south);
 
-    % Arrow ④: Generic Server -> Bound Callbacks (function registration, same as step ②)
-    \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt, dashed]
+    % Arrow ②: Generic Server -> Bound Callbacks (function registration)
+    \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt]
         ([xshift=0mm]rt.south) -- node[right, font=\scriptsize, align=center, text=erlgreen!70!black]
         {\scriptsize\bfseries \textcolor{black}{\ding{173}} 函数注册\\[1pt]
          \tiny \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} $\rightarrow$ \texttt{fun Mod:F/A}} ([xshift=0mm]rb.north);
