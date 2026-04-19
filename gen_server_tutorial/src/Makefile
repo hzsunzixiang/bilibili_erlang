@@ -7,7 +7,7 @@ ERL = erl -boot start_clean
 
 MODS := $(patsubst %.erl,%, $(wildcard *.erl))
 
-.PHONY: all compile clean run_raw run_generic run_otp run_reply run_timeout run_call_timeout run_kv_local run_kv_global run_kv_unnamed run_distributed help
+.PHONY: all compile clean run_raw run_generic run_otp run_reply run_timeout run_call_timeout run_kv_local run_kv_global run_kv_unnamed run_distributed run_named_counter help
 
 all: compile
 
@@ -44,6 +44,9 @@ run_kv_unnamed: compile
 run_distributed: compile
 	erl -noshell -s distributed_demo demo_local -s init stop
 
+run_named_counter: compile
+	erl -noshell -s named_counter demo -s init stop
+
 ## Run all demos in sequence
 run_all: compile
 	@echo "=========================================="
@@ -74,6 +77,9 @@ run_all: compile
 	@echo ">>> Distributed demo (local)"
 	erl -noshell -s distributed_demo demo_local -s init stop
 	@echo ""
+	@echo ">>> Named Counter (startup with Pid/Name)"
+	$(MAKE) run_named_counter
+	@echo ""
 	@echo "=========================================="
 	@echo "  All demos completed!"
 	@echo "=========================================="
@@ -94,5 +100,6 @@ help:
 	@echo "  make run_kv_global  - KV Store global registration"
 	@echo "  make run_kv_unnamed - KV Store unnamed (by PID)"
 	@echo "  make run_distributed - Distributed demo (local)"
+	@echo "  make run_named_counter - Named counter (Pid/Name startup)"
 	@echo "  make run_all        - Run all demos"
 	@echo "  make clean          - Remove compiled files"

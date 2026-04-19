@@ -10,8 +10,14 @@ TEXFLAGS = -interaction=nonstopmode -halt-on-error
 ARCH_SRC = gen_server_architecture.tex
 ARCH_PDF = gen_server_architecture.pdf
 
+STARTUP_SRC = gen_server_startup.tex
+STARTUP_PDF = gen_server_startup.pdf
+
+ARCH_PID_SRC = gen_server_architecture_pid.tex
+ARCH_PID_PDF = gen_server_architecture_pid.pdf
+
 # Default: build all diagrams
-all: $(ARCH_PDF)
+all: $(ARCH_PDF) $(STARTUP_PDF) $(ARCH_PID_PDF)
 
 $(ARCH_PDF): $(ARCH_SRC)
 	@which $(TEX) > /dev/null 2>&1 || \
@@ -19,6 +25,22 @@ $(ARCH_PDF): $(ARCH_SRC)
 	@echo "=== Compiling $(ARCH_SRC) ==="
 	$(TEX) $(TEXFLAGS) $(ARCH_SRC)
 	@echo "=== Done: $(ARCH_PDF) ==="
+	@$(MAKE) clean
+
+$(STARTUP_PDF): $(STARTUP_SRC)
+	@which $(TEX) > /dev/null 2>&1 || \
+		(echo "Error: $(TEX) not found. Install with: brew install --cask mactex" && exit 1)
+	@echo "=== Compiling $(STARTUP_SRC) ==="
+	$(TEX) $(TEXFLAGS) $(STARTUP_SRC)
+	@echo "=== Done: $(STARTUP_PDF) ==="
+	@$(MAKE) clean
+
+$(ARCH_PID_PDF): $(ARCH_PID_SRC)
+	@which $(TEX) > /dev/null 2>&1 || \
+		(echo "Error: $(TEX) not found. Install with: brew install --cask mactex" && exit 1)
+	@echo "=== Compiling $(ARCH_PID_SRC) ==="
+	$(TEX) $(TEXFLAGS) $(ARCH_PID_SRC)
+	@echo "=== Done: $(ARCH_PID_PDF) ==="
 	@$(MAKE) clean
 
 # View the PDF
