@@ -103,14 +103,14 @@
           minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (lb) at (-4.8, -2.85) {};
     \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Client进程（使用者 — 通过名字调用）};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lb.north west) {
-        gen\_server:call(\textcolor{erlname}{\textbf{ServerName}}, Req)\\
-        gen\_server:cast(\textcolor{erlname}{\textbf{ServerName}}, Msg)\\
-        gen\_server:send\_request(\textcolor{erlname}{\textbf{ServerName}}, Req)\\
-        gen\_server:stop(\textcolor{erlname}{\textbf{ServerName}})
+        gen\_server:call(\textcolor{erlname}{\textbf{ServerRef}}, Req)\\
+        gen\_server:cast(\textcolor{erlname}{\textbf{ServerRef}}, Req)\\
+        gen\_server:send\_request(\textcolor{erlname}{\textbf{ServerRef}}, Req)\\
+        gen\_server:stop(\textcolor{erlname}{\textbf{ServerRef}})
     };
-    % Note: ServerName = {local, counter_server} or counter_server
+    % Note: ServerRef = Name | {Name,Node} | {global,GlobalName}
     \node[font=\tiny\color{gray}, anchor=south west] at ([xshift=6pt, yshift=3pt]lb.south west)
-        {备注：\textcolor{erlname}{\textbf{ServerName}} = \texttt{\{local, counter\_server\}} 或 \texttt{counter\_server}};
+        {备注：\textcolor{erlname}{\textbf{ServerRef}} = \texttt{Name} | \texttt{\{Name,Node\}} | \texttt{\{global,GlobalName\}}};
 
     % ---- Right-Top: Generic Server ----
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
