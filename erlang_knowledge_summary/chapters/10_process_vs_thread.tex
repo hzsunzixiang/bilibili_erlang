@@ -185,7 +185,7 @@
         font=\small\sffamily, inner sep=3pt, minimum width=1.8cm
     },
     timeline/.style={
-        line width=2.5pt, rounded corners=1pt
+        line width=3pt, rounded corners=1pt
     },
     ann/.style={
         font=\small\sffamily, text=darkgray, align=center
@@ -194,73 +194,77 @@
         font=\bfseries\large\sffamily, text=darkgray
     },
     arrow/.style={
-        -{Stealth[length=5pt]}, thick, erlred!70
+        -{Stealth[length=5pt]}, thick
+    },
+    tag/.style={
+        font=\scriptsize\sffamily, inner sep=2pt
     }
 ]
 
 % ================================================================
 % (1) Preemptive Scheduling (OS Process / OS Thread / Erlang Process)
 % ================================================================
-\node[label] at (0, 4.0) {抢占式调度};
-\node[ann, anchor=east] at (-3.0, 3.2) {时间};
+\node[label] at (0, 5.8) {抢占式调度};
 
 % Time axis
-\draw[-{Stealth[length=5pt]}, gray] (-2.8, 1.8) -- (-2.8, 3.8);
+\draw[-{Stealth[length=5pt]}, gray] (-3.0, 3.5) -- (-3.0, 5.8);
+\node[ann, rotate=90, anchor=south] at (-3.4, 4.6) {时间};
 
-% Task A timeline (blue)
-\draw[timeline, erlblue!80] (-2.5, 3.4) -- (-0.5, 3.4);
-\draw[timeline, erlblue!80] (1.5, 3.4) -- (3.0, 3.4);
-\node[block, fill=erlblue!20, draw=erlblue, font=\small\sffamily] at (-1.5, 3.9) {任务 A};
+% Task A timeline (blue) — two segments with a gap where B preempts
+\draw[timeline, erlblue!80] (-2.5, 5.2) -- (-0.2, 5.2);
+\draw[timeline, erlblue!80] (2.2, 5.2) -- (4.0, 5.2);
+\node[block, fill=erlblue!20, draw=erlblue] at (-1.35, 5.9) {任务 A};
 
-% Task B timeline (red)
-\draw[timeline, erlred!80] (-0.5, 2.7) -- (1.5, 2.7);
-\node[block, fill=erlred!20, draw=erlred, font=\small\sffamily] at (0.5, 2.2) {任务 B};
+% Task B timeline (red) — runs in the gap
+\draw[timeline, erlred!80] (-0.2, 4.2) -- (2.2, 4.2);
+\node[block, fill=erlred!20, draw=erlred] at (1.0, 3.5) {任务 B};
 
-% Task A continues
-\draw[timeline, erlblue!80] (3.0, 3.4) -- (4.5, 3.4);
+% Preempt arrow: A -> B (downward at x=-0.2)
+\draw[arrow, erlred!70] (-0.2, 5.0) -- (-0.2, 4.45);
+\node[tag, text=erlred, right] at (-0.05, 4.7) {抢占};
 
-% Preempt arrows
-\draw[arrow] (-0.5, 3.6) -- (-0.5, 2.9) node[midway, right, font=\scriptsize\sffamily, text=erlred] {抢占};
-\draw[arrow] (1.5, 2.5) -- (1.5, 3.2) node[midway, right, font=\scriptsize\sffamily, text=erlblue] {恢复};
+% Resume arrow: B -> A (upward at x=2.2)
+\draw[arrow, erlblue!70] (2.2, 4.45) -- (2.2, 5.0);
+\node[tag, text=erlblue, right] at (2.35, 4.7) {恢复};
 
-\node[ann] at (1.0, 1.8) {OS / BEAM 调度器强制切换\\任何任务都无法独占 CPU};
+\node[ann] at (0.8, 3.0) {OS / BEAM 调度器强制切换，任何任务都无法独占 CPU};
 
 % Separator
-\draw[dashed, gray!60, line width=0.8pt] (-3.5, 1.3) -- (5, 1.3);
+\draw[dashed, gray!60, line width=0.8pt] (-3.8, 2.3) -- (5, 2.3);
 
 % ================================================================
 % (2) Cooperative Scheduling (Coroutine)
 % ================================================================
-\node[label] at (0, 0.8) {协作式调度};
-\node[ann, anchor=east] at (-3.0, -0.2) {时间};
+\node[label] at (0, 1.8) {协作式调度};
 
 % Time axis
-\draw[-{Stealth[length=5pt]}, gray] (-2.8, -1.8) -- (-2.8, 0.5);
+\draw[-{Stealth[length=5pt]}, gray] (-3.0, -0.5) -- (-3.0, 1.8);
+\node[ann, rotate=90, anchor=south] at (-3.4, 0.6) {时间};
 
 % Coroutine A runs, then yields
-\draw[timeline, erlpurple!80] (-2.5, 0.0) -- (0.5, 0.0);
-\node[block, fill=erlpurple!20, draw=erlpurple, font=\small\sffamily] at (-1.0, 0.5) {协程 A};
+\draw[timeline, erlpurple!80] (-2.5, 1.2) -- (0.5, 1.2);
+\node[block, fill=erlpurple!20, draw=erlpurple] at (-1.0, 1.9) {协程 A};
 
-% Yield point
-\fill[erlyellow!90!black] (0.5, 0.0) circle (4pt);
-\node[font=\scriptsize\sffamily, text=erlyellow!80!black, above] at (0.5, 0.15) {yield};
+% Yield point (circle marker)
+\fill[erlyellow!90!black] (0.5, 1.2) circle (4pt);
+\node[tag, text=erlyellow!80!black, above right] at (0.6, 1.35) {yield};
 
 % Coroutine B runs, then yields
-\draw[timeline, erlgreen!70!black] (0.5, -0.7) -- (3.0, -0.7);
-\node[block, fill=erlgreen!20, draw=erlgreen!70!black, font=\small\sffamily] at (1.75, -1.2) {协程 B};
+\draw[timeline, erlgreen!70!black] (0.5, 0.2) -- (3.0, 0.2);
+\node[block, fill=erlgreen!20, draw=erlgreen!70!black] at (1.75, -0.5) {协程 B};
 
 % Yield point
-\fill[erlyellow!90!black] (3.0, -0.7) circle (4pt);
-\node[font=\scriptsize\sffamily, text=erlyellow!80!black, above] at (3.0, -0.55) {yield};
+\fill[erlyellow!90!black] (3.0, 0.2) circle (4pt);
+\node[tag, text=erlyellow!80!black, above right] at (3.1, 0.35) {yield};
 
 % Coroutine A resumes
-\draw[timeline, erlpurple!80] (3.0, 0.0) -- (4.5, 0.0);
+\draw[timeline, erlpurple!80] (3.0, 1.2) -- (4.5, 1.2);
 
 % Transition arrows
-\draw[arrow, erlyellow!80!black] (0.5, -0.2) -- (0.5, -0.5);
-\draw[arrow, erlyellow!80!black] (3.0, -0.5) -- (3.0, -0.2);
+\draw[arrow, erlyellow!80!black] (0.5, 1.0) -- (0.5, 0.4);
+\draw[arrow, erlyellow!80!black] (3.0, 0.4) -- (3.0, 1.0);
 
-\node[ann] at (1.0, -1.8) {任务必须主动 yield\\不合作则阻塞整个线程};
+\node[ann] at (1.0, -1.2) {任务必须主动 yield，不合作则阻塞整个线程};
 
 \end{tikzpicture}
 \caption{抢占式调度与协作式调度对比}
