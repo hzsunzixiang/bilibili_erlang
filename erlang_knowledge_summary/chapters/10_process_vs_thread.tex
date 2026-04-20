@@ -129,12 +129,12 @@
 \node[coroblock, minimum width=1.5cm] at (1.6, -6.7) {协程 C};
 \node[font=\scriptsize\sffamily, text=erlgreen!40!black] at (2.85, -6.7) {共享栈};
 
-% Yield / Resume arrows
-\draw[arrow, erlpurple!70, bend left=25] (-1.2, -7.1) to node[below, font=\scriptsize\sffamily] {yield} (0.2, -7.1);
-\draw[arrow, erlpurple!70, bend left=25] (0.2, -7.1) to node[below, font=\scriptsize\sffamily] {resume} (-1.2, -7.1);
+% Yield / Resume arrows (below coroutine blocks, with enough clearance)
+\draw[arrow, erlpurple!70, bend left=30] (-1.2, -7.2) to node[below, font=\scriptsize\sffamily] {yield} (0.2, -7.2);
+\draw[arrow, erlpurple!70, bend left=30] (0.2, -7.2) to node[above, font=\scriptsize\sffamily, yshift=1pt] {resume} (-1.2, -7.2);
 
 % Annotation
-\node[ann] at (0.2, -7.8) {协作式调度\\主动 yield 切换};
+\node[ann] at (0.2, -8.0) {协作式调度\\主动 yield 切换};
 
 % Process frame
 \node[procframe, fit=(ct)(cbase), label={[font=\small\sffamily]above:同一进程}] {};
