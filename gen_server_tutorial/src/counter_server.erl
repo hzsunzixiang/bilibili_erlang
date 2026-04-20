@@ -30,6 +30,7 @@
 -export([start_link/0, start_link/1, start/0, start/1]).
 -export([increment/1, decrement/1, get_count/1, reset/1]).
 -export([slow_operation/2, crash/1]).
+-export([demo/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2,
@@ -148,3 +149,32 @@ format_status(_Opt, [_PDict, #{count := C, history := H}]) ->
     [{data, [{"State",
               #{count => C,
                 history_length => length(H)}}]}].
+
+%%% ============================================================
+%%% Demo
+%%% ============================================================
+
+%% @doc demo/0 - Demonstrates basic gen_server usage via counter_server.
+demo() ->
+    io:format("~n=== counter_server demo ===~n~n"),
+
+    {ok, Pid} = start_link(0),
+    io:format("Started: ~p~n", [Pid]),
+
+    io:format("increment: ~p~n", [increment(Pid)]),
+    io:format("increment: ~p~n", [increment(Pid)]),
+    io:format("increment: ~p~n", [increment(Pid)]),
+    io:format("get_count: ~p~n", [get_count(Pid)]),
+    io:format("decrement: ~p~n", [decrement(Pid)]),
+    io:format("get_count: ~p~n", [get_count(Pid)]),
+
+    reset(Pid),
+    timer:sleep(10),
+    io:format("after reset, get_count: ~p~n", [get_count(Pid)]),
+
+    io:format("slow_operation(100ms): ~p~n", [slow_operation(Pid, 100)]),
+
+    gen_server:stop(Pid),
+    timer:sleep(50),
+    io:format("~ncounter_server demo completed.~n"),
+    ok.
