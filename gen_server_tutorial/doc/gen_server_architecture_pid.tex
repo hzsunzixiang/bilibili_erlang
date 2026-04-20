@@ -280,11 +280,7 @@ gen\_server:cast       & -{}-{}-{}-{}-> & Module:handle\_cast/2 \\
 % ============================================================
 % Section 2: Architecture Diagrams
 % ============================================================
-\section{架构图}
-
-下面两张架构图分别展示了 gen\_server 的两种典型使用方式：通过 PID 引用和通过注册名字引用。
-
-\subsection{方式一：通过 PID 引用（start\_link/3）}
+\section{架构图（通过 Pid）}
 
 使用 \texttt{gen\_server:start\_link(?MODULE, Args, Opts)} 启动，不注册名字，通过返回的 Pid 来调用服务。
 
@@ -295,7 +291,7 @@ gen\_server:cast       & -{}-{}-{}-{}-> & Module:handle\_cast/2 \\
 \label{fig:arch-pid}
 \end{figure}
 
-\subsubsection{不注册（使用 PID）}
+\subsection{不注册（使用 PID）}
 
 \begin{lstlisting}[style=erlangstyle]
 {ok, Pid} = gen_server:start_link(?MODULE, Args, []).
@@ -303,7 +299,7 @@ gen\_server:cast       & -{}-{}-{}-{}-> & Module:handle\_cast/2 \\
 %% Can start multiple instances!
 \end{lstlisting}
 
-\subsubsection{实验演示：本地 PID 场景}
+\subsection{实验演示：本地 PID 场景}
 
 在同一个 Erlang 节点上启动 \texttt{counter\_server}，通过返回的 PID 直接调用。本地进程的 PID 第一位数字始终为 \texttt{0}。
 
@@ -337,7 +333,7 @@ PID 的格式为 \texttt{<A.B.C>}：
 上例中 \texttt{<0.93.0>} 表示：本地节点（\texttt{0}）、进程序号 \texttt{93}、高位 \texttt{0}。
 \end{notebox}
 
-\subsubsection{实验演示：分布式 PID 场景（跨节点访问）}
+\subsection{实验演示：分布式 PID 场景（跨节点访问）}
 
 在另一个 Erlang 节点（\texttt{pear}）上，通过 PID 远程访问 \texttt{apple} 节点上的 \texttt{counter\_server}。关键特性：\textbf{PID 中间的数字在远程节点上看到的不变}，但第一位数字从 \texttt{0} 变为非零值。
 
@@ -382,11 +378,20 @@ pong
 \end{tipbox}
 
 
-\subsection{方式二：通过注册名字引用（start\_link/4）--- 进程注册方式}
+\section{架构图（通过名字）}
+
+使用 \texttt{gen\_server:start\_link(ServerName, ?MODULE, Args, Opts)} 启动，将进程注册到名字表，Client 通过名字调用服务。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/gen_server_architecture_named.pdf}
+\caption{架构图（方式二）：通过注册名字引用 --- \texttt{start\_link/4}}
+\label{fig:arch-named}
+\end{figure}
 
 gen\_server 支持多种进程注册方式：
 
-\subsubsection{本地注册}
+\subsection{本地注册}
 
 \begin{lstlisting}[style=erlangstyle]
 gen_server:start_link({local, counter}, ?MODULE, Args, []).
@@ -463,7 +468,7 @@ undefined
 \end{itemize}
 \end{tipbox}
 
-\subsubsection{全局注册}
+\subsection{全局注册}
 
 \begin{lstlisting}[style=erlangstyle]
 gen_server:start_link({global, counter}, ?MODULE, Args, []).
@@ -529,7 +534,7 @@ pong
 \end{itemize}
 \end{tipbox}
 
-\subsubsection{server\_ref() 完整类型}
+\subsection{server\_ref() 完整类型}
 
 \begin{table}[H]
 \centering
@@ -547,16 +552,7 @@ pong
 \caption{server\_ref() 类型一览}
 \end{table}
 
-\subsection{架构图}
 
-使用 \texttt{gen\_server:start\_link(ServerName, ?MODULE, Args, Opts)} 启动，将进程注册到名字表，Client 通过名字调用服务。
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{images/gen_server_architecture_named.pdf}
-\caption{架构图（方式二）：通过注册名字引用 --- \texttt{start\_link/4}}
-\label{fig:arch-named}
-\end{figure}
 
 
 % ============================================================
