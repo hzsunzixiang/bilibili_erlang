@@ -16,6 +16,133 @@
 线程（同一进程内的）运行在\textbf{共享内存空间}中，而进程运行在\textbf{独立内存空间}中。
 \end{notebox}
 
+\subsection{内存模型图解}
+
+下图从内存布局的角度直观对比进程、线程和协程的核心差异：
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    % Common styles
+    memblock/.style={
+        draw, rounded corners=2pt, minimum height=0.55cm,
+        font=\small\sffamily, inner sep=3pt, text=white
+    },
+    threadblock/.style={
+        memblock, fill=erlblue!85, minimum width=1.6cm
+    },
+    heapblock/.style={
+        memblock, fill=erlred!75, minimum width=1.6cm
+    },
+    sharedblock/.style={
+        memblock, fill=erlyellow!90!black, minimum width=5.6cm
+    },
+    procframe/.style={
+        draw=darkgray, thick, rounded corners=4pt, inner sep=6pt
+    },
+    coroblock/.style={
+        memblock, fill=erlpurple!80, minimum width=1.6cm
+    },
+    label/.style={
+        font=\bfseries\large\sffamily, text=darkgray
+    },
+    ann/.style={
+        font=\small\sffamily, text=darkgray, align=center
+    },
+    arrow/.style={
+        -{Stealth[length=5pt]}, thick
+    }
+]
+
+% ================================================================
+% (1) Process Model — each process has fully independent memory
+% ================================================================
+\node[label] at (-0.2, 3.6) {进程模型};
+
+% Process A
+\node[memblock, fill=erlblue!85, minimum width=2.2cm] (pa) at (-1.6, 2.8) {线程};
+\node[memblock, fill=erlred!75, minimum width=2.2cm]  (ph) at (-1.6, 2.1) {堆};
+\node[memblock, fill=erlgreen!70, minimum width=2.2cm](ps) at (-1.6, 1.4) {栈};
+\node[procframe, fit=(pa)(ph)(ps), label={[font=\small\sffamily]above:进程 A}] (pA) {};
+
+% Process B
+\node[memblock, fill=erlblue!85, minimum width=2.2cm] (pb) at (2.0, 2.8) {线程};
+\node[memblock, fill=erlred!75, minimum width=2.2cm]  (qh) at (2.0, 2.1) {堆};
+\node[memblock, fill=erlgreen!70, minimum width=2.2cm](qs) at (2.0, 1.4) {栈};
+\node[procframe, fit=(pb)(qh)(qs), label={[font=\small\sffamily]above:进程 B}] (pB) {};
+
+% Annotation
+\node[ann] at (0.2, 0.5) {独立地址空间\\互不影响};
+
+% Separator line
+\draw[dashed, gray!60, line width=0.8pt] (-4, 0) -- (4, 0);
+
+% ================================================================
+% (2) Thread Model — threads share heap, each has own stack
+% ================================================================
+\node[label] at (-0.2, -0.5) {线程模型};
+
+% Shared heap & data
+\node[sharedblock] (sh) at (0.2, -1.2) {共享堆 / 全局变量 / 打开文件};
+
+% Thread 1
+\node[threadblock] (t1) at (-1.8, -2.3) {线程 1};
+\node[memblock, fill=erlgreen!70, minimum width=1.6cm] (s1) at (-1.8, -3.0) {栈};
+\node[procframe, fit=(t1)(s1), inner sep=4pt] (tf1) {};
+
+% Thread 2
+\node[threadblock] (t2) at (0.2, -2.3) {线程 2};
+\node[memblock, fill=erlgreen!70, minimum width=1.6cm] (s2) at (0.2, -3.0) {栈};
+\node[procframe, fit=(t2)(s2), inner sep=4pt] (tf2) {};
+
+% Thread 3
+\node[threadblock] (t3) at (2.2, -2.3) {线程 3};
+\node[memblock, fill=erlgreen!70, minimum width=1.6cm] (s3) at (2.2, -3.0) {栈};
+\node[procframe, fit=(t3)(s3), inner sep=4pt] (tf3) {};
+
+% Arrows from threads to shared heap
+\draw[arrow, erlred!70] (t1.north) -- (sh.south -| t1);
+\draw[arrow, erlred!70] (t2.north) -- (sh.south);
+\draw[arrow, erlred!70] (t3.north) -- (sh.south -| t3);
+
+% Process frame around everything
+\node[procframe, fit=(sh)(tf1)(tf2)(tf3), label={[font=\small\sffamily]above:同一进程}] {};
+
+% Annotation
+\node[ann] at (0.2, -4.1) {共享地址空间\\需同步（锁/互斥量）};
+
+% Separator line
+\draw[dashed, gray!60, line width=0.8pt] (-4, -4.8) -- (4, -4.8);
+
+% ================================================================
+% (3) Coroutine Model — cooperative, run on single stack
+% ================================================================
+\node[label] at (-0.2, -5.3) {协程模型};
+
+% Single thread
+\node[threadblock, minimum width=5.6cm] (ct) at (0.2, -6.0) {线程（唯一）};
+
+% Shared stack with multiple coroutine frames
+\node[memblock, fill=erlgreen!60, minimum width=5.6cm, minimum height=0.55cm] (cbase) at (0.2, -6.7) {};
+\node[coroblock, minimum width=1.5cm] at (-1.2, -6.7) {协程 A};
+\node[coroblock, minimum width=1.5cm] at (0.2, -6.7) {协程 B};
+\node[coroblock, minimum width=1.5cm] at (1.6, -6.7) {协程 C};
+\node[font=\scriptsize\sffamily, text=erlgreen!40!black] at (2.85, -6.7) {共享栈};
+
+% Yield / Resume arrows
+\draw[arrow, erlpurple!70, bend left=25] (-1.2, -7.1) to node[below, font=\scriptsize\sffamily] {yield} (0.2, -7.1);
+\draw[arrow, erlpurple!70, bend left=25] (0.2, -7.1) to node[below, font=\scriptsize\sffamily] {resume} (-1.2, -7.1);
+
+% Annotation
+\node[ann] at (0.2, -7.8) {协作式调度\\主动 yield 切换};
+
+% Process frame
+\node[procframe, fit=(ct)(cbase), label={[font=\small\sffamily]above:同一进程}] {};
+
+\end{tikzpicture}
+\caption{进程、线程与协程的内存模型对比}
+\end{figure}
+
 \subsection{资源划分}
 
 根据 Tanenbaum 在《现代操作系统》中的经典描述，进程模型基于两个独立概念：\textbf{资源分组}和\textbf{执行}。
@@ -49,6 +176,95 @@
     \item \textbf{内核线程}：能够使用阻塞式 I/O，调度由操作系统处理。但每次线程切换都需要陷入内核，相对较慢。
     \item \textbf{混合方式}：多个内核线程，每个内核线程上再运行多个用户线程，结合两者优势。
 \end{enumerate}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    block/.style={
+        draw, rounded corners=2pt, minimum height=0.5cm,
+        font=\small\sffamily, inner sep=3pt, minimum width=1.8cm
+    },
+    timeline/.style={
+        line width=2.5pt, rounded corners=1pt
+    },
+    ann/.style={
+        font=\small\sffamily, text=darkgray, align=center
+    },
+    label/.style={
+        font=\bfseries\large\sffamily, text=darkgray
+    },
+    arrow/.style={
+        -{Stealth[length=5pt]}, thick, erlred!70
+    }
+]
+
+% ================================================================
+% (1) Preemptive Scheduling (OS Process / OS Thread / Erlang Process)
+% ================================================================
+\node[label] at (0, 4.0) {抢占式调度};
+\node[ann, anchor=east] at (-3.0, 3.2) {时间};
+
+% Time axis
+\draw[-{Stealth[length=5pt]}, gray] (-2.8, 1.8) -- (-2.8, 3.8);
+
+% Task A timeline (blue)
+\draw[timeline, erlblue!80] (-2.5, 3.4) -- (-0.5, 3.4);
+\draw[timeline, erlblue!80] (1.5, 3.4) -- (3.0, 3.4);
+\node[block, fill=erlblue!20, draw=erlblue, font=\small\sffamily] at (-1.5, 3.9) {任务 A};
+
+% Task B timeline (red)
+\draw[timeline, erlred!80] (-0.5, 2.7) -- (1.5, 2.7);
+\node[block, fill=erlred!20, draw=erlred, font=\small\sffamily] at (0.5, 2.2) {任务 B};
+
+% Task A continues
+\draw[timeline, erlblue!80] (3.0, 3.4) -- (4.5, 3.4);
+
+% Preempt arrows
+\draw[arrow] (-0.5, 3.6) -- (-0.5, 2.9) node[midway, right, font=\scriptsize\sffamily, text=erlred] {抢占};
+\draw[arrow] (1.5, 2.5) -- (1.5, 3.2) node[midway, right, font=\scriptsize\sffamily, text=erlblue] {恢复};
+
+\node[ann] at (1.0, 1.8) {OS / BEAM 调度器强制切换\\任何任务都无法独占 CPU};
+
+% Separator
+\draw[dashed, gray!60, line width=0.8pt] (-3.5, 1.3) -- (5, 1.3);
+
+% ================================================================
+% (2) Cooperative Scheduling (Coroutine)
+% ================================================================
+\node[label] at (0, 0.8) {协作式调度};
+\node[ann, anchor=east] at (-3.0, -0.2) {时间};
+
+% Time axis
+\draw[-{Stealth[length=5pt]}, gray] (-2.8, -1.8) -- (-2.8, 0.5);
+
+% Coroutine A runs, then yields
+\draw[timeline, erlpurple!80] (-2.5, 0.0) -- (0.5, 0.0);
+\node[block, fill=erlpurple!20, draw=erlpurple, font=\small\sffamily] at (-1.0, 0.5) {协程 A};
+
+% Yield point
+\fill[erlyellow!90!black] (0.5, 0.0) circle (4pt);
+\node[font=\scriptsize\sffamily, text=erlyellow!80!black, above] at (0.5, 0.15) {yield};
+
+% Coroutine B runs, then yields
+\draw[timeline, erlgreen!70!black] (0.5, -0.7) -- (3.0, -0.7);
+\node[block, fill=erlgreen!20, draw=erlgreen!70!black, font=\small\sffamily] at (1.75, -1.2) {协程 B};
+
+% Yield point
+\fill[erlyellow!90!black] (3.0, -0.7) circle (4pt);
+\node[font=\scriptsize\sffamily, text=erlyellow!80!black, above] at (3.0, -0.55) {yield};
+
+% Coroutine A resumes
+\draw[timeline, erlpurple!80] (3.0, 0.0) -- (4.5, 0.0);
+
+% Transition arrows
+\draw[arrow, erlyellow!80!black] (0.5, -0.2) -- (0.5, -0.5);
+\draw[arrow, erlyellow!80!black] (3.0, -0.5) -- (3.0, -0.2);
+
+\node[ann] at (1.0, -1.8) {任务必须主动 yield\\不合作则阻塞整个线程};
+
+\end{tikzpicture}
+\caption{抢占式调度与协作式调度对比}
+\end{figure}
 
 \subsection{硬件多线程}
 
