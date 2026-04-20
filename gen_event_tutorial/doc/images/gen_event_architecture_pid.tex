@@ -63,18 +63,22 @@
     % ---- Left-Top
     % ---- Left-Top: Callback Module (User Code — source) ----
     \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
-          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (lt) at (-4.8, 1.75) {};
+          minimum width=6.2cm, minimum height=4.8cm, text width=5.8cm, align=left] (lt) at (-4.8, 1.75) {};
 \node[font=\small\bfseries\color{erlgreen!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {Manager 进程（启动gen\_event）};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lt.north west) {
         \textcolor{erlgreen!70!black}{-module(event\_counter).}\\
         \textcolor{erlgreen!70!black}{-behaviour(gen\_event).}
     };
     % Highlight start_link inside Callback Module
+    \node[draw=erlblue!70, fill=erlblue!8, rounded corners=3pt,
+          font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north west]
+        (startlinkbox) at ([xshift=6pt, yshift=-38pt]lt.north west)
+        {\textcolor{erlblue!80!black}{\ding{72} \{ok, Pid\} = gen\_event:start\_link()}};
     \node[draw=erlred!70, fill=erlred!8, rounded corners=3pt,
-          font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north]
-        (startlink) at ([yshift=-42pt]lt.north)
+          font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north west]
+        (startlink) at ([xshift=6pt, yshift=-54pt]lt.north west)
         {\textcolor{erlred!80!black}{\ding{72} gen\_event:add\_handler(Mgr, \textcolor{erlmodule}{\textbf{?MODULE}}, Args)}};
-    \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-60pt]lt.north west) {
+    \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-72pt]lt.north west) {
 \textcolor{erlinit}{\textbf{init/1}}\\
         handle\_event/2\\
         handle\_call/2\\
@@ -108,11 +112,11 @@
     };
     % Note: ?MODULE = event_counter
     \node[font=\tiny\color{gray}, anchor=south west] at ([xshift=6pt, yshift=3pt]lb.south west)
-        {备注：\texttt{\textcolor{erlpid}{\textbf{MgrRef}}} = \texttt{pid() | \{local, Name\}}};
+        {备注：\texttt{\textcolor{erlpid}{\textbf{MgrRef}}} = \texttt{pid() | \{local, Name\} | \{global, Name\}}};
 
     % ---- Right-Top: Generic Server ----
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
-          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (rt) at (6.4, 1.75) {};
+          minimum width=6.2cm, minimum height=4.8cm, text width=5.8cm, align=left] (rt) at (6.4, 1.75) {};
 \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Event Manager Library};
     \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
         \textcolor{erlblue!80!black}{\ding{72} \textbf{运行时核心：}}\\
@@ -142,37 +146,48 @@
 
     % ==== Arrows ====
 
-    % ==== Phase 1: Startup ====
+    % ==== Phase 0: Start Manager ====
 
-    % Arrow ①: start_link — the KEY arrow, from Callback Module (lt) to Generic Server (rt)
-    % Aligned with startlink node center: yshift=3.8mm from lt.east
-    \draw[-{Stealth[length=6pt]}, ultra thick, erlred!80!black, line width=1.6pt]
-        ([yshift=3.8mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlred!80!black]
-        {\textcolor{black}{\ding{172}} 注册Handler $\rightarrow$ 传递模块名\\[1pt]
-         \texttt{add\_handler(Mgr, \textcolor{erlmodule}{\textbf{?MODULE}}, Args)}} ([yshift=3.8mm]rt.west);
+    % Arrow ①: start_link — from Callback Module (lt) to Generic Server (rt)
+    \draw[-{Stealth[length=6pt]}, ultra thick, erlblue!80!black, line width=1.6pt]
+        ([yshift=15mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlblue!80!black]
+        {\textcolor{black}{\ding{172}} 启动 Manager\\[1pt]
+         \texttt{\{ok, Pid\} = gen\_event:start\_link()}} ([yshift=15mm]rt.west);
 
-    % Arrow ③: Return {ok, Pid} — from Generic Server back to Callback Module
-    % Both endpoints shifted down by 0.8cm: yshift=1.5mm-8mm=-6.5mm
+    % Arrow ②: Return {ok, Pid} — from Generic Server back to Callback Module
     \draw[-{Stealth[length=6pt]}, ultra thick, erlpid!90!black, line width=1.6pt]
-        ([yshift=-6.5mm]rt.west) -- node[below, font=\scriptsize, align=center, text=erlpid!80!black]
-        {\textcolor{black}{\ding{174}} 返回 \texttt{\textcolor{erlpid}{\textbf{ok}}}\\[1pt]
-         {\tiny \textcolor{erlinit}{\textbf{init/1}} 成功后 Handler 加入 Manager 列表}} ([yshift=-6.5mm]lt.east);
+        ([yshift=10mm]rt.west) -- node[below, font=\scriptsize, align=center, text=erlpid!80!black]
+        {\textcolor{black}{\ding{173}} 返回 \texttt{\textcolor{erlpid}{\textbf{\{ok, Pid\}}}}} ([yshift=10mm]lt.east);
+
+    % ==== Phase 1: Register Handler ====
+
+    % Arrow ③: add_handler — from Callback Module (lt) to Generic Server (rt)
+    \draw[-{Stealth[length=6pt]}, ultra thick, erlred!80!black, line width=1.6pt]
+        ([yshift=-6.2mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlred!80!black]
+        {\textcolor{black}{\ding{174}} 注册Handler $\rightarrow$ 传递模块名\\[1pt]
+         \texttt{add\_handler(Mgr, \textcolor{erlmodule}{\textbf{?MODULE}}, Args)}} ([yshift=-6.2mm]rt.west);
+
+    % Arrow ⑤: Return ok — from Generic Server back to Callback Module
+    \draw[-{Stealth[length=6pt]}, ultra thick, erlpid!90!black, line width=1.6pt]
+        ([yshift=-11.5mm]rt.west) -- node[below, font=\scriptsize, align=center, text=erlpid!80!black]
+        {\textcolor{black}{\ding{176}} 返回 \texttt{\textcolor{erlpid}{\textbf{ok}}}\\[1pt]
+         {\tiny \textcolor{erlinit}{\textbf{init/1}} 成功后 Handler 加入 Manager 列表}} ([yshift=-11.5mm]lt.east);
 
     % ==== Phase 2: Runtime ====
 
-    % Arrow ④: Client API (lb) -> Callback Module (lt) (call / cast / send_request)
+    % Arrow ⑥: Client API (lb) -> Callback Module (lt) (call / cast / send_request)
     \draw[-{Stealth[length=5pt]}, thick, erlblue, line width=1.2pt]
-        ([xshift=-4mm]lb.north) -- node[left, font=\scriptsize, align=center, anchor=north east, yshift=6pt] {\textcolor{black}{\ding{175}} \textcolor{erlblue}{notify / call}} ([xshift=-4mm]lt.south);
+        ([xshift=-4mm]lb.north) -- node[left, font=\scriptsize, align=center, anchor=north east, yshift=6pt] {\textcolor{black}{\ding{177}} \textcolor{erlblue}{notify / call}} ([xshift=-4mm]lt.south);
 
-    % Arrow ②: Generic Server -> Bound Callbacks (function registration)
+    % Arrow ④: Generic Server -> Bound Callbacks (function registration)
     \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt]
         ([xshift=0mm]rt.south) -- node[right, font=\scriptsize, align=left, text=erlgreen!70!black]
-        {\scriptsize\bfseries \textcolor{black}{\ding{173}} Handler注册\\[1pt]
+        {\scriptsize\bfseries \textcolor{black}{\ding{175}} Handler注册\\[1pt]
          \tiny \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} $\rightarrow$ \texttt{\#handler\{\}}} ([xshift=0mm]rb.north);
 
-    % Arrow ⑤: Callback Module (lt) -> Client API (lb) (Reply)
+    % Arrow ⑦: Callback Module (lt) -> Client API (lb) (Reply)
     \draw[-{Stealth[length=5pt]}, thick, erlred, line width=1.2pt]
-        ([xshift=4mm]lt.south) -- node[right, font=\scriptsize, align=center, anchor=north west, yshift=6pt] {\textcolor{black}{\ding{176}} \textcolor{erlred}{Reply}} ([xshift=4mm]lb.north);
+        ([xshift=4mm]lt.south) -- node[right, font=\scriptsize, align=center, anchor=north west, yshift=6pt] {\textcolor{black}{\ding{178}} \textcolor{erlred}{Reply}} ([xshift=4mm]lb.north);
 
     % ---- Dashed separator lines below inner boxes ----
     \draw[dashed, erlpurple!40, line width=0.6pt]
@@ -199,7 +214,8 @@
 
     % Left bottom annotation (inside left outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]lb.south west)
-        {\ding{72} \texttt{add\_handler} 是连接左右两半的关键桥梁：\\
+        {\ding{72} \texttt{start\_link} 是连接左右两边的关键桥梁\\
+         \ding{72} \texttt{add\_handler} 注册相关event事件\\
          \ding{72} \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 使得 Manager 知道调用哪个模块的回调函数\\
          \ding{72} 这里 \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 是宏，指的是 \texttt{event\_counter}};
 
