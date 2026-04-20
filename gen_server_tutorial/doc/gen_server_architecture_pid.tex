@@ -797,6 +797,15 @@ format_status(_Opt, [_PDict, #{count := C, history := H}]) ->
 \label{fig:message-flow}
 \end{figure}
 
+\subsection{常见陷阱}
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{Shell 中使用 start\_link}：Shell 进程与 gen\_server 链接，gen\_server 崩溃会导致 Shell 也崩溃。开发测试时建议使用 \texttt{start/0}
+    \item \textbf{handle\_call 中调用自己}：\texttt{gen\_server:call(self(), Req)} 会死锁，因为 gen\_server 是单进程的，处理消息时无法再接收新消息
+    \item \textbf{call 超时后的残留消息}：超时时客户端崩溃，但服务器继续运行并可能稍后发送回复，残留消息会留在调用者的消息队列中
+    \item \textbf{handle\_call 中的长时间操作}：gen\_server 顺序处理消息，长时间操作会阻塞所有其他请求。可用 \texttt{cast} + 异步通知、spawn 子进程、或 \texttt{gen\_server:reply/2} 解决
+\end{itemize}
+
 
 % ============================================================
 % Section 5: Callback Return Values
@@ -861,139 +870,6 @@ terminate(Reason, State) ->
 \end{warnbox}
 
 
-% ============================================================
-% Section 6: Common Pitfalls
-% ============================================================
-\section{常见陷阱}
 
-\subsection{陷阱 1：在 Shell 中使用 start\_link}
-
-\begin{lstlisting}[style=erlangstyle]
-%% Shell process and gen_server are linked!
-1> {ok, Pid} = counter_server:start_link().
-{ok,<0.83.0>}
-2> counter_server:crash(Pid).
-** exception exit: ...
-3> self().
-<0.88.0>   %% Shell process has changed!
-\end{lstlisting}
-
-Shell 进程与 gen\_server 链接，gen\_server 崩溃会导致 Shell 也崩溃（然后自动重启）。开发测试时建议使用 \texttt{start/0}。
-
-\subsection{陷阱 2：在 handle\_call 中调用自己}
-
-\begin{lstlisting}[style=erlangstyle]
-%% DEADLOCK! gen_server is single-process
-handle_call(request1, _From, State) ->
-    Result = gen_server:call(self(), request2),  %% DEADLOCK!
-    {reply, Result, State}.
-\end{lstlisting}
-
-gen\_server 是单进程的，在处理消息时无法再接收新消息。
-
-\subsection{陷阱 3：call 超时后的残留消息}
-
-\begin{lstlisting}[style=erlangstyle]
-%% After timeout, server's reply may still arrive later
-try
-    gen_server:call(Server, Request, 1000)
-catch
-    exit:{timeout, _} ->
-        %% Server may reply later, message stays in queue!
-        ok
-end.
-\end{lstlisting}
-
-超时时\textbf{客户端崩溃}，但\textbf{服务器继续运行}并可能稍后发送回复。
-
-\subsection{陷阱 4：handle\_call 中的长时间操作}
-
-\begin{lstlisting}[style=erlangstyle]
-%% BAD: blocks the gen_server for Duration ms
-handle_call({slow_op, Duration}, _From, State) ->
-    timer:sleep(Duration),  %% All other requests are blocked!
-    {reply, ok, State}.
-\end{lstlisting}
-
-gen\_server 是顺序处理消息的，长时间操作会阻塞所有其他请求。解决方案：
-\begin{itemize}[leftmargin=2em]
-    \item 使用 \texttt{cast} + 异步通知
-    \item spawn 子进程处理耗时任务
-    \item 使用 \texttt{gen\_server:reply/2} 先回复再处理
-\end{itemize}
-
-
-% ============================================================
-% Section 7: Debugging
-% ============================================================
-\section{调试工具}
-
-gen\_server 内置了 \texttt{sys} 模块集成，提供强大的调试能力：
-
-\begin{lstlisting}[style=erlangstyle, caption={sys 模块调试工具}]
-%% Get server status
-sys:get_status(Pid).
-
-%% Trace messages (print all incoming messages)
-sys:trace(Pid, true).
-sys:trace(Pid, false).  %% stop tracing
-
-%% Get statistics
-sys:statistics(Pid, true).   %% start collecting
-sys:statistics(Pid, get).    %% get stats
-
-%% Suspend / Resume
-sys:suspend(Pid).
-sys:resume(Pid).
-\end{lstlisting}
-
-
-% ============================================================
-% Section 8: Quick Reference
-% ============================================================
-\section{快速参考}
-
-\subsection{客户端函数}
-
-\begin{table}[H]
-\centering
-\small
-\begin{tabular}{@{}llp{5.5cm}@{}}
-\toprule
-\textbf{函数} & \textbf{类型} & \textbf{说明} \\
-\midrule
-\texttt{call(Ref, Req)} & 同步 & 默认5秒超时 \\
-\texttt{call(Ref, Req, Timeout)} & 同步 & 自定义超时 \\
-\texttt{cast(Ref, Msg)} & 异步 & 无返回值 \\
-\texttt{reply(From, Reply)} & --- & 显式回复 \\
-\texttt{stop(Ref)} & 同步 & 停止服务器 \\
-\texttt{stop(Ref, Reason, Timeout)} & 同步 & 带原因停止 \\
-\texttt{send\_request(Ref, Req)} & 异步 & 异步请求（OTP 23+） \\
-\texttt{multi\_call(Nodes, Name, Req)} & 同步 & 多节点调用 \\
-\texttt{abcast(Nodes, Name, Msg)} & 异步 & 多节点广播 \\
-\bottomrule
-\end{tabular}
-\caption{gen\_server 客户端函数}
-\end{table}
-
-\subsection{回调函数返回值速查}
-
-\begin{tcolorbox}[colback=codebg, colframe=codeborder, arc=2mm, boxrule=0.5pt,
-                  title={\textbf{Callback Return Values Quick Reference}},
-                  fonttitle=\bfseries\ttfamily, width=\textwidth]
-\small\ttfamily
-\textbf{init/1:} \\
-\quad \{ok, State\} | \{ok, State, Timeout\} | \{ok, State, \{continue, Info\}\} \\
-\quad | \{stop, Reason\} | ignore \\[6pt]
-\textbf{handle\_call/3:} \\
-\quad \{reply, Reply, State [, Timeout | hibernate | \{continue, Info\}]\} \\
-\quad \{noreply, State [, Timeout | hibernate | \{continue, Info\}]\} \\
-\quad \{stop, Reason, Reply, State\} | \{stop, Reason, State\} \\[6pt]
-\textbf{handle\_cast/2 \& handle\_info/2:} \\
-\quad \{noreply, State [, Timeout | hibernate | \{continue, Info\}]\} \\
-\quad \{stop, Reason, State\} \\[6pt]
-\textbf{terminate/2:} ok (return value ignored) \\[4pt]
-\textbf{code\_change/3:} \{ok, NewState\}
-\end{tcolorbox}
 
 \end{document}
