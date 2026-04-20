@@ -1,8 +1,8 @@
 %%%-------------------------------------------------------------------
-%%% @doc named_counter - Demonstrates gen_server ServerRef variants:
-%%%      Pid, {local, Name}, and {global, GlobalName}.
+%%% @doc local_counter - Demonstrates gen_server with local name
+%%%      registration ({local, Name}).
 %%%
-%%% This module shows the THREE ways to identify a gen_server:
+%%% This module shows TWO ways to identify a gen_server locally:
 %%%
 %%%   1. Anonymous (returns Pid only):
 %%%      {ok, Pid} = gen_server:start_link(?MODULE, Args, [])
@@ -12,35 +12,29 @@
 %%%      {ok, Pid} = gen_server:start_link({local, Name}, ?MODULE, Args, [])
 %%%      gen_server:call(Name, Request)
 %%%
-%%%   3. Global name (registers across all connected nodes):
-%%%      {ok, Pid} = gen_server:start_link({global, GName}, ?MODULE, Args, [])
-%%%      gen_server:call({global, GName}, Request)
-%%%
 %%% From the gen_server:call/3 documentation:
 %%%
 %%%   call(ServerRef, Request, Timeout) -> Reply
 %%%   ServerRef = Name | {Name,Node} | {global,GlobalName}
 %%%             | {via,Module,ViaName} | pid()
 %%%
-%%% This module demonstrates the Pid, Name (local), and
-%%% {global, GlobalName} variants of ServerRef.
+%%% The local name is scoped to the current Erlang node only.
+%%% Each node in a cluster can register the same name independently.
 %%%
 %%% @end
 %%%-------------------------------------------------------------------
--module(named_counter).
+-module(local_counter).
 -behaviour(gen_server).
 
 %% ============================================================
-%% Client API — Three startup modes
+%% Client API
 %% ============================================================
 -export([
     %% Anonymous start (returns Pid)
     start_link/0, start_link/1,
     %% Local named start (registers atom name locally)
     start_link_local/0, start_link_local/1, start_link_local/2,
-    %% Global named start (registers name globally across nodes)
-    start_link_global/0, start_link_global/1, start_link_global/2,
-    %% Operations (accept Pid, Name, or {global, Name})
+    %% Operations (accept Pid or Name)
     increment/1, decrement/1, get_count/1, get_info/1,
     reset/1, stop/1,
     %% Demo
@@ -51,11 +45,10 @@
 -export([init/1, handle_call/3, handle_cast/2,
          handle_info/2, terminate/2]).
 
--define(DEFAULT_LOCAL_NAME, counter_local).
--define(DEFAULT_GLOBAL_NAME, counter_global).
+-define(DEFAULT_NAME, counter_local).
 
 %% Type for ServerRef accepted by all API functions
--type server_ref() :: pid() | atom() | {global, term()}.
+-type server_ref() :: pid() | atom().
 
 %%% ============================================================
 %%% Client API
@@ -74,41 +67,24 @@ start_link(InitCount) ->
 %% ---- Mode 2: Local named start ({local, Name}) ----
 %% After startup, the server can be called by Name directly:
 %%   gen_server:call(Name, Request)
+%%
+%% The name is registered via erlang:register/2, which is
+%% scoped to the local node only. Other nodes cannot see it.
 
 -spec start_link_local() -> {ok, pid()} | {error, term()}.
 start_link_local() ->
-    start_link_local(?DEFAULT_LOCAL_NAME, 0).
+    start_link_local(?DEFAULT_NAME, 0).
 
 -spec start_link_local(InitCount :: integer()) -> {ok, pid()} | {error, term()}.
 start_link_local(InitCount) ->
-    start_link_local(?DEFAULT_LOCAL_NAME, InitCount).
+    start_link_local(?DEFAULT_NAME, InitCount).
 
 -spec start_link_local(Name :: atom(), InitCount :: integer()) ->
     {ok, pid()} | {error, term()}.
 start_link_local(Name, InitCount) ->
     gen_server:start_link({local, Name}, ?MODULE, InitCount, []).
 
-%% ---- Mode 3: Global named start ({global, GlobalName}) ----
-%% After startup, the server can be called from ANY connected node:
-%%   gen_server:call({global, GlobalName}, Request)
-%%
-%% The global name is registered via the `global` module, which
-%% maintains a cluster-wide name registry across all connected nodes.
-
--spec start_link_global() -> {ok, pid()} | {error, term()}.
-start_link_global() ->
-    start_link_global(?DEFAULT_GLOBAL_NAME, 0).
-
--spec start_link_global(InitCount :: integer()) -> {ok, pid()} | {error, term()}.
-start_link_global(InitCount) ->
-    start_link_global(?DEFAULT_GLOBAL_NAME, InitCount).
-
--spec start_link_global(GlobalName :: term(), InitCount :: integer()) ->
-    {ok, pid()} | {error, term()}.
-start_link_global(GlobalName, InitCount) ->
-    gen_server:start_link({global, GlobalName}, ?MODULE, InitCount, []).
-
-%% ---- Operations (ServerRef = Pid | Name | {global, Name}) ----
+%% ---- Operations (ServerRef = Pid | Name) ----
 
 -spec increment(server_ref()) -> integer().
 increment(ServerRef) ->
@@ -139,14 +115,6 @@ stop(ServerRef) ->
 %%% ============================================================
 
 %% @doc init/1 — Called in the NEW process during startup.
-%%
-%% This is the critical moment shown in the diagram:
-%%   proc_lib:start_link → init_it → Mod:init(Args)
-%%
-%% After init/1 returns {ok, State}, gen_server calls
-%% proc_lib:init_ack({ok, self()}) to unblock the caller.
-%%
-%% The caller then receives {ok, Pid} — Arrow ② in the diagram.
 init(InitCount) when is_integer(InitCount) ->
     process_flag(trap_exit, true),
 
@@ -156,23 +124,13 @@ init(InitCount) when is_integer(InitCount) ->
         []                      -> undefined
     end,
 
-    %% Check if globally registered
-    GlobalName = case global:registered_names() of
-        Names ->
-            case lists:filter(fun(N) -> global:whereis_name(N) =:= Pid end, Names) of
-                [GN | _] -> GN;
-                []        -> undefined
-            end
-    end,
-
-    io:format("[named_counter] init: count=~p, pid=~p, local_name=~p, global_name=~p~n",
-              [InitCount, Pid, RegisteredName, GlobalName]),
+    io:format("[local_counter] init: count=~p, pid=~p, local_name=~p~n",
+              [InitCount, Pid, RegisteredName]),
 
     State = #{
         count => InitCount,
         pid => Pid,
         registered_name => RegisteredName,
-        global_name => GlobalName,
         started_at => erlang:system_time(millisecond)
     },
     {ok, State}.
@@ -193,7 +151,6 @@ handle_call(get_info, _From, State) ->
     Info = #{
         pid => maps:get(pid, State),
         registered_name => maps:get(registered_name, State),
-        global_name => maps:get(global_name, State, undefined),
         count => maps:get(count, State),
         started_at => maps:get(started_at, State),
         uptime_ms => erlang:system_time(millisecond) -
@@ -206,7 +163,7 @@ handle_call(_Request, _From, State) ->
 
 %% @doc handle_cast/2 — Asynchronous message handling.
 handle_cast(reset, State) ->
-    io:format("[named_counter] reset to 0~n"),
+    io:format("[local_counter] reset to 0~n"),
     {noreply, State#{count := 0}};
 
 handle_cast(_Msg, State) ->
@@ -214,22 +171,21 @@ handle_cast(_Msg, State) ->
 
 %% @doc handle_info/2 — Other messages.
 handle_info(Info, State) ->
-    io:format("[named_counter] unexpected info: ~p~n", [Info]),
+    io:format("[local_counter] unexpected info: ~p~n", [Info]),
     {noreply, State}.
 
 %% @doc terminate/2 — Cleanup.
-terminate(Reason, #{count := C, pid := Pid, registered_name := Name} = State) ->
-    GlobalName = maps:get(global_name, State, undefined),
-    io:format("[named_counter] terminating: reason=~p, pid=~p, "
-              "local_name=~p, global_name=~p, final_count=~p~n",
-              [Reason, Pid, Name, GlobalName, C]),
+terminate(Reason, #{count := C, pid := Pid, registered_name := Name}) ->
+    io:format("[local_counter] terminating: reason=~p, pid=~p, "
+              "local_name=~p, final_count=~p~n",
+              [Reason, Pid, Name, C]),
     ok.
 
 %%% ============================================================
-%%% Demo — Demonstrates all three ServerRef modes
+%%% Demo
 %%% ============================================================
 
-%% @doc demo/0 — Demonstrates anonymous, local, and global startup modes.
+%% @doc demo/0 — Demonstrates anonymous and local named startup modes.
 demo() ->
     io:format("~n=== Mode 1: Anonymous start (Pid only) ===~n~n"),
     {ok, Pid1} = start_link(10),
@@ -250,16 +206,5 @@ demo() ->
     gen_server:stop(my_counter),
     timer:sleep(50),
 
-    io:format("~n=== Mode 3: Global named start ({global, Name}) ===~n~n"),
-    {ok, Pid3} = start_link_global(my_global_counter, 100),
-    io:format("Returned: {ok, ~p}~n", [Pid3]),
-    io:format("get_count(Pid):            ~p~n", [get_count(Pid3)]),
-    io:format("get_count({global, Name}): ~p~n", [get_count({global, my_global_counter})]),
-    io:format("increment({global, Name}): ~p~n", [increment({global, my_global_counter})]),
-    io:format("decrement({global, Name}): ~p~n", [decrement({global, my_global_counter})]),
-    io:format("get_info({global, Name}):  ~p~n", [get_info({global, my_global_counter})]),
-    gen_server:stop({global, my_global_counter}),
-    timer:sleep(50),
-
-    io:format("~nAll ServerRef demos completed.~n"),
+    io:format("~nLocal counter demos completed.~n"),
     ok.
