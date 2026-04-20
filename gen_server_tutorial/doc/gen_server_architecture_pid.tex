@@ -564,190 +564,28 @@ pong
 \texttt{src/counter\_server.erl}
 \end{notebox}
 
-以一个计数器服务器为例，完整展示 gen\_server 的用法。
+以一个计数器服务器为例，展示 gen\_server 的核心结构。模块包含以下部分：
 
-\subsection{模块声明}
-
-\begin{lstlisting}[style=erlangstyle, caption={模块声明与行为模式}]
--module(counter_server).
--behaviour(gen_server).
-
-%% Client API
--export([start_link/0, start_link/1, start/0, start/1]).
--export([increment/1, decrement/1, get_count/1, reset/1]).
--export([slow_operation/2, crash/1]).
-
-%% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2,
-         handle_info/2, handle_continue/2,
-         terminate/2, code_change/3, format_status/2]).
-\end{lstlisting}
-
-\subsection{启动函数}
-
-\begin{lstlisting}[style=erlangstyle, caption={启动函数 --- start\_link 与 start}]
-start_link() ->
-    gen_server:start_link(?MODULE, 0, []).
-%%                        ^^^^^^  ^  ^^
-%%                        Module  Arg Options
-
-start_link(InitCount) ->
-    gen_server:start_link(?MODULE, InitCount, []).
-
-start() ->
-    gen_server:start(?MODULE, 0, []).
-
-start(InitCount) ->
-    gen_server:start(?MODULE, InitCount, []).
-\end{lstlisting}
-
-\begin{tipbox}[start\_link vs start]
-\begin{itemize}[leftmargin=1.5em]
-    \item \texttt{start\_link}：与调用者进程链接，一方崩溃另一方也会收到通知。生产环境配合 supervisor 使用。
-    \item \texttt{start}：不链接，独立生命周期。适合开发测试。
-\end{itemize}
-\end{tipbox}
-
-\subsection{客户端 API}
-
-\begin{lstlisting}[style=erlangstyle, caption={客户端 API --- 对 gen\_server 调用的封装}]
-increment(Server) ->
-    gen_server:call(Server, increment).     %% sync
-
-decrement(Server) ->
-    gen_server:call(Server, decrement).     %% sync
-
-get_count(Server) ->
-    gen_server:call(Server, get_count).     %% sync
-
-reset(Server) ->
-    gen_server:cast(Server, reset).         %% async
-
-slow_operation(Server, Duration) ->
-    gen_server:call(Server, {slow_op, Duration}).
-
-crash(Server) ->
-    gen_server:cast(Server, crash).
-\end{lstlisting}
-
-\begin{warnbox}[注意]
-客户端 API 是\textbf{薄封装}（thin wrapper），它们运行在\textbf{调用者进程}中，而非 gen\_server 进程中。
-\end{warnbox}
-
-\subsection{init/1 --- 初始化}
-
-\begin{lstlisting}[style=erlangstyle, caption={init/1 --- 初始化回调}]
-init(InitCount) when is_integer(InitCount) ->
-    process_flag(trap_exit, true),
-    io:format("[counter] init: count=~p, pid=~p~n",
-              [InitCount, self()]),
-    {ok, #{count => InitCount, history => []},
-     {continue, post_init}};
-init(_) ->
-    {stop, {error, bad_init_arg}}.
-\end{lstlisting}
-
-要点：
 \begin{itemize}[leftmargin=2em]
-    \item State 使用 Map：\texttt{\#\{count => 0, history => []\}}
-    \item \texttt{process\_flag(trap\_exit, true)}：捕获 EXIT 信号，使 \texttt{terminate/2} 能被调用
-    \item \texttt{\{continue, post\_init\}}：init 返回后立即触发 \texttt{handle\_continue/2}
+    \item \textbf{模块声明}：\texttt{-behaviour(gen\_server).} 声明行为模式，导出 Client API 和回调函数
+    \item \textbf{启动函数}：
+    \begin{itemize}[leftmargin=1.5em]
+        \item \texttt{start\_link/0,1} --- 与调用者链接，生产环境配合 supervisor 使用
+        \item \texttt{start/0,1} --- 不链接，适合开发测试（Shell 中推荐）
+    \end{itemize}
+    \item \textbf{客户端 API}（薄封装，运行在调用者进程中）：
+    \begin{itemize}[leftmargin=1.5em]
+        \item \texttt{increment/1}, \texttt{decrement/1}, \texttt{get\_count/1} --- 同步调用（\texttt{gen\_server:call}）
+        \item \texttt{reset/1}, \texttt{crash/1} --- 异步调用（\texttt{gen\_server:cast}）
+    \end{itemize}
+    \item \textbf{init/1}：初始化 State（Map），设置 \texttt{trap\_exit}，通过 \texttt{\{continue, post\_init\}} 触发延续处理
+    \item \textbf{handle\_continue/2}：处理 \texttt{init/1} 返回的 \texttt{continue} 指令，用于耗时初始化（避免阻塞 \texttt{start\_link} 调用者）
+    \item \textbf{handle\_call/3}：处理同步请求，返回 \texttt{\{reply, Reply, NewState\}}
+    \item \textbf{handle\_cast/2}：处理异步请求，返回 \texttt{\{noreply, NewState\}}
+    \item \textbf{handle\_info/2}：处理非 call/cast 消息（如 \texttt{timeout}、\texttt{'EXIT'}、自定义消息）
+    \item \textbf{terminate/2}：进程终止时的清理工作（需设置 \texttt{trap\_exit} 才能可靠触发）
+    \item \textbf{format\_status/2}：自定义 \texttt{sys:get\_status/1} 输出，可隐藏敏感信息（密码、token 等）
 \end{itemize}
-
-\subsection{handle\_continue/2 --- 延续处理}
-
-\begin{lstlisting}[style=erlangstyle, caption={handle\_continue/2 --- 初始化后的延续}]
-handle_continue(post_init, State) ->
-    io:format("[counter] post_init complete~n"),
-    {noreply, State}.
-\end{lstlisting}
-
-\begin{tipbox}[为什么用 handle\_continue？]
-\texttt{init/1} 应该尽快返回（因为调用者在等待 \texttt{\{ok, Pid\}}）。耗时的初始化工作可以放到 \texttt{handle\_continue/2} 中异步完成。
-\end{tipbox}
-
-\subsection{handle\_call/3 --- 同步请求}
-
-\begin{lstlisting}[style=erlangstyle, caption={handle\_call/3 --- 处理同步请求}]
-handle_call(increment, _From, #{count := C} = State) ->
-    NewCount = C + 1,
-    {reply, NewCount, State#{count := NewCount,
-        history := [{increment, NewCount} |
-                    maps:get(history, State)]}};
-
-handle_call(decrement, _From, #{count := C} = State) ->
-    NewCount = C - 1,
-    {reply, NewCount, State#{count := NewCount,
-        history := [{decrement, NewCount} |
-                    maps:get(history, State)]}};
-
-handle_call(get_count, _From, #{count := C} = State) ->
-    {reply, C, State};
-
-handle_call({slow_op, Duration}, _From, State) ->
-    timer:sleep(Duration),
-    {reply, {ok, done_after, Duration}, State};
-
-handle_call(_Request, _From, State) ->
-    {reply, {error, unknown_request}, State}.
-\end{lstlisting}
-
-\subsection{handle\_cast/2 --- 异步请求}
-
-\begin{lstlisting}[style=erlangstyle, caption={handle\_cast/2 --- 处理异步请求}]
-handle_cast(reset, State) ->
-    io:format("[counter] reset to 0~n"),
-    {noreply, State#{count := 0, history := []}};
-
-handle_cast(crash, _State) ->
-    error(deliberate_crash);
-
-handle_cast(_Msg, State) ->
-    {noreply, State}.
-\end{lstlisting}
-
-\subsection{handle\_info/2 --- 其他消息}
-
-\begin{lstlisting}[style=erlangstyle, caption={handle\_info/2 --- 处理非 call/cast 消息}]
-handle_info(timeout, State) ->
-    io:format("[counter] timeout fired~n"),
-    {noreply, State};
-
-handle_info({custom_msg, Payload}, State) ->
-    io:format("[counter] received custom_msg: ~p~n", [Payload]),
-    {noreply, State};
-
-handle_info({'EXIT', Pid, Reason}, State) ->
-    io:format("[counter] linked process ~p exited: ~p~n",
-              [Pid, Reason]),
-    {noreply, State};
-
-handle_info(Info, State) ->
-    io:format("[counter] unexpected info: ~p~n", [Info]),
-    {noreply, State}.
-\end{lstlisting}
-
-\subsection{terminate/2 --- 终止清理}
-
-\begin{lstlisting}[style=erlangstyle, caption={terminate/2 --- 进程终止时的清理}]
-terminate(Reason, #{count := C}) ->
-    io:format("[counter] terminating: reason=~p, "
-              "final_count=~p~n", [Reason, C]),
-    ok.
-\end{lstlisting}
-
-\subsection{format\_status/2 --- 自定义状态显示}
-
-\begin{lstlisting}[style=erlangstyle, caption={format\_status/2 --- 自定义 sys:get\_status 输出}]
-format_status(_Opt, [_PDict, #{count := C, history := H}]) ->
-    [{data, [{"State",
-              #{count => C,
-                history_length => length(H)}}]}].
-\end{lstlisting}
-
-\begin{tipbox}[安全提示]
-\texttt{format\_status/2} 可用于隐藏敏感信息（如密码、token），使其不出现在崩溃日志和 \texttt{sys:get\_status/1} 输出中。
-\end{tipbox}
 
 
 % ============================================================
