@@ -1,0 +1,52 @@
+% ============================================================
+% Chapter 5: Code Management
+% ============================================================
+\section{代码管理}
+
+\subsection{如何找出包依赖}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item 直接启动试试：\lstinline|application:ensure_all_started(systemd).|
+    \item 从 \lstinline|rebar.config| 中查看：\lstinline|{deps, [enough]}.|
+    \item 使用命令：\lstinline|rebar3 deps|
+    \item 使用命令：\lstinline|rebar3 tree|
+    \item 使用命令：\lstinline|make list-deps|
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image28}
+\caption{rebar3 tree 输出}
+\end{figure}
+
+\subsection{如何在 rebar3 工程下设置 application 参数}
+
+使用 \lstinline|config/sys.config| 文件设置 \lstinline|kernel| 等应用的参数。
+
+\subsection{RabbitMQ 工程中修改代码重新编译}
+
+需要删掉整个 \lstinline|ebin| 目录，删掉里面的内容，以及删掉 \lstinline|_build| 都没有用。
+
+\subsection{ez Erlang --- RabbitMQ 的编译方式}
+
+\begin{lstlisting}[style=shellstyle]
+make dist DIST_AS_EZS=true
+\end{lstlisting}
+
+\subsection{Erlang 批量载入 beam 文件}
+
+\subsection{带有头文件的编译}
+
+参考：\href{https://stackoverflow.com/questions/74700492/erl-make-using-header-file}{Stack Overflow - erl make using header file}
+
+\subsection{Erlang 升级（热代码加载）}
+
+参考：\href{https://medium.com/@kansi/hot-code-loading-with-erlang-and-rebar3-8252af16605b}{Hot Code Loading with Erlang and Rebar3}
+
+\subsection{Loading of Code From Archive Files}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \href{https://www.erlang.org/doc/man/code.html#loading-of-code-from-archive-files}{Erlang -- code}
+    \item \href{https://learnyousomeerlang.com/release-is-the-word}{Learn You Some Erlang - Release is the Word}
+    \item \href{https://www.erlang.org/doc/man/reltool.html}{Erlang -- reltool}
+\end{itemize}

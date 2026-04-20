@@ -1,0 +1,135 @@
+% ============================================================
+% Chapter 1: Basics
+% ============================================================
+\section{基础语法}
+
+\subsection{数据类型转换}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \lstinline|list_to_integer/1| --- 列表转整数
+    \item \lstinline|byte_size/1| --- 获取字节大小
+\end{itemize}
+
+\subsection{Erlang 的循环}
+
+Erlang 没有传统的循环语句，通过递归和列表操作实现循环逻辑。
+
+\subsubsection{生成一个数组}
+
+\begin{lstlisting}
+[X || X <- lists:seq(1,100), X rem 2 == 0].
+\end{lstlisting}
+
+\subsubsection{遍历数组}
+
+\begin{lstlisting}
+lists:foldl(fun(X, Sum) -> X + Sum end, 0,
+    [X || X <- lists:seq(1,100)]).
+\end{lstlisting}
+
+\subsubsection{调用 N 次某函数}
+
+\begin{lstlisting}
+lists:foldl(fun(X, Sum) ->
+    database_logic:storeDB(node(), X) end, 0,
+    [X || X <- lists:seq(1,100)]).
+\end{lstlisting}
+
+\subsection{模式匹配}
+
+模式匹配（Pattern Matching）在 Erlang 中有三大用途：
+\begin{itemize}[leftmargin=1.5em]
+    \item 选择控制流分支
+    \item 执行变量赋值（绑定）
+    \item 分解数据结构（选取和提取部分）
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image56}
+\caption{模式匹配}
+\end{figure}
+
+\subsubsection{函数参数中的模式匹配}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image57}
+\caption{函数参数中的模式匹配}
+\end{figure}
+
+\begin{notebox}[Alias Pattern]
+The pattern has the shape \lstinline|#state{...}=State|, which means it's an alias pattern: it both matches and assigns a name at the same time.
+\end{notebox}
+
+\subsection{短路求值}
+
+\begin{lstlisting}
+Expr1 orelse Expr2
+Expr1 andalso Expr2
+\end{lstlisting}
+
+详见：\href{https://www.erlang.org/doc/reference_manual/expressions.html}{Erlang -- Expressions}
+
+\subsection{begin...end}
+
+\lstinline|begin...end| 用于将多个表达式组合为一个表达式，常见于 \lstinline|if|、\lstinline|case| 等需要单表达式的地方。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image41}
+\caption{begin...end 用法}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image42}
+\caption{begin...end 示例}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{image43}
+\caption{begin...end 代码块}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image44}
+\caption{begin...end 执行结果}
+\end{figure}
+
+\subsection{list comprehension}
+
+列表推导式（List Comprehension）是 Erlang 中强大的语法特性。
+
+\begin{itemize}[leftmargin=1.5em]
+    \item 结合 \lstinline|lists:delete/2| 使用
+    \item 调试时临时函数名的解读：参见 \href{https://stackoverflow.com/questions/6019447/how-to-read-decode-temporary-function-names-of-list-comprehension-in-erlang-when}{Stack Overflow}
+\end{itemize}
+
+\subsection{\$ Dollar Sign}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image45}
+\caption{\$ 符号用法}
+\end{figure}
+
+\subsection{lists:takewhile}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{image46}
+\caption{lists:takewhile 示例}
+\end{figure}
+
+\subsection{Erlang 没有 continue 关键字}
+
+It's not a keyword, it is simply an atom returned as result of the fun.
+
+\subsection{Closures in Erlang}
+
+Erlang 支持闭包（Closures），函数可以捕获其定义环境中的变量。
+
+参考：\href{https://navidmostafiz.medium.com/closures-in-erlang-made-easy-708936749608}{Closures in Erlang Made Easy}

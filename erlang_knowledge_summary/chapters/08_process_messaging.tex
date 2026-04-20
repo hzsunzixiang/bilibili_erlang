@@ -1,0 +1,107 @@
+% ============================================================
+% Chapter 8: Process and Messaging
+% ============================================================
+\section{进程与消息}
+
+\subsection{进程的注册和获取}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image48}
+\caption{进程注册与获取}
+\end{figure}
+
+\subsection{发送信息到远程节点}
+
+向另一节点上的注册进程发送消息的格式：
+
+\begin{lstlisting}
+{pong, Pong_Node} ! {ping, self()},
+\end{lstlisting}
+
+使用 \lstinline|{registered_name, node_name}| 元组代替单独的 \lstinline|registered_name|。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image47}
+\caption{远程消息发送}
+\end{figure}
+
+参考：\href{https://www.erlang.org/doc/getting_started/conc_prog.html#message-passing}{Erlang -- Concurrent Programming}
+
+\subsection{获取远程进程 PID：通过 register}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image49}
+\caption{通过 register 获取远程 PID (1)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image50}
+\caption{通过 register 获取远程 PID (2)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image51}
+\caption{通过 register 获取远程 PID (3)}
+\end{figure}
+
+\subsection{直接用远程 PID 发送消息}
+
+\subsection{io\_request 与 group\_leader}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image52}
+\caption{io\_request 发送到远程}
+\end{figure}
+
+\lstinline|io_request| 发送到远程，无法直接执行打印的时候，放到消息队列。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image53}
+\caption{发给 group\_leader 直接执行}
+\end{figure}
+
+发给 \lstinline|group_leader| 直接执行，不会放到进程的消息队列中。
+
+\subsection{Observer 观察消息队列}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image54}
+\caption{Observer 消息队列 (1)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image55}
+\caption{Observer 消息队列 (2)}
+\end{figure}
+
+\subsection{获取进程列表与进程信息}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item 获取进程列表
+    \item 获取进程信息
+\end{itemize}
+
+\subsection{Erlang/OTP 并发编程实践}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image58}
+\caption{并发编程实践}
+\end{figure}
+
+修改了一下，只允许一个实例存在：
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image59}
+\caption{单实例修改}
+\end{figure}

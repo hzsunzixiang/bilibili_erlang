@@ -1,0 +1,280 @@
+% ============================================================
+% Chapter 3: Distributed Programming
+% ============================================================
+\section{分布式编程}
+
+\subsection{从配置中启动 MQ}
+
+\begin{enumerate}[leftmargin=1.5em]
+    \item \lstinline|.erlang.cookie| 文件必须一致
+    \item 必须一次性成功，把节点全部启动起来
+\end{enumerate}
+
+\subsection{Hidden Node}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image1}
+\caption{Hidden Node}
+\end{figure}
+
+参考：\href{https://www.erlang.org/doc/reference_manual/distributed.html}{Erlang -- Distributed Erlang}
+
+\subsection{远程连接 Erlang 节点}
+
+\subsubsection{使用 remsh}
+
+远程连接的最简方式。
+
+\subsubsection{使用 net\_kernel:connect\_node}
+
+\begin{lstlisting}[style=shellstyle]
+[root@kvm_10_21_1_163 sbin]# erl -sname apple
+(apple@kvm_10_21_1_163)1> net_kernel:connect_node('rabbit@kvm_10_20_1_60').
+true
+\end{lstlisting}
+
+\begin{warnbox}[注意]
+\lstinline|net_kernel:connect_node/1| 的返回值可能被忽略，参见 \href{https://blog.differentpla.net/blog/2013/11/07/net-kernel-connect-node-1-returns-ignored/}{net\_kernel:connect\_node/1 returns ignored}
+\end{warnbox}
+
+需要给节点起个名字（\lstinline|-sname|）才能连接。
+
+\subsubsection{使用 net\_adm:ping}
+
+注意是 \lstinline|-sname| 生效，不用 \lstinline|-name|，能够在远程节点生效。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image5}
+\caption{net\_adm:ping 远程连接}
+\end{figure}
+
+\subsubsection{使用 rpc:call}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image6}
+\caption{rpc:call 远程调用}
+\end{figure}
+
+\subsubsection{使用消息发送 !}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image7}
+\caption{消息发送 ! 远程通信}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image8}
+\caption{消息发送示例}
+\end{figure}
+
+\subsubsection{使用 monitor}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{image9}
+\caption{monitor 用法 (1)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{image10}
+\caption{monitor 用法 (2)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{image11}
+\caption{monitor 用法 (3)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{image12}
+\caption{monitor 用法 (4)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.65\textwidth]{image13}
+\caption{monitor 用法 (5)}
+\end{figure}
+
+三种情况：
+\begin{enumerate}[leftmargin=1.5em]
+    \item Case 1: 节点不存在
+    \item Case 2: 节点存在，服务不存在，建立连接
+    \item Case 3: 远程节点和进程都存在
+\end{enumerate}
+
+\subsubsection{使用 Ctrl+G}
+
+通过 Ctrl+G 可以连接到远程节点。
+
+\subsubsection{使用 Observer 观察远程节点}
+
+注意在本地先启动 observer，然后在 Nodes 中切换。
+
+\textbf{步骤：}
+
+\begin{enumerate}[leftmargin=1.5em]
+    \item 新起一个节点
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image14}
+\caption{新起节点}
+\end{figure}
+
+\begin{enumerate}[leftmargin=1.5em]
+    \setcounter{enumi}{1}
+    \item 启动 observer
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image15}
+\caption{启动 observer}
+\end{figure}
+
+\begin{enumerate}[leftmargin=1.5em]
+    \setcounter{enumi}{2}
+    \item 连接其他 node
+\end{enumerate}
+
+\begin{tipbox}[提示]
+在本机上即使不连接，能看到其他节点的时候也可以直接切换。在远程，必须先连接上，然后再切换。
+\end{tipbox}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image16}
+\caption{连接其他节点}
+\end{figure}
+
+或者用命令行：
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image17}
+\caption{命令行连接}
+\end{figure}
+
+\begin{enumerate}[leftmargin=1.5em]
+    \setcounter{enumi}{3}
+    \item 切换到其他节点
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image18}
+\caption{切换到其他节点}
+\end{figure}
+
+\begin{enumerate}[leftmargin=1.5em]
+    \setcounter{enumi}{4}
+    \item 查看节点信息
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image19}
+\caption{节点信息}
+\end{figure}
+
+\subsection{节点无法连接的调试}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item 查看防火墙，如果有，需要关闭
+    \item 检查 \lstinline|.erlang.cookie| 是否一致
+    \item 检查 hosts 配置
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image20}
+\caption{节点连接调试 (1)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image21}
+\caption{节点连接调试 (2)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image22}
+\caption{节点连接调试 (3)}
+\end{figure}
+
+\subsection{把一个节点变成分布式节点}
+
+为节点起名字即可：
+
+\begin{lstlisting}
+net_kernel:start([foo, shortnames]).
+\end{lstlisting}
+
+启动之前：
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{image30}
+\caption{启动分布式之前}
+\end{figure}
+
+启动之后：
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{image31}
+\caption{启动分布式之后}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image32}
+\caption{net\_kernel:start 结果}
+\end{figure}
+
+这是多出来的一部分：
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image33}
+\caption{新增部分 (1)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image34}
+\caption{新增部分 (2)}
+\end{figure}
+
+源码位置：\lstinline|kernel-8.4.2/src/erl_distribution.erl|
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image35}
+\caption{erl\_distribution 源码 (1)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image36}
+\caption{erl\_distribution 源码 (2)}
+\end{figure}
+
+\subsection{Erlang 节点间通信}
+
+参见：\href{https://doc.weixin.qq.com/doc/w3_AIUAewaBACcKvp9d0QlSbafbqP8YO?scode=AJEAIQdfAAo4VWNB0wAIUAewaBACc}{erlang 节点间通信 -- Net Tick Time}
+
+\subsection{找到 pid/reference/port 所在的 node}
+
+参考：\href{https://www.erlang.org/doc/man/erlang.html#node-1}{Erlang -- erlang:node/1}

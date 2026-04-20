@@ -1,0 +1,119 @@
+% ============================================================
+% Chapter 4: Debugging and Monitoring
+% ============================================================
+\section{调试与监控}
+
+\subsection{调试 RabbitMQ 节点}
+
+\subsubsection{初步启动}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.35\textwidth]{image23}
+\caption{RabbitMQ 初步启动}
+\end{figure}
+
+\subsubsection{停止}
+
+\begin{lstlisting}
+(rabbit@centos7-mq1)2> rabbit:stop().
+ok
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image24}
+\caption{RabbitMQ 停止}
+\end{figure}
+
+\subsubsection{再次开启}
+
+\begin{lstlisting}
+(rabbit@centos7-mq1)4> rabbit:start().
+ok
+\end{lstlisting}
+
+\subsection{节点位置无关性}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image25}
+\caption{节点位置无关性 (1)}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image26}
+\caption{节点位置无关性 (2)}
+\end{figure}
+
+\subsection{调试加载系统库和当前目录}
+
+\subsection{列出已加载的库（符号表）}
+
+\begin{lstlisting}
+code:all_loaded().
+rp(code:all_loaded()).
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image27}
+\caption{已加载模块列表}
+\end{figure}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item 加载模块：\lstinline|l(ping).|
+    \item 显示模块：\lstinline|{ping, "/home/ericksun/.../ping.beam"}|
+\end{itemize}
+
+\subsection{查看所有的路径}
+
+使用 \lstinline|filename| 模块。
+
+\subsection{唤起 xterm}
+
+\begin{lstlisting}[style=shellstyle]
+sudo yum install xterm.x86_64
+\end{lstlisting}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image29}
+\caption{xterm 界面}
+\end{figure}
+
+\subsection{查看 Monitor/Link 进程}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item 查看 monitor 或 link 进程的情况
+    \item 获取没有被 link 和 monitor 的进程
+    \item 查看占用内存最大的进程
+\end{itemize}
+
+\subsection{日志}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \href{https://www.erlang.org/doc/man/logger.html#macros}{Erlang -- logger}
+    \item \href{https://www.erlang.org/doc/man/erlang#type-reference}{Erlang -- erlang reference}
+\end{itemize}
+
+\subsection{再查清楚：日志 handler 是怎么注册的}
+
+\subsubsection{旧版 error\_logger}
+
+在较旧的 Erlang 版本里，\lstinline|error_logger| 是主要的日志和事件管理模块。可以借助 \lstinline|gen_event:which_handlers/1| 函数来查看 \lstinline|error_logger| 事件管理器里的所有处理程序。
+
+\subsubsection{新版 logger 模块}
+
+从 Erlang/OTP 21.0 版本开始，引入了新的 \lstinline|logger| 模块来替代 \lstinline|error_logger|。可以通过 \lstinline|logger:get_handler_config/0| 函数查看所有已配置的处理程序。
+
+\subsection{查看 event 中所有的 handler}
+
+\begin{lstlisting}
+% Old version
+gen_event:which_handlers(error_logger).
+
+% New version (OTP 21+)
+logger:get_handler_config().
+\end{lstlisting}

@@ -1,0 +1,42 @@
+% ============================================================
+% Chapter 7: Mnesia Database
+% ============================================================
+\section{Mnesia 数据库}
+
+\subsection{定义 Record}
+
+\begin{lstlisting}
+rd(factorial, {nodeName, comment, createdOn}).
+\end{lstlisting}
+
+\subsection{加载 Record}
+
+\begin{lstlisting}
+7> rr(amqp_connection).
+\end{lstlisting}
+
+参考：\href{https://www.erlang.org/doc/man/shell}{Erlang -- shell}
+
+\subsection{创建 Mnesia 表}
+
+\begin{lstlisting}
+rd(factorial, {nodeName, comment, createdOn}).
+
+Result = mnesia:create_table(factorial,
+    [{attributes, record_info(fields, factorial)},
+     {type, bag},
+     {ram_copies, [node()]}]).
+
+Result2 = mnesia:create_table(factorial1,
+    [{attributes, record_info(fields, factorial)},
+     {type, bag},
+     {disc_copies, [node()]}]).
+\end{lstlisting}
+
+\subsection{查看 Mnesia 表信息}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image2}
+\caption{Mnesia 表信息}
+\end{figure}

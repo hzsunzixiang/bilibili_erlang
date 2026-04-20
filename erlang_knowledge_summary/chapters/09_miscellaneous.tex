@@ -1,0 +1,38 @@
+% ============================================================
+% Chapter 9: Miscellaneous
+% ============================================================
+\section{其他知识点}
+
+\subsection{获取系统信息}
+
+\subsection{net\_adm:localhost/0}
+
+\begin{lstlisting}
+1> net_adm:localhost().
+"centos7-mq1"
+\end{lstlisting}
+
+\subsection{监控垃圾回收}
+
+\subsection{清屏}
+
+参考：\href{https://stackoverflow.com/questions/37829916/how-do-i-reset-clear-erlang-terminal}{Stack Overflow - How do I reset/clear erlang terminal}
+
+\subsection{列表打印完全：rp(Term)}
+
+\lstinline|rp(Term)| 使用 shell 已知的 record 定义来打印 term。所有内容都会完整打印，不会像返回值那样限制深度。
+
+\begin{lstlisting}
+rp(code:all_loaded()).
+\end{lstlisting}
+
+参考：\href{https://www.erlang.org/doc/man/shell.html}{Erlang -- shell}、\href{https://stackoverflow.com/questions/75566211/how-does-it-show-completely-on-erl-terminal-in-erlang}{Stack Overflow}
+
+\subsection{Core Erlang}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \href{https://www.it.uu.se/research/group/hipe/cerl/doc/core_erlang-1.0.3.pdf}{Core Erlang 规范 (PDF)}
+    \item \href{https://www.erlang.org/blog/core-erlang-by-example/}{Core Erlang by Example - Erlang/OTP}
+    \item \href{https://baha.github.io/intro-core-erlang-2/}{A Gentle Introduction to Core Erlang: Part 2}
+    \item \href{https://8thlight.com/insights/the-core-of-erlang}{The Core of Erlang}
+\end{itemize}

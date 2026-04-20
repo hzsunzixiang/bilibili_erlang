@@ -1,0 +1,60 @@
+% ============================================================
+% Chapter 2: Module Attributes
+% ============================================================
+\section{模块属性（Module Attributes）}
+
+\subsection{基本属性}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image3}
+\caption{Module Attributes 概览}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{image4}
+\caption{Module Attributes 详解}
+\end{figure}
+
+参考：
+\begin{itemize}[leftmargin=1.5em]
+    \item \href{https://www.erlang.org/doc/reference_manual/modules}{Erlang -- Modules}
+    \item \href{https://www.tutorialspoint.com/erlang/erlang_modules.htm}{Erlang - Modules (TutorialsPoint)}
+\end{itemize}
+
+\subsection{Tuple 形式的模块属性}
+
+Tuple 形式的属性与普通属性没有任何差别，例如：
+
+\begin{lstlisting}
+-module(rabbit).
+-author("TutorialPoint").
+-version("1.0").
+-module_description("This is an example module.").
+
+-rabbit_boot_step({pre_boot,
+    [{description, "rabbit boot start"}]}).
+
+-rabbit_boot_step({codec_correctness_check,
+    [{description, "codec correctness check"},
+     {mfa, {rabbit_binary_generator,
+            check_empty_frame_size, []}},
+     {requires, pre_boot},
+     {enables, external_infrastructure}]}).
+
+-export([start/0]).
+-export([start1/0]).
+
+start() ->
+    io:fwrite("Hello World\n"),
+    ModuleInfo = rabbit:module_info(),
+    Attributes = rabbit:module_info(attributes),
+    io:format("~p~n", [Attributes]),
+    finish.
+\end{lstlisting}
+
+\begin{notebox}[要点]
+Any module attribute can be specified. The attributes are stored in the compiled code and can be retrieved by calling \lstinline|Module:module_info(attributes)|, or by using the module \lstinline|beam_lib(3)| in STDLIB.
+Tuple 形式的属性值是叠加的。
+\end{notebox}
