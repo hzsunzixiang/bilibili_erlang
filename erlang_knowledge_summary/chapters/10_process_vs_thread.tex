@@ -1,0 +1,144 @@
+% ============================================================
+% Chapter 10: Process vs Thread
+% ============================================================
+\section{进程与线程}
+
+\subsection{基本概念}
+
+进程（Process）和线程（Thread）都是独立的执行序列，但它们之间有本质区别：
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{进程}：运行在独立的内存空间中，拥有自己的虚拟地址空间、可执行代码、打开的系统对象句柄、安全上下文、唯一进程标识符、环境变量、优先级类等资源。每个进程至少拥有一个线程（主线程）。
+    \item \textbf{线程}：运行在进程内部，与同进程的其他线程共享内存空间和系统资源。每个线程维护自己的异常处理器、调度优先级、线程本地存储、唯一线程标识符，以及保存线程上下文所需的结构（包括寄存器集、内核栈和用户栈）。
+\end{itemize}
+
+\begin{notebox}[核心区别]
+线程（同一进程内的）运行在\textbf{共享内存空间}中，而进程运行在\textbf{独立内存空间}中。
+\end{notebox}
+
+\subsection{资源划分}
+
+根据 Tanenbaum 在《现代操作系统》中的经典描述，进程模型基于两个独立概念：\textbf{资源分组}和\textbf{执行}。
+
+进程是一种将相关资源组织在一起的方式——它包含地址空间（程序文本和数据）、打开的文件、子进程、待处理的闹钟、信号处理器、记账信息等。而线程是执行的基本单位——拥有程序计数器（跟踪下一条要执行的指令）、寄存器（保存当前工作变量）和栈（包含执行历史）。
+
+\begin{table}[H]
+\centering
+\caption{进程与线程的资源划分}
+\begin{tabular}{ll}
+\toprule
+\textbf{进程级资源} & \textbf{线程级资源} \\
+\midrule
+地址空间         & 程序计数器 \\
+全局变量         & 寄存器 \\
+打开的文件       & 栈 \\
+子进程           & 状态 \\
+待处理的闹钟     & \\
+信号和信号处理器 & \\
+记账信息         & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{线程的软件实现方式}
+
+线程在软件层面有三种基本实现方式：
+
+\begin{enumerate}[leftmargin=1.5em]
+    \item \textbf{用户空间线程}：线程切换不需要陷入内核，速度极快，可以自定义调度策略。最大缺点是无法执行阻塞式 I/O（会阻塞整个进程及其所有用户线程）。
+    \item \textbf{内核线程}：能够使用阻塞式 I/O，调度由操作系统处理。但每次线程切换都需要陷入内核，相对较慢。
+    \item \textbf{混合方式}：多个内核线程，每个内核线程上再运行多个用户线程，结合两者优势。
+\end{enumerate}
+
+\subsection{硬件多线程}
+
+经典的 CPU 维护单一线程的执行状态（一个程序计数器 + 一组寄存器）。当发生缓存未命中时，CPU 需要等待从主存读取数据，此时 CPU 空闲。
+
+硬件多线程（如超线程 / SMT）的基本思路是：在 CPU 核心内维护两套线程状态（PC + 寄存器），当一个线程等待主存时，另一个线程可以继续工作，从而提高 CPU 利用率。
+
+\subsection{进程与线程的对比总结}
+
+\begin{table}[H]
+\centering
+\caption{进程与线程对比}
+\begin{tabular}{lll}
+\toprule
+\textbf{特性} & \textbf{进程} & \textbf{线程} \\
+\midrule
+内存空间     & 独立                   & 共享 \\
+创建开销     & 大（需分配地址空间）   & 小（轻量级） \\
+上下文切换   & 慢                     & 快 \\
+通信方式     & IPC（复杂、资源密集） & 共享内存（需同步） \\
+安全性       & 相互独立               & 相互依赖 \\
+崩溃影响     & 不影响其他进程         & 可能影响同进程所有线程 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Linux 的视角：执行上下文（COE）}
+
+Linus Torvalds 在 1996 年的 Linux 内核邮件列表中提出了一个不同的观点：\textbf{不应将"线程"和"进程"视为不同的实体}。
+
+他认为，两者本质上都是"执行上下文"（Context of Execution, COE）——包含了 CPU 状态（寄存器等）、MMU 状态（页映射）、权限状态（uid, gid）和各种"通信状态"（打开的文件、信号处理器等）。传统的线程/进程划分只是对 COE 状态共享程度的一种特定划分方式，而非唯一可能。
+
+在 Linux 中，线程和进程都是"任务"（task），它们可以选择性地共享部分上下文。Linux 的 \lstinline|clone()| 系统调用允许精细控制哪些资源需要共享，哪些需要独立，这超越了传统的线程/进程二分法。
+
+\subsection{Erlang 的进程模型}
+
+\subsubsection{为什么 Erlang 叫"进程"而非"线程"}
+
+Erlang 使用术语"进程"（process）来命名其并发执行单元，而非"线程"（thread）或"协程"（coroutine），这是由其核心设计哲学决定的：
+
+\begin{enumerate}[leftmargin=1.5em]
+    \item \textbf{无共享内存}：Erlang 进程之间\textbf{没有共享内存}，所有通信都通过消息传递完成。这是 Erlang 进程最根本的特征，也是最接近操作系统"进程"概念的原因——``Erlang 使用术语'进程'，因为它不暴露共享内存的多程序设计模型。称它们为'线程'将意味着它们拥有共享内存。''
+    \item \textbf{完全隔离}：每个 Erlang 进程拥有独立的堆、栈、邮箱和进程字典。一个进程的崩溃不会直接导致另一个进程的内存损坏，这与操作系统进程的隔离性一致。
+    \item \textbf{异步消息传递}：进程间唯一合法的通信方式是发送消息，发送者不阻塞等待接收者处理完成。这类似于操作系统中进程间通过管道或套接字通信。
+\end{enumerate}
+
+\begin{tipbox}[Erlang 进程 $\neq$ OS 进程]
+尽管 Erlang 使用"进程"一词，但 Erlang 进程并非操作系统级别的进程。它们是 Erlang 虚拟机（BEAM）内部的轻量级执行单元，由 BEAM 调度器管理。一个操作系统进程（BEAM VM）内部可以运行数百万个 Erlang 进程。
+\end{tipbox}
+
+\subsubsection{为什么不叫"线程"}
+
+"线程"一词在计算机科学中已有明确的语义约定——同一进程内的线程\textbf{共享地址空间}。如果 Erlang 称其执行单元为"线程"，将与这一约定矛盾：
+
+\begin{itemize}[leftmargin=1.5em]
+    \item 线程隐含共享内存语义，但 Erlang 进程之间\textbf{严格禁止共享内存}
+    \item 线程模型需要锁、互斥量等同步原语来保护共享数据，而 Erlang 的消息传递模型\textbf{不需要锁}
+    \item 线程的故障会波及同进程内的所有线程（共享内存损坏），而 Erlang 进程故障通过链接和监控机制被\textbf{隔离和处理}（``Let it crash'' 哲学）
+\end{itemize}
+
+\subsubsection{为什么不叫"协程"}
+
+协程（coroutine）是一种\textbf{协作式}的多任务机制，执行流由程序员显式控制（通过 yield/resume 切换），而 Erlang 进程是\textbf{抢占式}调度的：
+
+\begin{itemize}[leftmargin=1.5em]
+    \item 协程需要手动让出控制权，一个不协作的协程会阻塞整个系统
+    \item Erlang 的 BEAM 调度器会在每个\textbf{reduction}（约一次函数调用）后检查是否需要切换进程，实现公平的抢占式调度
+    \item 协程通常运行在同一个栈上，而 Erlang 进程拥有完全独立的栈和堆
+\end{itemize}
+
+\subsubsection{Erlang 进程的独特优势}
+
+\begin{table}[H]
+\centering
+\caption{Erlang 进程与 OS 进程/线程/协程的对比}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{特性} & \textbf{OS 进程} & \textbf{OS 线程} & \textbf{协程} & \textbf{Erlang 进程} \\
+\midrule
+内存隔离       & 是       & 否       & 否       & 是 \\
+共享内存       & 否       & 是       & 是       & 否 \\
+创建开销       & 大       & 中       & 极小     & 极小 \\
+调度方式       & 抢占式   & 抢占式   & 协作式   & 抢占式 \\
+并发规模       & 数十     & 数百     & 数万     & 数百万 \\
+故障隔离       & 是       & 否       & 否       & 是 \\
+通信方式       & IPC      & 共享内存 & 直接调用 & 消息传递 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{warnbox}[术语陷阱]
+在不同的编程语言和操作系统中，"进程"和"线程"的含义可能不同。例如 Linux 中线程本质上也是进程（任务），只是共享了部分上下文；而 Erlang 的"进程"既不是 OS 进程也不是 OS 线程，而是 BEAM 虚拟机内的轻量级并发单元。理解术语的\textbf{语义}比纠结于术语的\textbf{名称}更重要。
+\end{warnbox}
