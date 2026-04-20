@@ -4,17 +4,17 @@
 LATEX = xelatex
 LATEXFLAGS = -interaction=nonstopmode -halt-on-error
 
-SOURCES = gen_event_architecture_pid.tex
+SOURCES = gen_event_architecture_pid.tex gen_event_architecture_named.tex
 
 PDFS = $(SOURCES:.tex=.pdf)
 
 .PHONY: all clean distclean
 
 all: $(PDFS)
+	@$(MAKE) clean
 
 %.pdf: %.tex
 	$(LATEX) $(LATEXFLAGS) $<
-	@rm -f $*.aux $*.log $*.out
 
 clean:
 	rm -f *.aux *.log *.out *.synctex.gz
