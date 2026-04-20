@@ -10,8 +10,8 @@ TEX = xelatex
 TEXFLAGS = -interaction=nonstopmode -halt-on-error
 
 # Architecture diagram (standalone)
-SRC = gen_server_architecture_pid.tex
-PDF = gen_server_architecture_pid.pdf
+SRC = gen_server_architecture.tex
+PDF = gen_server_architecture.pdf
 
 # Image dependencies (architecture diagram PDFs)
 IMAGES_DIR = images
