@@ -10,7 +10,7 @@ SOURCES = gen_event_architecture.tex \
 
 PDFS = $(SOURCES:.tex=.pdf)
 
-.PHONY: all clean
+.PHONY: all clean distclean
 
 all: $(PDFS)
 
@@ -19,4 +19,7 @@ all: $(PDFS)
 	@rm -f $*.aux $*.log $*.out
 
 clean:
-	rm -f *.pdf *.aux *.log *.out *.synctex.gz
+	rm -f *.aux *.log *.out *.synctex.gz
+
+distclean: clean
+	rm -f *.pdf
