@@ -1,0 +1,215 @@
+% gen_event Architecture Diagram (Standalone)
+% Based on gen_event event manager architecture.
+% Compile with: xelatex gen_event_architecture.tex
+\documentclass[border=10pt]{standalone}
+
+% ============================================================
+% Packages
+% ============================================================
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont[BoldFont=STHeiti, ItalicFont=STKaiti]{STSong}
+\setCJKsansfont{STHeiti}
+\setCJKmonofont{STFangsong}
+
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pifont}  % for \ding symbols (circled numbers)
+
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, calc, backgrounds, decorations.pathreplacing}
+
+% ============================================================
+% Color Definitions (same as gen_server_api_guide.tex)
+% ============================================================
+\definecolor{erlred}{HTML}{A4070A}
+\definecolor{erlblue}{HTML}{2B5EA7}
+\definecolor{erlgreen}{HTML}{2E7D32}
+\definecolor{erlyellow}{HTML}{F9A825}
+\definecolor{erlpurple}{HTML}{6A1B9A}
+\definecolor{erlmodule}{HTML}{D84315}  % dedicated color for ?MODULE
+\definecolor{erlinit}{HTML}{00897B}    % dedicated vivid teal color for init/1
+\definecolor{erlpid}{HTML}{E65100}     % dedicated color for Pid return
+
+% ============================================================
+% Architecture Diagram
+% ============================================================
+\begin{document}
+
+\begin{tikzpicture}[scale=0.68, every node/.style={scale=0.68},
+    quadrant/.style={minimum width=6.5cm, minimum height=4.5cm, text width=5.8cm, align=left, font=\small},
+    api/.style={font=\scriptsize\ttfamily, inner sep=2pt},
+]
+    % ---- Outer frames ----
+    % Left half
+    \node[draw=erlpurple!60, fill=erlpurple!3, rounded corners=6pt,
+          minimum width=6.6cm, minimum height=10.4cm] (leftframe) at (-4.8, -0.55) {};
+\node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {用户自定义handler（启动Manager）};
+\node[font=\small\ttfamily\bfseries\itshape\color{black}, anchor=north west] at ([xshift=3pt, yshift=-1pt]leftframe.north west) {event\_counter.erl};
+    \draw[dashed, black, line width=0.5pt]
+        ([xshift=3pt, yshift=-13pt]leftframe.north west) -- ([xshift=-3pt, yshift=-13pt]leftframe.north east);
+
+    % Right half
+    \node[draw=erlblue!60, fill=erlblue!3, rounded corners=6pt,
+          minimum width=6.6cm, minimum height=10.4cm] (rightframe) at (6.4, -0.55) {};
+    \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {gen\_event 库（非独立进程）};
+\node[font=\small\ttfamily\bfseries\itshape\color{black}, anchor=north west] at ([xshift=3pt, yshift=-1pt]rightframe.north west) {gen\_event.erl};
+    \draw[dashed, black, line width=0.5pt]
+        ([xshift=3pt, yshift=-13pt]rightframe.north west) -- ([xshift=-3pt, yshift=-13pt]rightframe.north east);
+
+    % Connect the two dashed lines in the middle
+    \draw[dashed, black, line width=0.5pt]
+        ([xshift=-3pt, yshift=-13pt]leftframe.north east) -- ([xshift=3pt, yshift=-13pt]rightframe.north west);
+
+    % ---- Left-Top
+    % ---- Left-Top: Callback Module (User Code — source) ----
+    \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (lt) at (-4.8, 1.75) {};
+\node[font=\small\bfseries\color{erlgreen!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {Manager 进程（启动gen\_event）};
+    \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lt.north west) {
+        \textcolor{erlgreen!70!black}{-module(event\_counter).}\\
+        \textcolor{erlgreen!70!black}{-behaviour(gen\_event).}
+    };
+    % Highlight start_link inside Callback Module
+    \node[draw=erlred!70, fill=erlred!8, rounded corners=3pt,
+          font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north]
+        (startlink) at ([yshift=-42pt]lt.north)
+        {\textcolor{erlred!80!black}{\ding{72} gen\_event:add\_handler(Mgr, \textcolor{erlmodule}{\textbf{?MODULE}}, Args)}};
+    \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-60pt]lt.north west) {
+\textcolor{erlinit}{\textbf{init/1}}\\
+        handle\_event/2\\
+        handle\_call/2\\
+        handle\_info/2\\
+        terminate/2\\
+        code\_change/3
+    };
+
+    % Vertical dashed line from left endpoint of the dashed line down to just below lt.south
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=3pt, yshift=-13pt]leftframe.north west),
+            \p2 = ([yshift=-6pt]lt.south)
+        in (\p1) -- (\x1, \y2);
+
+    % Horizontal dashed line from the bottom of the vertical line to near right outer frame left edge
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=3pt, yshift=-13pt]leftframe.north west),
+            \p2 = ([yshift=-6pt]lt.south),
+            \p3 = ([xshift=-3pt]rightframe.west)
+        in (\x1, \y2) -- (\x3, \y2);
+
+    % ---- Left-Bottom: Client API (runtime communication via Pid) ----
+    \node[draw=erlpurple, fill=erlpurple!8, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (lb) at (-4.8, -2.85) {};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Client进程（使用者）};
+    \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lb.north west) {
+        gen\_event:notify(\textcolor{erlpid}{\textbf{MgrRef}}, Event)\\
+        gen\_event:sync\_notify(\textcolor{erlpid}{\textbf{MgrRef}}, Event)\\
+        gen\_event:call(\textcolor{erlpid}{\textbf{MgrRef}}, Handler, Req)\\
+        gen\_event:stop(\textcolor{erlpid}{\textbf{MgrRef}})
+    };
+    % Note: ?MODULE = event_counter
+    \node[font=\tiny\color{gray}, anchor=south west] at ([xshift=6pt, yshift=3pt]lb.south west)
+        {备注：\texttt{\textcolor{erlpid}{\textbf{MgrRef}}} = \texttt{pid() | \{local, Name\}}};
+
+    % ---- Right-Top: Generic Server ----
+    \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (rt) at (6.4, 1.75) {};
+\node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Generic Event Manager Library};
+    \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
+        \textcolor{erlblue!80!black}{\ding{72} \textbf{运行时核心：}}\\
+        {\tiny\textcolor{erlred!80!black}{\textbf{维护 Handler 列表，逐一分发事件}}}\\
+        {\tiny\texttt{receive} $\rightarrow$ \texttt{Mod:handle\_event/2} \ldots}\\[6pt]
+        \textcolor{erlblue!80!black}{\ding{72} \textbf{启动流程：}}\\
+        {\tiny\texttt{start\_link} $\rightarrow$ \texttt{proc\_lib:start\_link} $\rightarrow$ \texttt{init\_it} $\rightarrow$ 空 Handler 列表}\\[6pt]
+        \textcolor{erlblue!80!black}{\ding{72} \textbf{Handler 列表结构：}}\\
+        {\tiny\texttt{[\#handler\{module, id, state\} | ...]}}\\[2pt]
+        {\tiny\texttt{add\_handler} $\rightarrow$ 调用 \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}} $\rightarrow$ 加入列表}\\
+        {\tiny\textcolor{erlinit}{\textbf{注意：}}每个 Handler 独立维护自己的 \texttt{State}}
+    };
+
+    % ---- Right-Bottom: Bound Callbacks (registered via ?MODULE) ----
+    \node[draw=erlgreen!70!black, fill=erlgreen!5, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (rb) at (6.4, -2.8) {};
+    \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {已注册的 Handler（运行时）};
+    \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
+        \textcolor{erlred!80!black}{\texttt{add\_handler(Mgr, \textcolor{erlmodule}{\textbf{?MODULE}}, ...)}} 之后：\\[3pt]
+        \texttt{fun event\_counter:init/1}\\
+        \texttt{fun event\_counter:handle\_event/2}\\
+        \texttt{fun event\_counter:handle\_call/2}\\
+        \texttt{fun event\_counter:handle\_info/2}\\
+        \texttt{fun event\_counter:terminate/2}\\[0pt]
+        {\tiny\textcolor{gray}{\textcolor{erlmodule}{\textbf{\texttt{?MODULE}}}\kern1pt 的信息存储在 \texttt{\#handler\{\}} 记录中}}
+    };
+
+    % ==== Arrows ====
+
+    % ==== Phase 1: Startup ====
+
+    % Arrow ①: start_link — the KEY arrow, from Callback Module (lt) to Generic Server (rt)
+    % Aligned with startlink node center: yshift=3.8mm from lt.east
+    \draw[-{Stealth[length=6pt]}, ultra thick, erlred!80!black, line width=1.6pt]
+        ([yshift=3.8mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlred!80!black]
+        {\textcolor{black}{\ding{172}} 注册Handler $\rightarrow$ 传递模块名\\[1pt]
+         \texttt{add\_handler(Mgr, \textcolor{erlmodule}{\textbf{?MODULE}}, Args)}} ([yshift=3.8mm]rt.west);
+
+    % Arrow ③: Return {ok, Pid} — from Generic Server back to Callback Module
+    % Both endpoints shifted down by 0.8cm: yshift=1.5mm-8mm=-6.5mm
+    \draw[-{Stealth[length=6pt]}, ultra thick, erlpid!90!black, line width=1.6pt]
+        ([yshift=-6.5mm]rt.west) -- node[below, font=\scriptsize, align=center, text=erlpid!80!black]
+        {\textcolor{black}{\ding{174}} 返回 \texttt{\textcolor{erlpid}{\textbf{ok}}}\\[1pt]
+         {\tiny \textcolor{erlinit}{\textbf{init/1}} 成功后 Handler 加入 Manager 列表}} ([yshift=-6.5mm]lt.east);
+
+    % ==== Phase 2: Runtime ====
+
+    % Arrow ④: Client API (lb) -> Callback Module (lt) (call / cast / send_request)
+    \draw[-{Stealth[length=5pt]}, thick, erlblue, line width=1.2pt]
+        ([xshift=-4mm]lb.north) -- node[left, font=\scriptsize, align=center, anchor=north east, yshift=6pt] {\textcolor{black}{\ding{175}} \textcolor{erlblue}{notify / call}} ([xshift=-4mm]lt.south);
+
+    % Arrow ②: Generic Server -> Bound Callbacks (function registration)
+    \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt]
+        ([xshift=0mm]rt.south) -- node[right, font=\scriptsize, align=left, text=erlgreen!70!black]
+        {\scriptsize\bfseries \textcolor{black}{\ding{173}} Handler注册\\[1pt]
+         \tiny \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} $\rightarrow$ \texttt{\#handler\{\}}} ([xshift=0mm]rb.north);
+
+    % Arrow ⑤: Callback Module (lt) -> Client API (lb) (Reply)
+    \draw[-{Stealth[length=5pt]}, thick, erlred, line width=1.2pt]
+        ([xshift=4mm]lt.south) -- node[right, font=\scriptsize, align=center, anchor=north west, yshift=6pt] {\textcolor{black}{\ding{176}} \textcolor{erlred}{Reply}} ([xshift=4mm]lb.north);
+
+    % ---- Dashed separator lines below inner boxes ----
+    \draw[dashed, erlpurple!40, line width=0.6pt]
+        ([yshift=-6pt]lb.south west) -- ([yshift=-6pt]lb.south east);
+    \draw[dashed, black, line width=0.6pt]
+        let \p1 = ([xshift=-3pt]rightframe.west),
+            \p2 = ([yshift=-6pt]rb.south west),
+            \p3 = ([xshift=-3pt]rightframe.east)
+        in (\x1, \y2) -- (\x3, \y2);
+
+    % Vertical dashed line from the right endpoint of horizontal dashed line down to the right bottom dashed line
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=-3pt]rightframe.west),
+            \p2 = ([yshift=-6pt]lt.south),
+            \p3 = ([yshift=-6pt]rb.south)
+        in (\x1, \y2) -- (\x1, \y3);
+
+    % Vertical dashed line from top dashed line right endpoint down to right bottom dashed line right endpoint
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=-3pt, yshift=-13pt]rightframe.north east),
+            \p2 = ([yshift=-6pt]rb.south),
+            \p3 = ([xshift=-3pt]rightframe.east)
+        in (\x3, \y1) -- (\x3, \y2);
+
+    % Left bottom annotation (inside left outer frame, below dashed line)
+    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]lb.south west)
+        {\ding{72} \texttt{add\_handler} 是连接左右两半的关键桥梁：\\
+         \ding{72} \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 使得 Manager 知道调用哪个模块的回调函数\\
+         \ding{72} 这里 \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 是宏，指的是 \texttt{event\_counter}};
+
+    % Right bottom annotation (inside right outer frame, below dashed line)
+    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
+        {\ding{72} \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}} 注册Handler时调用用户编写的 \textcolor{erlinit}{\textbf{\texttt{init/1}}}\\
+         \ding{72} \textcolor{erlinit}{\textbf{\texttt{init/1}}} 提供 \textcolor{erlblue}{\textbf{State}} 的初始值，每个Handler独立维护\\
+         \ding{72} \textcolor{erlblue}{\textbf{State}} 保存在 \texttt{\#handler\{state=State\}} 中，随事件分发更新\\
+         \ding{72} 一个 Manager 可注册多个 Handler，事件广播给所有 Handler};
+
+\end{tikzpicture}
+
+\end{document}

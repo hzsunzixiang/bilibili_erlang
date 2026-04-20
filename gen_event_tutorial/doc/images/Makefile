@@ -4,9 +4,8 @@
 LATEX = xelatex
 LATEXFLAGS = -interaction=nonstopmode -halt-on-error
 
-SOURCES = gen_event_architecture.tex \
-          gen_event_handler_lifecycle.tex \
-          gen_event_vs_gen_server.tex
+SOURCES = gen_event_architecture_pid.tex \
+          gen_event_architecture_named.tex
 
 PDFS = $(SOURCES:.tex=.pdf)
 
