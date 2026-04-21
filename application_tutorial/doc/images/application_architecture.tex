@@ -1,172 +1,226 @@
-% Application Architecture Diagram
-% Standalone TikZ diagram showing the application behaviour architecture.
+% Application Architecture Diagram (Standalone)
+% Shows the relationship between Application Controller, Application Master,
+% Callback Module (.app file), and the Supervision Tree.
 % Compile with: xelatex application_architecture.tex
 \documentclass[border=10pt]{standalone}
 
+% ============================================================
+% Packages
+% ============================================================
 \usepackage{fontspec}
 \usepackage{xeCJK}
 \setCJKmainfont[BoldFont=STHeiti, ItalicFont=STKaiti]{STSong}
 \setCJKsansfont{STHeiti}
 \setCJKmonofont{STFangsong}
 
+\usepackage{xcolor}
 \usepackage{tikz}
+\usepackage{pifont}  % for \ding symbols (circled numbers)
+
 \usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, calc, backgrounds, decorations.pathreplacing}
 
+% ============================================================
 % Color Definitions
+% ============================================================
 \definecolor{erlred}{HTML}{A4070A}
 \definecolor{erlblue}{HTML}{2B5EA7}
 \definecolor{erlgreen}{HTML}{2E7D32}
 \definecolor{erlyellow}{HTML}{F9A825}
 \definecolor{erlpurple}{HTML}{6A1B9A}
-\definecolor{erlmodule}{HTML}{D84315}
-\definecolor{erlinit}{HTML}{00897B}
-\definecolor{erlpid}{HTML}{E65100}
-\definecolor{erlname}{HTML}{6A1B9A}
-\definecolor{darkgray}{HTML}{333333}
+\definecolor{erlmodule}{HTML}{D84315}  % dedicated color for callback module
+\definecolor{erlinit}{HTML}{00897B}    % dedicated vivid teal color
+\definecolor{erlpid}{HTML}{E65100}     % dedicated color for Pid return
+\definecolor{erlapp}{HTML}{1565C0}     % dedicated color for .app file
 
+% ============================================================
+% Architecture Diagram
+% ============================================================
 \begin{document}
-\begin{tikzpicture}[
-    % Node styles
-    controller/.style={draw=erlblue!80, fill=erlblue!10, rounded corners=6pt,
-        minimum width=4.5cm, minimum height=1.4cm, font=\large\bfseries,
-        line width=1.2pt},
-    master/.style={draw=erlpurple!80, fill=erlpurple!10, rounded corners=6pt,
-        minimum width=4cm, minimum height=1.2cm, font=\normalsize\bfseries,
-        line width=1pt},
-    supervisor/.style={draw=erlred!80, fill=erlred!10, rounded corners=6pt,
-        minimum width=3.5cm, minimum height=1.2cm, font=\normalsize\bfseries,
-        line width=1pt},
-    worker/.style={draw=erlgreen!80, fill=erlgreen!10, rounded corners=6pt,
-        minimum width=2.8cm, minimum height=1cm, font=\small\bfseries,
-        line width=0.8pt},
-    appfile/.style={draw=erlyellow!80, fill=erlyellow!10, rounded corners=4pt,
-        minimum width=3.5cm, minimum height=1cm, font=\small,
-        line width=0.8pt},
-    callback/.style={draw=erlmodule!80, fill=erlmodule!10, rounded corners=4pt,
-        minimum width=3.5cm, minimum height=1cm, font=\small,
-        line width=0.8pt},
-    labelstyle/.style={font=\scriptsize\ttfamily, fill=white, inner sep=2pt},
+
+\begin{tikzpicture}[scale=0.68, every node/.style={scale=0.68},
+    quadrant/.style={minimum width=6.5cm, minimum height=4.5cm, text width=5.8cm, align=left, font=\small},
+    api/.style={font=\scriptsize\ttfamily, inner sep=2pt},
 ]
+    % ---- Outer frames ----
+    % Left half: User-defined code
+    \node[draw=erlpurple!60, fill=erlpurple!3, rounded corners=6pt,
+          minimum width=6.6cm, minimum height=10.4cm] (leftframe) at (-4.8, -0.55) {};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=south] at (leftframe.north) {用户定义模块（Application的启动）};
+    \node[font=\small\ttfamily\bfseries\itshape\color{black}, anchor=north west] at ([xshift=3pt, yshift=-1pt]leftframe.north west) {bsc.erl + bsc.app};
+    \draw[dashed, black, line width=0.5pt]
+        ([xshift=3pt, yshift=-13pt]leftframe.north west) -- ([xshift=-3pt, yshift=-13pt]leftframe.north east);
 
-    % ============================================================
-    % Title
-    % ============================================================
-    \node[font=\LARGE\bfseries\color{erlblue}] (title) at (5, 8.5)
-        {Application Behaviour 架构};
-    \node[font=\small\color{darkgray}] at (5, 7.8)
-        {application:start(AppName) $\rightarrow$ Module:start/2 $\rightarrow$ TopSupervisor};
+    % Right half: OTP Application library
+    \node[draw=erlblue!60, fill=erlblue!3, rounded corners=6pt,
+          minimum width=6.6cm, minimum height=10.4cm] (rightframe) at (6.4, -0.55) {};
+    \node[font=\small\bfseries\color{erlblue}, anchor=south] at (rightframe.north) {application库（应用管理引擎）};
+    \node[font=\small\ttfamily\bfseries\itshape\color{black}, anchor=north west] at ([xshift=3pt, yshift=-1pt]rightframe.north west) {application.erl};
+    \draw[dashed, black, line width=0.5pt]
+        ([xshift=3pt, yshift=-13pt]rightframe.north west) -- ([xshift=-3pt, yshift=-13pt]rightframe.north east);
 
-    % ============================================================
-    % Left side: Application Resource File (.app)
-    % ============================================================
-    \node[appfile, text width=3.8cm, align=left] (appfile) at (-3.5, 4.5) {
-        \textbf{myapp.app}\\[2pt]
-        {\scriptsize\ttfamily \{application, myapp,}\\
-        {\scriptsize\ttfamily ~~[\{mod, \{myapp, []\}\},}\\
-        {\scriptsize\ttfamily ~~~\{applications,}\\
-        {\scriptsize\ttfamily ~~~~[kernel, stdlib]\},}\\
-        {\scriptsize\ttfamily ~~~\{env, [...]\}]\}.}
+    % Connect the two dashed lines in the middle
+    \draw[dashed, black, line width=0.5pt]
+        ([xshift=-3pt, yshift=-13pt]leftframe.north east) -- ([xshift=3pt, yshift=-13pt]rightframe.north west);
+
+    % ---- Left-Top: Callback Module + .app file (User Code — source) ----
+    \node[draw=erlgreen, fill=erlgreen!8, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (lt) at (-4.8, 1.75) {};
+    \node[font=\small\bfseries\color{erlgreen!80!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lt.north west) {回调模块 + .app 资源文件};
+    \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lt.north west) {
+        \textcolor{erlgreen!70!black}{-module(bsc).}\\
+        \textcolor{erlgreen!70!black}{-behaviour(application).}
+    };
+    % Highlight start/2 callback inside Callback Module
+    \node[draw=erlred!70, fill=erlred!8, rounded corners=3pt,
+          font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north]
+        (startcb) at ([yshift=-42pt]lt.north)
+        {\textcolor{erlred!80!black}{\ding{72} start(\_Type, \_Args) -> bsc\_sup:start\_link()}};
+    \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-60pt]lt.north west) {
+        \textcolor{erlinit}{\textbf{stop/1}}\\[2pt]
+        {\tiny\textcolor{gray}{必须实现的回调函数：}}\\
+        {\tiny\textcolor{gray}{start/2 → \{ok, Pid\} | \{ok, Pid, State\}}}\\
+        {\tiny\textcolor{gray}{stop/1 → 清理工作（进程已终止后调用）}}
     };
 
-    % ============================================================
-    % Application Controller (singleton per node)
-    % ============================================================
-    \node[controller] (ac) at (5, 6) {Application Controller};
-    \node[font=\scriptsize\color{erlblue!70}, below=1pt of ac] {每个节点一个，管理所有 Application};
+    % Vertical dashed line from left endpoint of the dashed line down to just below lt.south
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=3pt, yshift=-13pt]leftframe.north west),
+            \p2 = ([yshift=-6pt]lt.south)
+        in (\p1) -- (\x1, \y2);
 
-    % ============================================================
-    % Application Master
-    % ============================================================
-    \node[master] (am) at (5, 3.5) {Application Master};
-    \node[font=\scriptsize\color{erlpurple!70}, below=1pt of am] {每个 Application 一个};
+    % Horizontal dashed line from the bottom of the vertical line to near right outer frame left edge
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=3pt, yshift=-13pt]leftframe.north west),
+            \p2 = ([yshift=-6pt]lt.south),
+            \p3 = ([xshift=-3pt]rightframe.west)
+        in (\x1, \y2) -- (\x3, \y2);
 
-    % ============================================================
-    % Right side: Callback Module
-    % ============================================================
-    \node[callback, text width=3.5cm, align=left] (cbmod) at (13.5, 4.5) {
-        \textbf{Callback Module}\\[2pt]
-        {\scriptsize\ttfamily -behaviour(application).}\\
-        {\scriptsize\ttfamily start(Type, Args) ->}\\
-        {\scriptsize\ttfamily ~~myapp\_sup:start\_link().}\\
-        {\scriptsize\ttfamily stop(State) -> ok.}
+    % ---- Left-Bottom: Client API (runtime communication) ----
+    \node[draw=erlpurple, fill=erlpurple!8, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (lb) at (-4.8, -2.85) {};
+    \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Client进程（管理Application）};
+    \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lb.north west) {
+        application:start(\textcolor{erlapp}{\textbf{bsc}})\\
+        application:stop(\textcolor{erlapp}{\textbf{bsc}})\\
+        application:ensure\_all\_started(\textcolor{erlapp}{\textbf{bsc}})\\
+        application:get\_env(\textcolor{erlapp}{\textbf{bsc}}, Key)
+    };
+    % Note: AppName = atom()
+    \node[font=\tiny\color{gray}, anchor=south west] at ([xshift=6pt, yshift=3pt]lb.south west)
+        {备注：\texttt{\textcolor{erlapp}{\textbf{AppName}}} = \texttt{atom()}，对应 .app 文件中的名称};
+
+    % ---- Right-Top: Application Controller + Application Master ----
+    \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=4.2cm, text width=5.8cm, align=left] (rt) at (6.4, 1.75) {};
+    \node[font=\small\bfseries\color{erlblue}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rt.north west) {Application Controller \& Master};
+    \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rt.north west) {
+        \textcolor{erlblue!80!black}{\ding{72} \textbf{Application Controller（单例）：}}\\
+        {\tiny\textcolor{erlred!80!black}{\textbf{每个节点一个，管理所有 Application}}}\\
+        {\tiny 加载 .app $\rightarrow$ 检查依赖 $\rightarrow$ 创建 App Master}\\[6pt]
+        \textcolor{erlblue!80!black}{\ding{72} \textbf{Application Master（每App一个）：}}\\
+        {\tiny 调用 \textcolor{erlmodule}{\textbf{\texttt{Module:start/2}}} $\rightarrow$ 获取 Top Supervisor Pid}\\
+        {\tiny 作为 Group Leader，监控 Top Supervisor}\\[6pt]
+        \textcolor{erlblue!80!black}{\ding{72} \textbf{启动流程：}}\\
+        {\tiny\texttt{application:start} $\rightarrow$ \texttt{load .app} $\rightarrow$ \texttt{check deps}}\\
+        {\tiny $\rightarrow$ \texttt{create Master} $\rightarrow$ \textcolor{erlmodule}{\textbf{\texttt{Module:start/2}}} $\rightarrow$ \texttt{\{ok, Pid\}}}
     };
 
-    % ============================================================
-    % Top Supervisor
-    % ============================================================
-    \node[supervisor] (topsup) at (5, 0.8) {Top Supervisor};
-    \node[font=\scriptsize\color{erlred!70}, below=1pt of topsup] {myapp\_sup};
-
-    % ============================================================
-    % Child processes
-    % ============================================================
-    \node[worker] (w1) at (0.5, -2) {gen\_server};
-    \node[font=\scriptsize\color{erlgreen!70}, below=1pt of w1] {worker\_1};
-
-    \node[worker] (w2) at (5, -2) {gen\_event};
-    \node[font=\scriptsize\color{erlgreen!70}, below=1pt of w2] {worker\_2};
-
-    \node[worker] (w3) at (9.5, -2) {gen\_statem};
-    \node[font=\scriptsize\color{erlgreen!70}, below=1pt of w3] {worker\_3};
-
-    % ============================================================
-    % Arrows
-    % ============================================================
-    % App Controller -> App Master
-    \draw[-{Stealth[length=6pt]}, line width=1.5pt, erlblue!70]
-        (ac.south) -- node[labelstyle, right=2pt] {start\_application} (am.north);
-
-    % App file -> App Controller
-    \draw[-{Stealth[length=5pt]}, line width=1pt, erlyellow!80!black, dashed]
-        (appfile.east) -- node[labelstyle, above] {\scriptsize load .app} (ac.west);
-
-    % Callback Module -> App Master
-    \draw[-{Stealth[length=5pt]}, line width=1pt, erlmodule!80, dashed]
-        (cbmod.west) -- node[labelstyle, above] {\scriptsize Module:start/2} (am.east);
-
-    % App Master -> Top Supervisor
-    \draw[-{Stealth[length=6pt]}, line width=1.5pt, erlpurple!70]
-        (am.south) -- node[labelstyle, right=2pt] {start\_link} (topsup.north);
-
-    % Top Supervisor -> Workers
-    \draw[-{Stealth[length=5pt]}, line width=1pt, erlred!70]
-        (topsup.south) -- (w1.north);
-    \draw[-{Stealth[length=5pt]}, line width=1pt, erlred!70]
-        (topsup.south) -- (w2.north);
-    \draw[-{Stealth[length=5pt]}, line width=1pt, erlred!70]
-        (topsup.south) -- (w3.north);
-
-    % ============================================================
-    % Step annotations
-    % ============================================================
-    \node[font=\footnotesize\bfseries, circle, draw=erlblue, fill=erlblue!15,
-        inner sep=2pt] (s1) at (-1.5, 6) {\color{erlblue}1};
-    \node[font=\footnotesize\bfseries, circle, draw=erlpurple, fill=erlpurple!15,
-        inner sep=2pt] (s2) at (2.5, 4.8) {\color{erlpurple}2};
-    \node[font=\footnotesize\bfseries, circle, draw=erlred, fill=erlred!15,
-        inner sep=2pt] (s3) at (2.5, 2) {\color{erlred}3};
-    \node[font=\footnotesize\bfseries, circle, draw=erlgreen, fill=erlgreen!15,
-        inner sep=2pt] (s4) at (-1.5, -0.5) {\color{erlgreen}4};
-
-    \node[font=\scriptsize, anchor=west, text=erlblue!80] at (-1.2, 6)
-        {加载 .app 文件};
-    \node[font=\scriptsize, anchor=west, text=erlpurple!80] at (2.8, 4.8)
-        {创建 Application Master};
-    \node[font=\scriptsize, anchor=west, text=erlred!80] at (2.8, 2)
-        {调用 Module:start/2};
-    \node[font=\scriptsize, anchor=west, text=erlgreen!80] at (-1.2, -0.5)
-        {启动子进程树};
-
-    % ============================================================
-    % Application lifecycle box
-    % ============================================================
-    \node[draw=darkgray!50, fill=white, rounded corners=3pt,
-        text width=3.2cm, align=center, font=\scriptsize] (lifecycle) at (13.5, 0.8) {
-        \textbf{Application 生命周期}\\[3pt]
-        application:start/1,2\\
-        application:stop/1\\
-        application:ensure\_all\_started/1
+    % ---- Right-Bottom: Supervision Tree (managed by Application) ----
+    \node[draw=erlgreen!70!black, fill=erlgreen!5, rounded corners=5pt,
+          minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (rb) at (6.4, -2.85) {};
+    \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {监督树（由Application管理）};
+    \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
+        \textcolor{erlred!80!black}{\texttt{Module:start/2}} 返回后：\\[3pt]
+        \textcolor{erlblue}{\ding{72}} \texttt{Top Supervisor:} \textcolor{erlblue}{\textbf{bsc\_sup}}\\
+        \hspace{12pt}\textcolor{erlgreen!70!black}{\ding{72}} \texttt{child\_1:} \textcolor{erlgreen!70!black}{\textbf{gen\_server}} $\rightarrow$ \texttt{frequency}\\
+        \hspace{12pt}\textcolor{erlpurple}{\ding{72}} \texttt{child\_2:} \textcolor{erlpurple}{\textbf{gen\_event}} $\rightarrow$ \texttt{freq\_overload}\\
+        \hspace{12pt}\textcolor{erlinit}{\ding{72}} \texttt{child\_3:} \textcolor{erlinit}{\textbf{gen\_statem}} $\rightarrow$ \texttt{phone\_fsm}\\[2pt]
+        {\tiny\textcolor{gray}{Top Supervisor 终止 → Application Master 检测 → Application 终止}}
     };
 
+    % ==== .app Resource File Info Box (center-bottom gap) ====
+    \node[draw=erlyellow!80!black, fill=erlyellow!10, rounded corners=5pt,
+          minimum width=4.0cm, minimum height=3.4cm, text width=3.6cm, align=left,
+          font=\tiny] (appfilebox) at (0.8, -3.45) {
+        \textcolor{erlyellow!70!black}{\scriptsize\bfseries .app 资源文件}\\[2pt]
+        \texttt{\{application, bsc,}\\[0pt]
+        \hspace{4pt}\texttt{[\{}\textcolor{erlblue}{\textbf{mod}}\texttt{, \{bsc, []\}\},}\\
+        \hspace{5pt}\texttt{\{}\textcolor{erlred}{\textbf{applications}}\texttt{,}\\
+        \hspace{10pt}\texttt{[kernel, stdlib, sasl]\},}\\
+        \hspace{5pt}\texttt{\{}\textcolor{erlgreen}{\textbf{env}}\texttt{, [...]\},}\\
+        \hspace{5pt}\texttt{\{}\textcolor{erlpurple}{\textbf{modules}}\texttt{, [bsc, ...]\},}\\
+        \hspace{5pt}\texttt{\{}\textcolor{erlinit}{\textbf{registered}}\texttt{, [...]\}}\\
+        \texttt{]\}.}\\[3pt]
+        \ding{72} \textcolor{erlblue}{\textbf{mod}} 指定回调模块\\
+        \ding{72} \textcolor{erlred}{\textbf{applications}} 声明依赖
+    };
+
+    % ==== Arrows ====
+
+    % ==== Phase 1: Startup ====
+
+    % Arrow ①: application:start — from Client (lb) to Application Controller (rt)
+    \draw[-{Stealth[length=6pt]}, ultra thick, erlred!80!black, line width=1.6pt]
+        ([yshift=3.8mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlred!80!black]
+        {\textcolor{black}{\ding{172}} 启动 Application\\[1pt]
+         \texttt{application:start(\textcolor{erlapp}{\textbf{bsc}})}} ([yshift=3.8mm]rt.west);
+
+    % Arrow ③: Return {ok, Pid} — from Application Master back to Client
+    \draw[-{Stealth[length=6pt]}, ultra thick, erlpid!90!black, line width=1.6pt]
+        ([yshift=-6.5mm]rt.west) -- node[below, font=\scriptsize, align=center, text=erlpid!80!black]
+        {\textcolor{black}{\ding{174}} 返回 \texttt{\textcolor{erlpid}{\textbf{\{ok, Pid\}}}}\\[1pt]
+         {\tiny \textcolor{erlmodule}{\textbf{Module:start/2}} 成功后，Application 进入运行状态}} ([yshift=-6.5mm]lt.east);
+
+    % Arrow ④: Client API (lb) -> Callback Module (lt) (manage application)
+    \draw[-{Stealth[length=5pt]}, thick, erlblue, line width=1.2pt]
+        ([xshift=-4mm]lb.north) -- node[left, font=\scriptsize, align=center, anchor=north east, yshift=6pt] {\textcolor{black}{\ding{175}} \textcolor{erlblue}{start / stop /}\\[1pt]\textcolor{erlblue}{get\_env}} ([xshift=-4mm]lt.south);
+
+    % Arrow ②: Application Master -> Supervision Tree (start tree)
+    \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt]
+        ([xshift=0mm]rt.south) -- node[right, font=\scriptsize, align=left, text=erlgreen!70!black]
+        {\scriptsize\bfseries \textcolor{black}{\ding{173}} 启动监督树\\[1pt]
+         \tiny Module:start/2 $\rightarrow$ bsc\_sup:start\_link()} ([xshift=0mm]rb.north);
+
+    % Arrow ⑤: Callback Module (lt) -> Client API (lb) (Reply)
+    \draw[-{Stealth[length=5pt]}, thick, erlred, line width=1.2pt]
+        ([xshift=4mm]lt.south) -- node[right, font=\scriptsize, align=center, anchor=north west, yshift=6pt] {\textcolor{black}{\ding{176}} \textcolor{erlred}{ok / \{error, R\}}} ([xshift=4mm]lb.north);
+
+    % ---- Dashed separator lines below inner boxes ----
+    \draw[dashed, erlpurple!40, line width=0.6pt]
+        ([yshift=-6pt]lb.south west) -- ([yshift=-6pt]lb.south east);
+    \draw[dashed, black, line width=0.6pt]
+        let \p1 = ([xshift=-3pt]rightframe.west),
+            \p2 = ([yshift=-6pt]rb.south west),
+            \p3 = ([xshift=-3pt]rightframe.east)
+        in (\x1, \y2) -- (\x3, \y2);
+
+    % Vertical dashed line from the right endpoint of horizontal dashed line down to the right bottom dashed line
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=-3pt]rightframe.west),
+            \p2 = ([yshift=-6pt]lt.south),
+            \p3 = ([yshift=-6pt]rb.south)
+        in (\x1, \y2) -- (\x1, \y3);
+
+    % Vertical dashed line from top dashed line right endpoint down to right bottom dashed line right endpoint
+    \draw[dashed, black, line width=0.5pt]
+        let \p1 = ([xshift=-3pt, yshift=-13pt]rightframe.north east),
+            \p2 = ([yshift=-6pt]rb.south),
+            \p3 = ([xshift=-3pt]rightframe.east)
+        in (\x3, \y1) -- (\x3, \y2);
+
+    % Left bottom annotation (inside left outer frame, below dashed line)
+    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]lb.south west)
+        {\ding{72} \texttt{.app} 文件中的 \texttt{\textcolor{erlblue}{\textbf{mod}}} 字段是连接左右两半的关键桥梁\\
+         \ding{72} \texttt{\{mod, \{bsc, []\}\}} 告诉 Application Master 调用 \texttt{bsc:start/2}\\
+         \ding{72} Application 只需实现 \texttt{start/2} 和 \texttt{stop/1} 两个回调\\
+         \ding{72} 可选回调：\texttt{prep\_stop/1}、\texttt{start\_phase/3}、\texttt{config\_change/3}};
+
+    % Right bottom annotation (inside right outer frame, below dashed line)
+    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
+        {\ding{72} Application Controller 加载 \texttt{.app} 文件，检查 \texttt{applications} 依赖\\
+         \ding{72} Application Master 调用 \textcolor{erlmodule}{\textbf{\texttt{Module:start/2}}} 启动监督树\\
+         \ding{72} 停止时：\texttt{prep\_stop/1} $\rightarrow$ 关闭监督树 $\rightarrow$ \texttt{stop/1}\\
+         \ding{72} restart\_type: \texttt{permanent} $|$ \texttt{transient} $|$ \texttt{temporary}};
 \end{tikzpicture}
+
 \end{document}
