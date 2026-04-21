@@ -10,7 +10,7 @@
 %%%   locked ---(correct code)---> open
 %%%   open   ---(state_timeout)--> locked
 %%%
-%%% @end
+%%%% @end
 %%%-------------------------------------------------------------------
 -module(code_lock_state).
 -behaviour(gen_statem).

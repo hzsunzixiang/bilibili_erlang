@@ -74,8 +74,8 @@
           font=\scriptsize\ttfamily\bfseries, inner sep=3pt, anchor=north west,
           text width=5.0cm]
         (startlinkbox) at ([xshift=6pt, yshift=-38pt]lt.north west)
-        {\textcolor{erlblue!80!black}{\ding{72} \{ok, Pid\} = gen\_statem:start\_link}\\
-         \hfill\textcolor{erlblue!80!black}{(\textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}};
+        {\textcolor{erlblue!80!black}{\ding{72} gen\_statem:start\_link}\\
+         \hfill\textcolor{erlblue!80!black}{(ServerRef, \textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-66pt]lt.north west) {
 \textcolor{erlinit}{\textbf{init/1}}\\
         callback\_mode/0\\
@@ -103,13 +103,13 @@
           minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (lb) at (-4.8, -2.85) {};
     \node[font=\small\bfseries\color{erlpurple}, anchor=north west] at ([xshift=3pt, yshift=-3pt]lb.north west) {Client进程（使用者）};
     \node[font=\scriptsize\ttfamily, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-18pt]lb.north west) {
-        gen\_statem:call(\textcolor{erlpid}{\textbf{Pid}}, Request)\\
-        gen\_statem:cast(\textcolor{erlpid}{\textbf{Pid}}, Msg)\\
-        gen\_statem:stop(\textcolor{erlpid}{\textbf{Pid}})
+        gen\_statem:call(\textcolor{erlpid}{\textbf{ServerRef}}, Request)\\
+        gen\_statem:cast(\textcolor{erlpid}{\textbf{ServerRef}}, Msg)\\
+        gen\_statem:stop(\textcolor{erlpid}{\textbf{ServerRef}})
     };
-    % Note: Pid = pid()
+    % Note: ServerRef = {local, ServerName} | {global, ServerName}
     \node[font=\tiny\color{gray}, anchor=south west] at ([xshift=6pt, yshift=3pt]lb.south west)
-        {备注：\texttt{\textcolor{erlpid}{\textbf{Pid}}} = \texttt{pid()}};
+        {备注\kern4pt \texttt{\textcolor{erlpid}{\textbf{ServerRef}}} = \texttt{\{local, ServerName\}} $|$ \texttt{\{global, ServerName\}}};
 
     % ---- Right-Top: Generic State Machine ----
     \node[draw=erlblue, fill=erlblue!10, rounded corners=5pt,
@@ -132,7 +132,7 @@
           minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (rb) at (6.4, -2.8) {};
     \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {已绑定的回调函数（运行时）};
     \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
-        \textcolor{erlred!80!black}{\texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}} 之后：\\[3pt]
+        {\tiny\textcolor{erlred!80!black}{\texttt{start\_link(ServerRef, \textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}} 之后：}\\[3pt]
         \texttt{fun code\_lock\_state:init/1}\\
         \texttt{fun code\_lock\_state:callback\_mode/0}\\
         \texttt{fun code\_lock\_state:locked/3}\\
@@ -149,12 +149,13 @@
     \draw[-{Stealth[length=6pt]}, ultra thick, erlblue!80!black, line width=1.6pt]
         ([yshift=15mm]lt.east) -- node[above, font=\scriptsize, align=center, text=erlblue!80!black]
         {\textcolor{black}{\ding{172}} 启动状态机\\[1pt]
-         {\tiny\texttt{gen\_statem:start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}}} ([yshift=15mm]rt.west);
+         {\fontsize{4}{5}\selectfont\texttt{gen\_statem:start\_link(ServerRef, \textcolor{erlmodule}{\textbf{?MODULE}}, Args, Opts)}}} ([yshift=15mm]rt.west);
 
     % Arrow ②: Return {ok, Pid} — from Generic State Machine back to Callback Module
     \draw[-{Stealth[length=6pt]}, ultra thick, erlpid!90!black, line width=1.6pt]
         ([yshift=10mm]rt.west) -- node[below, font=\scriptsize, align=center, text=erlpid!80!black]
-        {\textcolor{black}{\ding{173}} 返回 \texttt{\textcolor{erlpid}{\textbf{\{ok, Pid\}}}}} ([yshift=10mm]lt.east);
+        {\textcolor{black}{\ding{173}} 返回 \texttt{\textcolor{erlpid}{\textbf{\{ok, Pid\}}}}\\[1pt]
+         {\tiny 进程已注册为 \texttt{\textcolor{erlpid}{\textbf{ServerRef}}}}} ([yshift=10mm]lt.east);
 
     % ==== Phase 1: Init Callback ====
 
@@ -212,9 +213,9 @@
     % Left bottom annotation (inside left outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]lb.south west)
         {\ding{72} \texttt{start\_link} 启动状态机进程并链接到调用者\\
+         \ding{72} \texttt{ServerRef} 注册进程名，如 \texttt{\{local, code\_lock\}}\\
          \ding{72} \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 在启动时传入，绑定回调模块\\
-         \ding{72} 状态机进程内部保存 Module、State、Data\\
-         \ding{72} 这里 \texttt{\textcolor{erlmodule}{\textbf{?MODULE}}} 是宏，指的是 \texttt{code\_lock\_state}};
+         \ding{72} 通过 \texttt{ServerRef} 而非 \texttt{Pid} 与状态机通信};
 
     % Right bottom annotation (inside right outer frame, below dashed line)
     \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
