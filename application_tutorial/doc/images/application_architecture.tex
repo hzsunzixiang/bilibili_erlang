@@ -1,0 +1,172 @@
+% Application Architecture Diagram
+% Standalone TikZ diagram showing the application behaviour architecture.
+% Compile with: xelatex application_architecture.tex
+\documentclass[border=10pt]{standalone}
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont[BoldFont=STHeiti, ItalicFont=STKaiti]{STSong}
+\setCJKsansfont{STHeiti}
+\setCJKmonofont{STFangsong}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, calc, backgrounds, decorations.pathreplacing}
+
+% Color Definitions
+\definecolor{erlred}{HTML}{A4070A}
+\definecolor{erlblue}{HTML}{2B5EA7}
+\definecolor{erlgreen}{HTML}{2E7D32}
+\definecolor{erlyellow}{HTML}{F9A825}
+\definecolor{erlpurple}{HTML}{6A1B9A}
+\definecolor{erlmodule}{HTML}{D84315}
+\definecolor{erlinit}{HTML}{00897B}
+\definecolor{erlpid}{HTML}{E65100}
+\definecolor{erlname}{HTML}{6A1B9A}
+\definecolor{darkgray}{HTML}{333333}
+
+\begin{document}
+\begin{tikzpicture}[
+    % Node styles
+    controller/.style={draw=erlblue!80, fill=erlblue!10, rounded corners=6pt,
+        minimum width=4.5cm, minimum height=1.4cm, font=\large\bfseries,
+        line width=1.2pt},
+    master/.style={draw=erlpurple!80, fill=erlpurple!10, rounded corners=6pt,
+        minimum width=4cm, minimum height=1.2cm, font=\normalsize\bfseries,
+        line width=1pt},
+    supervisor/.style={draw=erlred!80, fill=erlred!10, rounded corners=6pt,
+        minimum width=3.5cm, minimum height=1.2cm, font=\normalsize\bfseries,
+        line width=1pt},
+    worker/.style={draw=erlgreen!80, fill=erlgreen!10, rounded corners=6pt,
+        minimum width=2.8cm, minimum height=1cm, font=\small\bfseries,
+        line width=0.8pt},
+    appfile/.style={draw=erlyellow!80, fill=erlyellow!10, rounded corners=4pt,
+        minimum width=3.5cm, minimum height=1cm, font=\small,
+        line width=0.8pt},
+    callback/.style={draw=erlmodule!80, fill=erlmodule!10, rounded corners=4pt,
+        minimum width=3.5cm, minimum height=1cm, font=\small,
+        line width=0.8pt},
+    labelstyle/.style={font=\scriptsize\ttfamily, fill=white, inner sep=2pt},
+]
+
+    % ============================================================
+    % Title
+    % ============================================================
+    \node[font=\LARGE\bfseries\color{erlblue}] (title) at (5, 8.5)
+        {Application Behaviour 架构};
+    \node[font=\small\color{darkgray}] at (5, 7.8)
+        {application:start(AppName) $\rightarrow$ Module:start/2 $\rightarrow$ TopSupervisor};
+
+    % ============================================================
+    % Left side: Application Resource File (.app)
+    % ============================================================
+    \node[appfile, text width=3.8cm, align=left] (appfile) at (-3.5, 4.5) {
+        \textbf{myapp.app}\\[2pt]
+        {\scriptsize\ttfamily \{application, myapp,}\\
+        {\scriptsize\ttfamily ~~[\{mod, \{myapp, []\}\},}\\
+        {\scriptsize\ttfamily ~~~\{applications,}\\
+        {\scriptsize\ttfamily ~~~~[kernel, stdlib]\},}\\
+        {\scriptsize\ttfamily ~~~\{env, [...]\}]\}.}
+    };
+
+    % ============================================================
+    % Application Controller (singleton per node)
+    % ============================================================
+    \node[controller] (ac) at (5, 6) {Application Controller};
+    \node[font=\scriptsize\color{erlblue!70}, below=1pt of ac] {每个节点一个，管理所有 Application};
+
+    % ============================================================
+    % Application Master
+    % ============================================================
+    \node[master] (am) at (5, 3.5) {Application Master};
+    \node[font=\scriptsize\color{erlpurple!70}, below=1pt of am] {每个 Application 一个};
+
+    % ============================================================
+    % Right side: Callback Module
+    % ============================================================
+    \node[callback, text width=3.5cm, align=left] (cbmod) at (13.5, 4.5) {
+        \textbf{Callback Module}\\[2pt]
+        {\scriptsize\ttfamily -behaviour(application).}\\
+        {\scriptsize\ttfamily start(Type, Args) ->}\\
+        {\scriptsize\ttfamily ~~myapp\_sup:start\_link().}\\
+        {\scriptsize\ttfamily stop(State) -> ok.}
+    };
+
+    % ============================================================
+    % Top Supervisor
+    % ============================================================
+    \node[supervisor] (topsup) at (5, 0.8) {Top Supervisor};
+    \node[font=\scriptsize\color{erlred!70}, below=1pt of topsup] {myapp\_sup};
+
+    % ============================================================
+    % Child processes
+    % ============================================================
+    \node[worker] (w1) at (0.5, -2) {gen\_server};
+    \node[font=\scriptsize\color{erlgreen!70}, below=1pt of w1] {worker\_1};
+
+    \node[worker] (w2) at (5, -2) {gen\_event};
+    \node[font=\scriptsize\color{erlgreen!70}, below=1pt of w2] {worker\_2};
+
+    \node[worker] (w3) at (9.5, -2) {gen\_statem};
+    \node[font=\scriptsize\color{erlgreen!70}, below=1pt of w3] {worker\_3};
+
+    % ============================================================
+    % Arrows
+    % ============================================================
+    % App Controller -> App Master
+    \draw[-{Stealth[length=6pt]}, line width=1.5pt, erlblue!70]
+        (ac.south) -- node[labelstyle, right=2pt] {start\_application} (am.north);
+
+    % App file -> App Controller
+    \draw[-{Stealth[length=5pt]}, line width=1pt, erlyellow!80!black, dashed]
+        (appfile.east) -- node[labelstyle, above] {\scriptsize load .app} (ac.west);
+
+    % Callback Module -> App Master
+    \draw[-{Stealth[length=5pt]}, line width=1pt, erlmodule!80, dashed]
+        (cbmod.west) -- node[labelstyle, above] {\scriptsize Module:start/2} (am.east);
+
+    % App Master -> Top Supervisor
+    \draw[-{Stealth[length=6pt]}, line width=1.5pt, erlpurple!70]
+        (am.south) -- node[labelstyle, right=2pt] {start\_link} (topsup.north);
+
+    % Top Supervisor -> Workers
+    \draw[-{Stealth[length=5pt]}, line width=1pt, erlred!70]
+        (topsup.south) -- (w1.north);
+    \draw[-{Stealth[length=5pt]}, line width=1pt, erlred!70]
+        (topsup.south) -- (w2.north);
+    \draw[-{Stealth[length=5pt]}, line width=1pt, erlred!70]
+        (topsup.south) -- (w3.north);
+
+    % ============================================================
+    % Step annotations
+    % ============================================================
+    \node[font=\footnotesize\bfseries, circle, draw=erlblue, fill=erlblue!15,
+        inner sep=2pt] (s1) at (-1.5, 6) {\color{erlblue}1};
+    \node[font=\footnotesize\bfseries, circle, draw=erlpurple, fill=erlpurple!15,
+        inner sep=2pt] (s2) at (2.5, 4.8) {\color{erlpurple}2};
+    \node[font=\footnotesize\bfseries, circle, draw=erlred, fill=erlred!15,
+        inner sep=2pt] (s3) at (2.5, 2) {\color{erlred}3};
+    \node[font=\footnotesize\bfseries, circle, draw=erlgreen, fill=erlgreen!15,
+        inner sep=2pt] (s4) at (-1.5, -0.5) {\color{erlgreen}4};
+
+    \node[font=\scriptsize, anchor=west, text=erlblue!80] at (-1.2, 6)
+        {加载 .app 文件};
+    \node[font=\scriptsize, anchor=west, text=erlpurple!80] at (2.8, 4.8)
+        {创建 Application Master};
+    \node[font=\scriptsize, anchor=west, text=erlred!80] at (2.8, 2)
+        {调用 Module:start/2};
+    \node[font=\scriptsize, anchor=west, text=erlgreen!80] at (-1.2, -0.5)
+        {启动子进程树};
+
+    % ============================================================
+    % Application lifecycle box
+    % ============================================================
+    \node[draw=darkgray!50, fill=white, rounded corners=3pt,
+        text width=3.2cm, align=center, font=\scriptsize] (lifecycle) at (13.5, 0.8) {
+        \textbf{Application 生命周期}\\[3pt]
+        application:start/1,2\\
+        application:stop/1\\
+        application:ensure\_all\_started/1
+    };
+
+\end{tikzpicture}
+\end{document}

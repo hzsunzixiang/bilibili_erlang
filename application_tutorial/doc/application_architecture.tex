@@ -1,0 +1,943 @@
+% Application Behaviour Usage Guide
+% A complete introduction to application behaviour with architecture diagrams and examples.
+% Compile with: xelatex application_architecture.tex (run twice for TOC)
+\documentclass[a4paper,11pt]{article}
+
+% ============================================================
+% Packages
+% ============================================================
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont[BoldFont=STHeiti, ItalicFont=STKaiti]{STSong}
+\setCJKsansfont{STHeiti}
+\setCJKmonofont{STFangsong}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{pifont}
+
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, calc, backgrounds, decorations.pathreplacing}
+
+\tcbuselibrary{listings, skins, breakable}
+
+% ============================================================
+% Color Definitions
+% ============================================================
+\definecolor{erlred}{HTML}{A4070A}
+\definecolor{erlblue}{HTML}{2B5EA7}
+\definecolor{erlgreen}{HTML}{2E7D32}
+\definecolor{erlyellow}{HTML}{F9A825}
+\definecolor{erlpurple}{HTML}{6A1B9A}
+\definecolor{erlmodule}{HTML}{D84315}
+\definecolor{erlinit}{HTML}{00897B}
+\definecolor{erlpid}{HTML}{E65100}
+\definecolor{erlname}{HTML}{6A1B9A}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeborder}{HTML}{CCCCCC}
+\definecolor{tipbg}{HTML}{E8F5E9}
+\definecolor{warnbg}{HTML}{FFF3E0}
+\definecolor{notebg}{HTML}{E3F2FD}
+\definecolor{darkgray}{HTML}{333333}
+
+% ============================================================
+% Hyperref Setup
+% ============================================================
+\hypersetup{
+    colorlinks=true,
+    linkcolor=erlblue,
+    urlcolor=erlpurple,
+    citecolor=erlgreen,
+    pdftitle={Application Behaviour 用法指南},
+    pdfauthor={Erlang OTP Tutorial},
+    bookmarksnumbered=true,
+}
+
+% ============================================================
+% Code Listing Style
+% ============================================================
+\lstdefinelanguage{erlang}{
+    morekeywords={module, export, import, behaviour, behavior, spec, type,
+        record, define, include, ifdef, ifndef, else, endif, undef,
+        case, of, end, if, receive, after, when, fun, try, catch, throw,
+        begin, spawn, spawn_link, register, self, send, ok, error,
+        true, false, undefined, infinity, timeout, noreply, reply, stop,
+        hibernate, ignore, normal, process_flag, trap_exit, monitor_node,
+        application, start, start_link, start_phase, prep_stop, config_change},
+    sensitive=true,
+    morecomment=[l]{\%},
+    morestring=[b]",
+    morestring=[b]',
+}
+
+\lstdefinestyle{erlangstyle}{
+    language=erlang,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{erlblue}\bfseries,
+    commentstyle=\color{erlgreen}\itshape,
+    stringstyle=\color{erlred},
+    numberstyle=\tiny\color{gray},
+    numbers=left,
+    numbersep=8pt,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    rulecolor=\color{codeborder},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=4,
+    showstringspaces=false,
+    captionpos=b,
+    xleftmargin=1.5em,
+    framexleftmargin=1em,
+    aboveskip=1em,
+    belowskip=0.8em,
+}
+
+\lstdefinestyle{shellstyle}{
+    basicstyle=\ttfamily\small\color{white},
+    backgroundcolor=\color{darkgray},
+    rulecolor=\color{darkgray},
+    frame=single,
+    breaklines=true,
+    showstringspaces=false,
+    xleftmargin=1.5em,
+    framexleftmargin=1em,
+    aboveskip=1em,
+    belowskip=0.8em,
+}
+
+\lstset{style=erlangstyle}
+
+% ============================================================
+% Custom tcolorbox Environments
+% ============================================================
+\newtcolorbox{tipbox}[1][]{
+    colback=tipbg, colframe=erlgreen!80!black,
+    fonttitle=\bfseries, title={#1},
+    arc=2mm, boxrule=0.8pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+    breakable,
+}
+
+\newtcolorbox{warnbox}[1][]{
+    colback=warnbg, colframe=erlyellow!80!black,
+    fonttitle=\bfseries, title={#1},
+    arc=2mm, boxrule=0.8pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+    breakable,
+}
+
+\newtcolorbox{notebox}[1][]{
+    colback=notebg, colframe=erlblue!80!black,
+    fonttitle=\bfseries, title={#1},
+    arc=2mm, boxrule=0.8pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+    breakable,
+}
+
+% ============================================================
+% Header / Footer
+% ============================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textit{Application Behaviour 用法指南}}
+\fancyhead[R]{\small\textit{Erlang/OTP}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ============================================================
+% Title Formatting
+% ============================================================
+\titleformat{\section}
+    {\LARGE\bfseries\color{erlblue}}
+    {\thesection}{1em}{}[\vspace{-0.5em}\rule{\textwidth}{0.8pt}]
+
+\titleformat{\subsection}
+    {\Large\bfseries\color{erlblue!80!black}}
+    {\thesubsection}{0.8em}{}
+
+\titleformat{\subsubsection}
+    {\large\bfseries\color{erlblue!60!black}}
+    {\thesubsubsection}{0.6em}{}
+
+% ============================================================
+% Document Begin
+% ============================================================
+\begin{document}
+
+% ---- Title Page ----
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+
+{\fontsize{42}{48}\selectfont\bfseries\color{erlblue} application}\\[12pt]
+{\fontsize{24}{28}\selectfont\color{erlblue!70!black} Behaviour 用法指南}
+
+\vspace{2cm}
+
+\begin{tikzpicture}
+    \node[draw=erlblue, fill=erlblue!10, rounded corners=8pt, minimum width=4cm, minimum height=1.8cm, font=\large\bfseries] (ac) at (0,0) {App Controller};
+    \node[draw=erlpurple, fill=erlpurple!10, rounded corners=8pt, minimum width=4cm, minimum height=1.8cm, font=\large\bfseries] (am) at (0,-3) {App Master};
+    \node[draw=erlred, fill=erlred!10, rounded corners=8pt, minimum width=4cm, minimum height=1.8cm, font=\large\bfseries] (sup) at (0,-6) {Top Supervisor};
+
+    \draw[-{Stealth[length=8pt]}, line width=2pt, erlblue]
+        (ac.south) -- node[right, font=\small] {start\_application} (am.north);
+    \draw[-{Stealth[length=8pt]}, line width=2pt, erlpurple]
+        (am.south) -- node[right, font=\small] {Module:start/2} (sup.north);
+
+    \node[right=15mm of ac, font=\small\color{gray}, text width=4cm] {每个节点一个\\管理所有 Application};
+    \node[right=15mm of am, font=\small\color{gray}, text width=4cm] {每个 Application 一个\\Group Leader};
+    \node[right=15mm of sup, font=\small\color{gray}, text width=4cm] {监督树根节点\\管理子进程};
+\end{tikzpicture}
+
+\vspace{2cm}
+
+{\large\color{darkgray} 以 BSC（基站控制器）为例，从架构到实践}
+
+\vspace{1cm}
+
+{\normalsize\color{gray} Erlang/OTP $\cdot$ Application Behaviour $\cdot$ Supervision Tree}
+
+\vfill
+{\small\today}
+\end{titlepage}
+
+% ---- Table of Contents ----
+\newpage
+\tableofcontents
+\newpage
+
+
+% ============================================================
+% Section 1: Overview
+% ============================================================
+\section{概述}
+
+\subsection{什么是 Application？}
+
+在 OTP 中，\textbf{Application} 是一个实现了特定功能的组件，它可以作为一个整体被启动和停止，并且可以在其他系统中被复用。Application 是 Erlang/OTP 系统中组织代码的最高层级单元。
+
+\begin{tipbox}[核心思想]
+\textbf{Application = Application Resource File + Callback Module + Supervision Tree}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Application Resource File}（\texttt{.app} 文件）：描述 Application 的元数据（名称、版本、依赖、启动模块等）
+    \item \textbf{Callback Module}（实现 \texttt{application} behaviour）：定义如何启动和停止 Application
+    \item \textbf{Supervision Tree}：Application 内部的进程组织结构，由 Top Supervisor 管理
+\end{itemize}
+\end{tipbox}
+
+\subsection{Application 的两种类型}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{类型} & \textbf{说明} & \textbf{示例} \\
+\midrule
+Active Application  & 有监督树，通过 \texttt{mod} 键指定回调模块 & kernel, stdlib, sasl \\
+Library Application & 无监督树，仅提供工具模块 & crypto（部分） \\
+\bottomrule
+\end{tabular}
+\caption{Application 的两种类型}
+\end{table}
+
+\subsection{Application Behaviour 提供的能力}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{能力} & \textbf{说明} \\
+\midrule
+统一启停管理       & \texttt{application:start/1,2} 和 \texttt{application:stop/1} \\
+依赖管理           & 自动检查 \texttt{applications} 列表中的依赖是否已启动 \\
+环境变量           & 通过 \texttt{application:get\_env/2,3} 和 \texttt{set\_env/3,4} 管理配置 \\
+分布式支持         & 支持 failover 和 takeover \\
+热代码升级         & 通过 \texttt{config\_change/3} 回调处理配置变更 \\
+包含应用           & 通过 \texttt{included\_applications} 支持应用嵌套 \\
+启动阶段           & 通过 \texttt{start\_phases} 支持分阶段启动 \\
+\bottomrule
+\end{tabular}
+\caption{Application Behaviour 提供的能力}
+\end{table}
+
+\subsection{OTP 源码中的工作流}
+
+以下直接对应 \texttt{application.erl} 源码中的回调定义：
+
+\begin{tcolorbox}[colback=codebg, colframe=codeborder, arc=2mm, boxrule=0.5pt,
+                  title={\textbf{application.erl --- Callback Functions}},
+                  fonttitle=\bfseries\ttfamily, width=\textwidth]
+\small\ttfamily
+\begin{tabular}{@{}lcl@{}}
+application module &  & Callback module \\
+\textsf{-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-} & & \textsf{-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-} \\
+application:start/1,2         & -{}-{}-{}-{}-> & Module:start/2 \\
+application:stop/1            & -{}-{}-{}-{}-> & Module:prep\_stop/1 (optional) \\
+                              & -{}-{}-{}-{}-> & Module:stop/1 \\
+-                             & -{}-{}-{}-{}-> & Module:start\_phase/3 (optional) \\
+-                             & -{}-{}-{}-{}-> & Module:config\_change/3 (optional) \\
+\end{tabular}
+\end{tcolorbox}
+
+
+% ============================================================
+% Section 2: Architecture Diagram
+% ============================================================
+\section{架构图}
+
+Application 的启动涉及三个关键角色：Application Controller、Application Master 和 Top Supervisor。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{images/application_architecture.pdf}
+\caption{Application Behaviour 架构图}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Application Controller}
+
+Application Controller 是每个 Erlang 节点上的一个单例进程（注册名为 \texttt{application\_controller}），在节点启动时自动创建。它负责：
+
+\begin{itemize}[leftmargin=2em]
+    \item 加载和卸载 Application（\texttt{application:load/1}、\texttt{application:unload/1}）
+    \item 启动和停止 Application（\texttt{application:start/1,2}、\texttt{application:stop/1}）
+    \item 检查依赖关系（\texttt{applications} 列表）
+    \item 管理 Application 的环境变量
+\end{itemize}
+
+\subsection{Application Master}
+
+每个正在运行的 Application 都有一个 Application Master 进程。它由 Application Controller 创建，负责：
+
+\begin{itemize}[leftmargin=2em]
+    \item 调用回调模块的 \texttt{Module:start/2} 启动监督树
+    \item 成为 Application 中所有进程的 Group Leader（用于标识进程归属）
+    \item 在 Application 停止时，调用 \texttt{Module:prep\_stop/1} 和 \texttt{Module:stop/1}
+    \item 监控 Top Supervisor，如果 Top Supervisor 终止，Application 也随之终止
+\end{itemize}
+
+\subsection{启动流程}
+
+\begin{enumerate}[leftmargin=2em]
+    \item \texttt{application:start(myapp)} --- 用户调用启动函数
+    \item Application Controller 加载 \texttt{myapp.app} 文件（如果尚未加载）
+    \item Application Controller 检查 \texttt{applications} 列表中的依赖是否已启动
+    \item Application Controller 创建 Application Master
+    \item Application Master 调用 \texttt{Module:start(normal, StartArgs)}
+    \item \texttt{Module:start/2} 返回 \texttt{\{ok, Pid\}}，其中 \texttt{Pid} 是 Top Supervisor 的 PID
+    \item Application 进入运行状态
+\end{enumerate}
+
+\subsection{停止流程}
+
+\begin{enumerate}[leftmargin=2em]
+    \item \texttt{application:stop(myapp)} --- 用户调用停止函数
+    \item Application Master 调用 \texttt{Module:prep\_stop(State)}（如果定义了该回调）
+    \item Application Master 通知 Top Supervisor 关闭
+    \item 整个监督树按照启动的\textbf{逆序}终止
+    \item Application Master 调用 \texttt{Module:stop(State)}
+    \item Application Master 终止
+    \item Application 仍处于已加载状态（可以重新启动）
+\end{enumerate}
+
+
+% ============================================================
+% Section 3: Application Resource File
+% ============================================================
+\section{Application Resource File（.app 文件）}
+
+每个 Application 都需要一个 \texttt{.app} 文件，通常位于 \texttt{ebin/} 目录下。
+
+\subsection{基本格式}
+
+\begin{lstlisting}[style=erlangstyle, caption={Application Resource File 基本格式}]
+{application, AppName,
+ [{description, Description},
+  {vsn, Version},
+  {modules, [Module1, Module2, ...]},
+  {registered, [RegName1, RegName2, ...]},
+  {applications, [kernel, stdlib, ...]},
+  {env, [{Key1, Val1}, {Key2, Val2}]},
+  {mod, {CallbackModule, StartArgs}}
+ ]}.
+\end{lstlisting}
+
+\subsection{关键字段说明}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}llp{7cm}@{}}
+\toprule
+\textbf{字段} & \textbf{类型} & \textbf{说明} \\
+\midrule
+\texttt{description} & string() & Application 的描述信息 \\
+\texttt{vsn}         & string() & 版本号 \\
+\texttt{modules}     & [atom()] & Application 包含的所有模块列表 \\
+\texttt{registered}  & [atom()] & Application 注册的进程名列表 \\
+\texttt{applications} & [atom()] & 依赖的 Application 列表（必须先启动） \\
+\texttt{env}         & [{atom(), term()}] & 环境变量（配置参数） \\
+\texttt{mod}         & \{Module, Args\} & 回调模块和启动参数 \\
+\texttt{included\_applications} & [atom()] & 包含的子 Application \\
+\texttt{start\_phases} & [{atom(), term()}] & 启动阶段定义 \\
+\texttt{maxT}        & timeout() & Application 最大运行时间 \\
+\texttt{maxP}        & integer() | infinity & 最大进程数 \\
+\bottomrule
+\end{tabular}
+\caption{.app 文件关键字段}
+\end{table}
+
+\subsection{实例：BSC Application}
+
+\begin{lstlisting}[style=erlangstyle, caption={bsc.app --- 基站控制器 Application 资源文件}]
+{application, bsc,
+ [{description, "Base Station Controller"},
+  {vsn, "1.0"},
+  {modules, [bsc,
+             bsc_sup,
+             frequency,
+             freq_overload,
+             logger,
+             simple_phone_sup,
+             phone_fsm
+            ]},
+  {registered, [bsc_sup, frequency, freq_overload,
+                simple_phone_sup]},
+  {applications, [kernel, stdlib, sasl]},
+  {env, []},
+  {mod, {bsc, []}}
+ ]}.
+\end{lstlisting}
+
+\begin{notebox}[Library Application]
+如果 Application 没有监督树（Library Application），则不需要 \texttt{mod} 字段。这类 Application 只提供工具模块，不启动任何进程。
+\end{notebox}
+
+
+% ============================================================
+% Section 4: Callback Functions
+% ============================================================
+\section{回调函数}
+
+\subsection{必须实现的回调}
+
+\subsubsection{Module:start/2}
+
+\begin{lstlisting}[style=erlangstyle]
+-callback start(StartType, StartArgs) ->
+    {ok, Pid} |
+    {ok, Pid, State} |
+    {error, Reason}.
+
+-type start_type() :: normal
+                    | {takeover, Node :: node()}
+                    | {failover, Node :: node()}.
+\end{lstlisting}
+
+当 \texttt{application:start/1,2} 被调用时，Application Master 会调用此函数。它应该启动 Application 的 Top Supervisor 并返回其 PID。
+
+\textbf{StartType 参数说明：}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lp{9cm}@{}}
+\toprule
+\textbf{StartType} & \textbf{说明} \\
+\midrule
+\texttt{normal} & 正常启动 \\
+\texttt{\{takeover, Node\}} & 分布式 Application 从 Node 接管 \\
+\texttt{\{failover, Node\}} & 分布式 Application 从 Node 故障转移 \\
+\bottomrule
+\end{tabular}
+\caption{StartType 参数}
+\end{table}
+
+\subsubsection{Module:stop/1}
+
+\begin{lstlisting}[style=erlangstyle]
+-callback stop(State) -> term().
+\end{lstlisting}
+
+在 Application 停止后调用，用于清理工作。\texttt{State} 来自 \texttt{Module:prep\_stop/1} 的返回值（如果定义了该回调），否则来自 \texttt{Module:start/2} 的返回值。返回值被忽略。
+
+\subsection{可选回调}
+
+\subsubsection{Module:prep\_stop/1}
+
+\begin{lstlisting}[style=erlangstyle]
+-callback prep_stop(State) -> NewState.
+\end{lstlisting}
+
+在 Application 即将停止时、关闭进程之前调用。可以用于在进程终止前保存状态或执行清理操作。\texttt{NewState} 会传递给 \texttt{Module:stop/1}。
+
+\subsubsection{Module:start\_phase/3}
+
+\begin{lstlisting}[style=erlangstyle]
+-callback start_phase(Phase, StartType, PhaseArgs) ->
+    ok | {error, Reason}.
+\end{lstlisting}
+
+当 \texttt{.app} 文件中定义了 \texttt{start\_phases} 时，每个启动阶段都会调用此函数。用于在不同 Application 之间同步启动过程。
+
+\subsubsection{Module:config\_change/3}
+
+\begin{lstlisting}[style=erlangstyle]
+-callback config_change(Changed, New, Removed) -> ok.
+%% Changed :: [{Par, Val}]  - changed parameters
+%% New     :: [{Par, Val}]  - new parameters
+%% Removed :: [Par]         - removed parameters
+\end{lstlisting}
+
+在代码替换后，如果配置参数发生了变化，会调用此函数。
+
+
+% ============================================================
+% Section 5: Application API
+% ============================================================
+\section{常用 API}
+
+\subsection{启动与停止}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lp{8cm}@{}}
+\toprule
+\textbf{函数} & \textbf{说明} \\
+\midrule
+\texttt{application:start(App)} & 以 \texttt{temporary} 类型启动 Application \\
+\texttt{application:start(App, Type)} & 以指定类型启动 Application \\
+\texttt{application:stop(App)} & 停止 Application \\
+\texttt{application:ensure\_all\_started(App)} & 递归启动 Application 及其所有依赖 \\
+\texttt{application:ensure\_started(App)} & 启动 Application，已启动则返回 \texttt{ok} \\
+\bottomrule
+\end{tabular}
+\caption{启动与停止 API}
+\end{table}
+
+\subsection{restart\_type() --- 重启类型}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lp{9cm}@{}}
+\toprule
+\textbf{类型} & \textbf{说明} \\
+\midrule
+\texttt{permanent} & Application 终止时，所有其他 Application 和整个节点都会终止 \\
+\texttt{transient} & 正常终止只报告；异常终止会导致所有其他 Application 和节点终止 \\
+\texttt{temporary} & Application 终止只报告，不影响其他 Application（默认） \\
+\bottomrule
+\end{tabular}
+\caption{restart\_type() 重启类型}
+\end{table}
+
+\begin{warnbox}[注意]
+\texttt{transient} 类型在实际中用处有限，因为当监督树终止时，原因通常是 \texttt{shutdown} 而非 \texttt{normal}。
+\end{warnbox}
+
+\subsection{环境变量管理}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lp{7cm}@{}}
+\toprule
+\textbf{函数} & \textbf{说明} \\
+\midrule
+\texttt{application:get\_env(App, Key)} & 获取配置参数值 \\
+\texttt{application:get\_env(App, Key, Default)} & 获取配置参数值，带默认值 \\
+\texttt{application:get\_all\_env(App)} & 获取所有配置参数 \\
+\texttt{application:set\_env(App, Key, Val)} & 设置配置参数 \\
+\texttt{application:unset\_env(App, Key)} & 删除配置参数 \\
+\bottomrule
+\end{tabular}
+\caption{环境变量管理 API}
+\end{table}
+
+\subsection{查询 API}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lp{7cm}@{}}
+\toprule
+\textbf{函数} & \textbf{说明} \\
+\midrule
+\texttt{application:which\_applications()} & 列出所有正在运行的 Application \\
+\texttt{application:loaded\_applications()} & 列出所有已加载的 Application \\
+\texttt{application:get\_application(Pid)} & 获取进程所属的 Application \\
+\texttt{application:get\_supervisor(App)} & 获取 Application 的 Top Supervisor PID \\
+\texttt{application:get\_key(App, Key)} & 获取 .app 文件中的配置键值 \\
+\bottomrule
+\end{tabular}
+\caption{查询 API}
+\end{table}
+
+
+% ============================================================
+% Section 6: Example — BSC Application
+% ============================================================
+\section{实例：BSC Application}
+
+以一个基站控制器（Base Station Controller）为例，展示 Application Behaviour 的完整结构。
+
+\subsection{回调模块：bsc.erl}
+
+\begin{lstlisting}[style=erlangstyle, caption={bsc.erl --- Application 回调模块}]
+-module(bsc).
+-behaviour(application).
+
+%% Application callbacks
+-export([start/2, stop/1]).
+
+start(_StartType, _StartArgs) ->
+    bsc_sup:start_link().
+
+stop(_Data) ->
+    ok.
+\end{lstlisting}
+
+\begin{tipbox}[最小实现]
+Application 回调模块的最小实现只需要两个函数：
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{start/2}：启动 Top Supervisor，返回 \texttt{\{ok, Pid\}}
+    \item \texttt{stop/1}：清理工作，通常返回 \texttt{ok}
+\end{itemize}
+\end{tipbox}
+
+\subsection{Top Supervisor：bsc\_sup.erl}
+
+\begin{lstlisting}[style=erlangstyle, caption={bsc\_sup.erl --- Top Supervisor}]
+-module(bsc_sup).
+-behaviour(supervisor).
+
+-export([start_link/0, init/1]).
+-export([stop/0]).
+
+start_link() ->
+    {ok, Pid} = supervisor:start_link(
+        {local, ?MODULE}, ?MODULE, []),
+    {ok, Pid}.
+
+stop() ->
+    exit(whereis(?MODULE), shutdown).
+
+init(_) ->
+    ChildSpecList = [child(freq_overload),
+                     child(frequency),
+                     child(simple_phone_sup)],
+    {ok, {{rest_for_one, 2, 3600}, ChildSpecList}}.
+
+child(Module) ->
+    {Module, {Module, start_link, []},
+     permanent, 2000, worker, [Module]}.
+\end{lstlisting}
+
+\subsection{Application Resource File：bsc.app}
+
+\begin{lstlisting}[style=erlangstyle, caption={bsc.app --- Application 资源文件}]
+{application, bsc,
+ [{description, "Base Station Controller"},
+  {vsn, "1.0"},
+  {modules, [bsc, bsc_sup, frequency,
+             freq_overload, logger,
+             simple_phone_sup, phone_fsm]},
+  {registered, [bsc_sup, frequency,
+                freq_overload, simple_phone_sup]},
+  {applications, [kernel, stdlib, sasl]},
+  {env, []},
+  {mod, {bsc, []}}
+ ]}.
+\end{lstlisting}
+
+
+% ============================================================
+% Section 7: Start Phases
+% ============================================================
+\section{启动阶段（Start Phases）}
+
+当多个 Application 之间需要在启动过程中进行同步时，可以使用 Start Phases 机制。
+
+\subsection{配置 Start Phases}
+
+在 \texttt{.app} 文件中定义 \texttt{start\_phases}：
+
+\begin{lstlisting}[style=erlangstyle, caption={带 start\_phases 的 .app 文件}]
+{application, bsc,
+ [{description, "Base Station Controller"},
+  {vsn, "1.0"},
+  {modules, [bsc, bsc_sup, ...]},
+  {registered, [bsc_sup, ...]},
+  {applications, [kernel, stdlib, sasl]},
+  {start_phases, [{init, []},
+                  {admin, []},
+                  {oper, []}]},
+  {env, []},
+  {mod, {bsc, []}}
+ ]}.
+\end{lstlisting}
+
+\subsection{实现 start\_phase/3 回调}
+
+\begin{lstlisting}[style=erlangstyle, caption={带 start\_phase 回调的 bsc.erl}]
+-module(bsc).
+-behaviour(application).
+
+-export([start/2, start_phase/3, stop/1]).
+
+start(_StartType, _StartArgs) ->
+    bsc_sup:start_link().
+
+start_phase(StartPhase, StartType, Args) ->
+    io:format("bsc:start_phase(~p,~p,~p).~n",
+              [StartPhase, StartType, Args]).
+
+stop(_Data) ->
+    ok.
+\end{lstlisting}
+
+\begin{notebox}[Start Phases 执行顺序]
+Start Phases 按照 \texttt{start\_phases} 列表中定义的顺序依次执行。对于包含应用（Included Applications），子应用的 Start Phases 必须是父应用 Start Phases 的子集。
+\end{notebox}
+
+
+% ============================================================
+% Section 8: Included Applications
+% ============================================================
+\section{包含应用（Included Applications）}
+
+一个 Application 可以包含其他 Application。被包含的 Application 由包含它的 Application 负责启动和停止。
+
+\subsection{配置 Included Applications}
+
+\begin{lstlisting}[style=erlangstyle, caption={top\_app.app --- 包含 bsc 的 Application}]
+{application, top_app,
+ [{description, "Included Application Example"},
+  {vsn, "1.0"},
+  {modules, [top_app]},
+  {applications, [kernel, stdlib, sasl]},
+  {included_applications, [bsc]},
+  {start_phases, [{start, []},
+                  {admin, []},
+                  {stop, []}]},
+  {mod, {application_starter, [top_app, []]}}
+ ]}.
+\end{lstlisting}
+
+\subsection{包含应用的回调模块}
+
+\begin{lstlisting}[style=erlangstyle, caption={top\_app.erl --- 包含应用的回调模块}]
+-module(top_app).
+-behaviour(application).
+-export([start/2, start_phase/3, stop/1]).
+
+start(_Type, _Args) ->
+    {ok, _Pid} = bsc_sup:start_link().
+
+start_phase(StartPhase, StartType, Args) ->
+    io:format("top_app:start_phase(~p,~p,~p).~n",
+              [StartPhase, StartType, Args]).
+
+stop(_Data) ->
+    ok.
+\end{lstlisting}
+
+\begin{warnbox}[注意]
+使用 \texttt{included\_applications} 时，\texttt{mod} 字段通常设置为 \texttt{\{application\_starter, [TopApp, []]\}}，这是 OTP 提供的一个辅助模块，用于协调包含应用的启动。被包含的 Application 不应该出现在 \texttt{applications} 依赖列表中。
+\end{warnbox}
+
+
+% ============================================================
+% Section 9: Configuration
+% ============================================================
+\section{配置管理}
+
+\subsection{sys.config 文件}
+
+Application 的环境变量可以通过 \texttt{sys.config} 文件（或 \texttt{.config} 文件）在启动时配置：
+
+\begin{lstlisting}[style=erlangstyle, caption={bsc.config --- 系统配置文件}]
+[{sasl, [{errlog_type, all},
+         {sasl_error_logger, tty}]},
+ {bsc,  [{frequencies, [1,2,3,4,5,6]}]}].
+\end{lstlisting}
+
+\subsection{使用配置文件启动}
+
+\begin{lstlisting}[style=shellstyle, caption={使用配置文件启动 Erlang 节点}]
+$ erl -config bsc.config
+\end{lstlisting}
+
+\subsection{运行时读取配置}
+
+\begin{lstlisting}[style=erlangstyle, caption={运行时读取和设置环境变量}]
+%% Read configuration
+application:get_env(bsc, frequencies).
+%% => {ok, [1,2,3,4,5,6]}
+
+%% Read with default value
+application:get_env(bsc, max_retries, 3).
+%% => 3
+
+%% Set configuration at runtime
+application:set_env(bsc, frequencies, [1,2,3,4,5,6,7,8]).
+\end{lstlisting}
+
+\begin{warnbox}[运行时修改配置的注意事项]
+\texttt{application:set\_env/3,4} 应谨慎使用。配置参数的读取频率和时机取决于具体的 Application 实现。不当使用可能导致 Application 处于不一致的状态。
+
+如果在 Application 加载之前调用 \texttt{set\_env}，\texttt{.app} 文件中定义的值会覆盖之前设置的值。可以使用 \texttt{persistent} 选项来避免这种情况。
+\end{warnbox}
+
+
+% ============================================================
+% Section 10: Practical Demo
+% ============================================================
+\section{实验演示}
+
+\subsection{启动 Application}
+
+\begin{lstlisting}[style=shellstyle, caption={启动 BSC Application}]
+$ erl -pa ebin -config bsc.config
+Erlang/OTP 26 [erts-14.2.5.12] [source] [64-bit]
+
+1> application:start(sasl).
+ok
+2> application:start(bsc).
+ok
+3> application:which_applications().
+[{bsc,"Base Station Controller","1.0"},
+ {sasl,"SASL  CXC 138 11","4.2.2"},
+ {stdlib,"ERTS  CXC 138 10","5.2.3"},
+ {kernel,"ERTS  CXC 138 10","9.2.4"}]
+\end{lstlisting}
+
+\subsection{使用 ensure\_all\_started}
+
+\begin{lstlisting}[style=shellstyle, caption={使用 ensure\_all\_started 自动启动依赖}]
+$ erl -pa ebin -config bsc.config
+Erlang/OTP 26 [erts-14.2.5.12] [source] [64-bit]
+
+1> application:ensure_all_started(bsc).
+{ok,[sasl,bsc]}
+\end{lstlisting}
+
+\begin{tipbox}[ensure\_all\_started vs start]
+\texttt{ensure\_all\_started/1} 会自动递归启动所有依赖的 Application，而 \texttt{start/1} 只启动指定的 Application，如果依赖未启动会返回错误。在实际项目中，推荐使用 \texttt{ensure\_all\_started/1}。
+\end{tipbox}
+
+\subsection{停止 Application}
+
+\begin{lstlisting}[style=shellstyle, caption={停止 BSC Application}]
+4> application:stop(bsc).
+ok
+=INFO REPORT==== ...
+    application: bsc
+    exited: stopped
+    type: temporary
+5> application:which_applications().
+[{sasl,"SASL  CXC 138 11","4.2.2"},
+ {stdlib,"ERTS  CXC 138 10","5.2.3"},
+ {kernel,"ERTS  CXC 138 10","9.2.4"}]
+\end{lstlisting}
+
+\subsection{查询 Application 信息}
+
+\begin{lstlisting}[style=shellstyle, caption={查询 Application 信息}]
+6> application:start(bsc).
+ok
+7> application:get_env(bsc, frequencies).
+{ok,[1,2,3,4,5,6]}
+8> application:get_key(bsc, vsn).
+{ok,"1.0"}
+9> application:get_key(bsc, modules).
+{ok,[bsc,bsc_sup,frequency,freq_overload,
+     logger,simple_phone_sup,phone_fsm]}
+10> application:get_supervisor(bsc).
+{ok,<0.95.0>}
+11> application:loaded_applications().
+[{bsc,"Base Station Controller","1.0"},
+ {sasl,"SASL  CXC 138 11","4.2.2"},
+ {stdlib,"ERTS  CXC 138 10","5.2.3"},
+ {kernel,"ERTS  CXC 138 10","9.2.4"}]
+\end{lstlisting}
+
+
+% ============================================================
+% Section 11: Directory Structure
+% ============================================================
+\section{Application 目录结构}
+
+标准的 OTP Application 目录结构如下：
+
+\begin{lstlisting}[style=erlangstyle, caption={标准 OTP Application 目录结构}]
+myapp-1.0/
+  ebin/
+    myapp.app          %% Application resource file
+    myapp.beam         %% Compiled callback module
+    myapp_sup.beam     %% Compiled supervisor
+    ...
+  src/
+    myapp.erl          %% Application callback module
+    myapp_sup.erl      %% Top supervisor
+    ...
+  include/             %% Header files (.hrl)
+  priv/                %% Private data files
+  doc/                 %% Documentation
+\end{lstlisting}
+
+使用 \texttt{rebar3} 构建工具时，目录结构略有不同：
+
+\begin{lstlisting}[style=erlangstyle, caption={rebar3 项目目录结构}]
+myapp/
+  src/
+    myapp.app.src      %% Application resource template
+    myapp_app.erl      %% Application callback module
+    myapp_sup.erl      %% Top supervisor
+    ...
+  include/
+  priv/
+  config/
+    sys.config         %% System configuration
+    vm.args            %% VM arguments
+  rebar.config         %% Build configuration
+\end{lstlisting}
+
+\begin{notebox}[rebar3 的 .app.src]
+使用 \texttt{rebar3} 时，\texttt{.app.src} 文件是模板，\texttt{rebar3} 会在编译时自动生成 \texttt{ebin/myapp.app} 文件，并自动填充 \texttt{modules} 列表。
+\end{notebox}
+
+
+% ============================================================
+% Section 12: Common Pitfalls
+% ============================================================
+\section{常见陷阱}
+
+\begin{itemize}[leftmargin=2em]
+    \item \textbf{忘记声明依赖}：\texttt{applications} 列表中必须包含所有运行时依赖的 Application。遗漏会导致 \texttt{\{error, \{not\_started, App\}\}} 错误
+
+    \item \textbf{循环依赖}：Application 之间不能有循环依赖。如果 A 依赖 B，B 又依赖 A，系统无法启动
+
+    \item \textbf{start/2 返回值错误}：\texttt{start/2} 必须返回 \texttt{\{ok, Pid\}} 或 \texttt{\{ok, Pid, State\}}，其中 \texttt{Pid} 是 Top Supervisor 的 PID。返回其他值会导致启动失败
+
+    \item \textbf{stop/1 中的清理}：\texttt{stop/1} 在所有进程终止\textbf{之后}才被调用。如果需要在进程终止之前执行清理，应使用 \texttt{prep\_stop/1}
+
+    \item \textbf{环境变量的加载时机}：\texttt{application:set\_env/3} 在 Application 加载时会被 \texttt{.app} 文件中的值覆盖。使用 \texttt{\{persistent, true\}} 选项可以避免
+
+    \item \textbf{included\_applications 的限制}：被包含的 Application 不能被独立启动，也不能出现在其他 Application 的 \texttt{applications} 依赖列表中
+
+    \item \textbf{start\_phase 未定义}：如果 \texttt{.app} 文件中定义了 \texttt{start\_phases}，但回调模块没有导出 \texttt{start\_phase/3}，会导致 \texttt{undef} 错误
+\end{itemize}
+
+
+\end{document}
