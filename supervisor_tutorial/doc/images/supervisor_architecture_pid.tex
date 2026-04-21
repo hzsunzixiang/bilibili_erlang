@@ -125,7 +125,7 @@
 
     % ---- Right-Bottom: Child Processes (managed by supervisor) ----
     \node[draw=erlgreen!70!black, fill=erlgreen!5, rounded corners=5pt,
-          minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (rb) at (6.4, -2.8) {};
+          minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (rb) at (6.4, -2.85) {};
     \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {子进程（由supervisor管理）};
     \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
         \textcolor{erlred!80!black}{\texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, Args)}} 之后：\\[3pt]
@@ -151,6 +151,22 @@
         ([yshift=-6.5mm]rt.west) -- node[below, font=\scriptsize, align=center, text=erlpid!80!black]
         {\textcolor{black}{\ding{174}} 返回 \texttt{\textcolor{erlpid}{\textbf{\{ok, Pid\}}}}\\[1pt]
          {\tiny \textcolor{erlinit}{\textbf{init/1}} 成功后启动所有子进程，返回 Pid}} ([yshift=-6.5mm]lt.east);
+
+    % ==== ChildSpec Info Box (center-bottom gap) ====
+    \node[draw=erlyellow!80!black, fill=erlyellow!10, rounded corners=5pt,
+          minimum width=4.0cm, minimum height=2.8cm, text width=3.6cm, align=left,
+          font=\tiny] (childspecbox) at (0.8, -3.45) {
+        \textcolor{erlyellow!70!black}{\scriptsize\bfseries ChildSpec（子进程规格）}\\[2pt]
+        \texttt{\#\{}\\
+        \hspace{4pt}\textcolor{erlblue}{\textbf{id}} \texttt{=>} \textit{child\_id}\texttt{,}\\
+        \hspace{4pt}\textcolor{erlred}{\textbf{start}} \texttt{=>} \texttt{\{M, F, A\}}\texttt{,}\\
+        \hspace{4pt}\textcolor{erlgreen}{\textbf{restart}} \texttt{=>}\\
+        \hspace{12pt}\texttt{permanent|transient|temporary}\texttt{,}\\
+        \hspace{4pt}\textcolor{erlpurple}{\textbf{shutdown}} \texttt{=>} \texttt{brutal\_kill|Timeout}\texttt{,}\\
+        \hspace{4pt}\textcolor{erlinit}{\textbf{type}} \texttt{=>} \texttt{worker | supervisor}\texttt{,}\\
+        \hspace{4pt}\textcolor{gray}{\textbf{modules}} \texttt{=>} \texttt{[Module] | dynamic}\\
+        \texttt{\}}
+    };
 
     % ==== Phase 2: Runtime ====
 
