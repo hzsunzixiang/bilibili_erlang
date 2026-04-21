@@ -1,26 +1,29 @@
 .PHONY: all clean help
 
 # ============================================================
-# Erlang Compilation
+# Recursive build for sub-applications
 # ============================================================
-ERLC = erlc
-ERLCFLAGS = -Wall
+SUBDIRS = simple_app phased_app
 
-# Source files
-SRCS = $(wildcard *.erl)
-BEAMS = $(SRCS:.erl=.beam)
+# Default: compile all sub-applications
+all:
+	@for dir in $(SUBDIRS); do \
+		echo "=== Building $$dir ==="; \
+		$(MAKE) -C $$dir all; \
+	done
 
-# Default: compile all
-all: $(BEAMS)
-
-%.beam: %.erl
-	$(ERLC) $(ERLCFLAGS) $<
-
-# Clean compiled files
+# Clean all sub-applications
 clean:
-	rm -f *.beam erl_crash.dump
+	@for dir in $(SUBDIRS); do \
+		echo "=== Cleaning $$dir ==="; \
+		$(MAKE) -C $$dir clean; \
+	done
 
 help:
 	@echo "Available targets:"
-	@echo "  make       - Compile all .erl files"
-	@echo "  make clean - Remove .beam files and crash dumps"
+	@echo "  make       - Compile all sub-applications (simple_app, phased_app)"
+	@echo "  make clean - Clean all sub-applications"
+	@echo ""
+	@echo "To build/run individually:"
+	@echo "  cd simple_app && make run"
+	@echo "  cd phased_app && make run"
