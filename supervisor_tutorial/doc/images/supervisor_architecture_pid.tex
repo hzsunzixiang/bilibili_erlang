@@ -129,13 +129,12 @@
     \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {子进程（由supervisor管理）};
     \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
         \textcolor{erlred!80!black}{\texttt{start\_link(\textcolor{erlmodule}{\textbf{?MODULE}}, Args)}} 之后：\\[3pt]
-        \texttt{ChildSpec = \#\{id, start, restart, ...\ \}}\\
-        \texttt{child\_1: \{M, F, A\}} $\rightarrow$ \texttt{Pid\_1}\\
-        \texttt{child\_2: \{M, F, A\}} $\rightarrow$ \texttt{Pid\_2}\\
-        \texttt{child\_N: \{M, F, A\}} $\rightarrow$ \texttt{Pid\_N}\\[0pt]
-        {\tiny\textcolor{gray}{每个子进程由 ChildSpec 中的 \texttt{\{M, F, A\}} 启动}}
+        \textcolor{erlblue}{\ding{72}} \texttt{child\_1:} \textcolor{erlblue}{\textbf{gen\_server}} \texttt{\{M1,F,A\}} $\rightarrow$ \texttt{Pid\_1}\\
+        \textcolor{erlgreen!70!black}{\ding{72}} \texttt{child\_2:} \textcolor{erlgreen!70!black}{\textbf{gen\_event}} \texttt{\{M2,F,A\}} $\rightarrow$ \texttt{Pid\_2}\\
+        \textcolor{erlpurple}{\ding{72}} \texttt{child\_3:} \textcolor{erlpurple}{\textbf{gen\_statem}} \texttt{\{M3,F,A\}} $\rightarrow$ \texttt{Pid\_3}\\[2pt]
+        {\tiny\textcolor{gray}{子进程可以是任意 OTP behaviour（gen\_server /}}\\
+        {\tiny\textcolor{gray}{gen\_event / gen\_statem），也可以是 supervisor}}
     };
-
     % ==== Arrows ====
 
     % ==== Phase 1: Startup ====
@@ -219,8 +218,8 @@
         {\ding{72} \textcolor{erlinit}{\textbf{\texttt{Mod:init/1}}} 启动时调用，返回 \texttt{\{ok, \{SupFlags, ChildSpecs\}\}}\\
          \ding{72} \texttt{SupFlags} 定义重启策略、强度和周期\\
          \ding{72} \texttt{ChildSpecs} 列表中的子进程按顺序启动\\
+         \ding{72} 子进程可以是 \textcolor{erlblue}{\textbf{gen\_server}} / \textcolor{erlgreen!70!black}{\textbf{gen\_event}} / \textcolor{erlpurple}{\textbf{gen\_statem}} / \textbf{supervisor}\\
          \ding{72} 启动成功后返回 \textcolor{erlpid}{\textbf{\texttt{\{ok, Pid\}}}}，Pid 即监督进程标识};
-
 \end{tikzpicture}
 
 \end{document}
