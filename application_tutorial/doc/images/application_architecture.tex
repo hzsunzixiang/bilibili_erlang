@@ -135,7 +135,7 @@
         \hspace{8pt}\textcolor{erlgreen!70!black}{\ding{72}} \texttt{child\_1:} \textcolor{erlgreen!70!black}{\textbf{gen\_server}} $\rightarrow$ \texttt{frequency}\\
         \hspace{8pt}\textcolor{erlpurple}{\ding{72}} \texttt{child\_2:} \textcolor{erlpurple}{\textbf{gen\_event}} $\rightarrow$ \texttt{freq\_overload}\\
         \hspace{8pt}\textcolor{erlinit}{\ding{72}} \texttt{child\_3:} \textcolor{erlinit}{\textbf{gen\_statem}} $\rightarrow$ \texttt{phone\_fsm}\\[2pt]
-        {\fontsize{4}{5}\selectfont\textcolor{gray}{Top Supervisor 终止 → Application Master 检测 → Application 终止}}
+        {\fontsize{4}{5}\selectfont\textcolor{gray}{{\fontsize{3}{4}\selectfont Top Supervisor} 终止 → {\fontsize{3}{4}\selectfont Application Master} 检测 → {\fontsize{3}{4}\selectfont Application} 终止}}
     };
 
     % ==== .app Resource File Info Box (center-bottom gap) ====
@@ -177,9 +177,10 @@
 
     % Arrow ②: Application Master -> Supervision Tree (start tree)
     \draw[-{Stealth[length=6pt]}, thick, erlgreen!70!black, line width=1.2pt]
-        ([xshift=0mm]rt.south) -- node[right, font=\scriptsize, align=left, text=erlgreen!70!black]
-        {\scriptsize\bfseries \textcolor{black}{\ding{173}} 启动监督树\\[1pt]
-         \tiny Module:start/2 $\rightarrow$ bsc\_sup:start\_link()} ([xshift=0mm]rb.north);
+        ([xshift=0mm]rt.south) -- node[left, font=\scriptsize, align=right, text=erlgreen!70!black]
+        {{\scriptsize\bfseries \textcolor{black}{\ding{173}} 启动监督树}}
+        node[right, font=\tiny, align=left, text=erlgreen!70!black]
+        {Module:start/2\\$\rightarrow$ bsc\_sup:start\_link()} ([xshift=0mm]rb.north);
 
     % Arrow ⑤: Callback Module (lt) -> Client API (lb) (Reply)
     \draw[-{Stealth[length=5pt]}, thick, erlred, line width=1.2pt]
@@ -217,8 +218,8 @@
 
     % Right bottom annotation (inside right outer frame, below dashed line)
     \node[font=\fontsize{5}{6}\selectfont\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
-        {\ding{72} Application Controller 加载 \texttt{.app} 文件，检查 \texttt{applications} 依赖\\
-         \ding{72} Application Master 调用 \textcolor{erlmodule}{\textbf{\texttt{Module:start/2}}} 启动监督树\\
+        {\ding{72} {\fontsize{4}{5}\selectfont Application Controller} 加载 \texttt{.app} 文件，检查 \texttt{applications} 依赖\\
+         \ding{72} {\fontsize{4}{5}\selectfont Application Master} 调用 \textcolor{erlmodule}{\textbf{\texttt{Module:start/2}}} 启动监督树\\
          \ding{72} 停止时：\texttt{prep\_stop/1} $\rightarrow$ 关闭监督树 $\rightarrow$ \texttt{stop/1}\\
          \ding{72} restart\_type: \texttt{permanent} $|$ \texttt{transient} $|$ \texttt{temporary}};
 \end{tikzpicture}
