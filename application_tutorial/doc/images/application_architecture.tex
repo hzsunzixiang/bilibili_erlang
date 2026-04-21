@@ -129,13 +129,13 @@
     \node[draw=erlgreen!70!black, fill=erlgreen!5, rounded corners=5pt,
           minimum width=6.2cm, minimum height=2.8cm, text width=5.8cm, align=left] (rb) at (6.4, -2.85) {};
     \node[font=\small\bfseries\color{erlgreen!70!black}, anchor=north west] at ([xshift=3pt, yshift=-3pt]rb.north west) {监督树（由Application管理）};
-    \node[font=\scriptsize, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
+    \node[font=\tiny, text width=5.4cm, align=left, anchor=north west] at ([xshift=6pt, yshift=-16pt]rb.north west) {
         \textcolor{erlred!80!black}{\texttt{Module:start/2}} 返回后：\\[3pt]
         \textcolor{erlblue}{\ding{72}} \texttt{Top Supervisor:} \textcolor{erlblue}{\textbf{bsc\_sup}}\\
-        \hspace{12pt}\textcolor{erlgreen!70!black}{\ding{72}} \texttt{child\_1:} \textcolor{erlgreen!70!black}{\textbf{gen\_server}} $\rightarrow$ \texttt{frequency}\\
-        \hspace{12pt}\textcolor{erlpurple}{\ding{72}} \texttt{child\_2:} \textcolor{erlpurple}{\textbf{gen\_event}} $\rightarrow$ \texttt{freq\_overload}\\
-        \hspace{12pt}\textcolor{erlinit}{\ding{72}} \texttt{child\_3:} \textcolor{erlinit}{\textbf{gen\_statem}} $\rightarrow$ \texttt{phone\_fsm}\\[2pt]
-        {\tiny\textcolor{gray}{Top Supervisor 终止 → Application Master 检测 → Application 终止}}
+        \hspace{8pt}\textcolor{erlgreen!70!black}{\ding{72}} \texttt{child\_1:} \textcolor{erlgreen!70!black}{\textbf{gen\_server}} $\rightarrow$ \texttt{frequency}\\
+        \hspace{8pt}\textcolor{erlpurple}{\ding{72}} \texttt{child\_2:} \textcolor{erlpurple}{\textbf{gen\_event}} $\rightarrow$ \texttt{freq\_overload}\\
+        \hspace{8pt}\textcolor{erlinit}{\ding{72}} \texttt{child\_3:} \textcolor{erlinit}{\textbf{gen\_statem}} $\rightarrow$ \texttt{phone\_fsm}\\[2pt]
+        {\fontsize{4}{5}\selectfont\textcolor{gray}{Top Supervisor 终止 → Application Master 检测 → Application 终止}}
     };
 
     % ==== .app Resource File Info Box (center-bottom gap) ====
@@ -216,7 +216,7 @@
          \ding{72} 可选回调：\texttt{prep\_stop/1}、\texttt{start\_phase/3}、\texttt{config\_change/3}};
 
     % Right bottom annotation (inside right outer frame, below dashed line)
-    \node[font=\tiny\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
+    \node[font=\fontsize{5}{6}\selectfont\color{erlred!70!black}, anchor=north west, text width=5.8cm, align=left] at ([xshift=6pt, yshift=-10pt]rb.south west)
         {\ding{72} Application Controller 加载 \texttt{.app} 文件，检查 \texttt{applications} 依赖\\
          \ding{72} Application Master 调用 \textcolor{erlmodule}{\textbf{\texttt{Module:start/2}}} 启动监督树\\
          \ding{72} 停止时：\texttt{prep\_stop/1} $\rightarrow$ 关闭监督树 $\rightarrow$ \texttt{stop/1}\\
