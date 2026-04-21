@@ -5,7 +5,10 @@
       full_otp_app_sup,
       kv_server,
       traffic_light,
-      event_bus
+      event_bus,
+      data_store_sup,
+      data_store,
+      data_cache
   ]},
   {mod, {full_otp_app_app, []}},
   {applications,

@@ -18,6 +18,12 @@ Architecture
                 |       +-- event_bus_handler     - Default log handler
                 |
                 +-- traffic_light   (gen_statem)  - Traffic Light FSM
+                |
+                +-- data_store_sup  (supervisor, rest_for_one)
+                        |
+                        +-- data_store  (gen_server) - DETS disk persistence
+                        |
+                        +-- data_cache  (gen_server) - ETS in-memory cache
 
 
 Modules
@@ -31,6 +37,9 @@ Modules
 | event_bus           | gen_event   | Central event bus (wraps gen_event)      |
 | event_bus_handler   | gen_event   | Default handler, logs events to stdout   |
 | traffic_light       | gen_statem  | Traffic light FSM (red/green/yellow)     |
+| data_store_sup      | supervisor  | Sub-supervisor for persistence layer     |
+| data_store          | gen_server  | DETS-based disk persistence              |
+| data_cache          | gen_server  | ETS-based cache with read/write-through  |
 | demo                | -           | Interactive demo exercising all modules  |
 
 
@@ -71,6 +80,15 @@ Manual Usage
     traffic_light:emergency().        %% force red
     traffic_light:resume().           %% resume auto-transition
 
+    %% Data Persistence (sub-supervisor tree)
+    data_cache:put(key, "value").     %% write-through: cache + disk
+    data_cache:get(key).              %% read-through: cache -> disk
+    data_cache:invalidate(key).       %% remove from cache only
+    data_cache:stats().               %% hit/miss statistics
+    data_store:get(key).              %% read directly from DETS
+    data_store:all().                 %% all persisted records
+
     %% Supervisor
     supervisor:which_children(full_otp_app_sup).
+    supervisor:which_children(data_store_sup).
     supervisor:count_children(full_otp_app_sup).

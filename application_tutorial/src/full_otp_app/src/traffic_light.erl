@@ -6,7 +6,7 @@
 %%%   - External events: manual next/0, emergency/0, resume/0
 %%%
 %%% State transitions:
-%%%   red (5s) -> green (5s) -> yellow (2s) -> red ...
+%%%   red (30s) -> green (30s) -> yellow (30s) -> red ...
 %%%   Any state + emergency -> red (stays until resume)
 %%%
 %%% Usage (after application started):
@@ -26,9 +26,9 @@
 
 -define(SERVER, ?MODULE).
 
--define(RED_TIMEOUT,    5000).
--define(GREEN_TIMEOUT,  5000).
--define(YELLOW_TIMEOUT, 2000).
+-define(RED_TIMEOUT,    30000).
+-define(GREEN_TIMEOUT,  30000).
+-define(YELLOW_TIMEOUT, 30000).
 
 %%====================================================================
 %% API

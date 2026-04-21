@@ -84,16 +84,52 @@ run() ->
     timer:sleep(100),
     io:format("  resumed normal operation~n~n"),
 
+    %% --- Data persistence demo (sub-supervisor) ---
+    io:format("--- [supervisor] data_store_sup demo ---~n"),
+    io:format("  (supervisor under supervisor: DETS + ETS cache)~n~n"),
+
+    data_cache:put(db_host, "localhost"),
+    data_cache:put(db_port, 5432),
+    data_cache:put(db_name, "mydb"),
+    io:format("  write-through: put 3 config entries~n"),
+
+    {ok, Host} = data_cache:get(db_host),
+    io:format("  cache get(db_host) = ~p (cache hit)~n", [Host]),
+
+    %% Invalidate cache to demonstrate read-through
+    data_cache:invalidate(db_port),
+    io:format("  invalidated db_port from cache~n"),
+
+    {ok, Port} = data_cache:get(db_port),
+    io:format("  cache get(db_port) = ~p (cache miss -> read from DETS)~n", [Port]),
+
+    Stats = data_cache:stats(),
+    io:format("  cache stats: ~p~n", [Stats]),
+
+    AllDisk = data_store:all(),
+    io:format("  data_store:all() (on disk) = ~p~n~n", [AllDisk]),
+
     %% --- Supervisor tree ---
     io:format("--- [supervisor] tree info ---~n~n"),
     Children = supervisor:which_children(full_otp_app_sup),
-    io:format("  supervised children:~n"),
+    io:format("  top-level children (full_otp_app_sup):~n"),
     lists:foreach(
         fun({Id, Pid, Type, Modules}) ->
             io:format("    ~-20s pid=~p type=~p modules=~p~n",
                       [Id, Pid, Type, Modules])
         end,
         Children
+    ),
+
+    %% Show sub-supervisor children
+    io:format("~n  sub-supervisor children (data_store_sup):~n"),
+    SubChildren = supervisor:which_children(data_store_sup),
+    lists:foreach(
+        fun({Id, Pid, Type, Modules}) ->
+            io:format("    ~-20s pid=~p type=~p modules=~p~n",
+                      [Id, Pid, Type, Modules])
+        end,
+        SubChildren
     ),
 
     io:format("~n========================================~n"),

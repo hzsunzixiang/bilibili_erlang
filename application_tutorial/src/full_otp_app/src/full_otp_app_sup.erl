@@ -1,9 +1,10 @@
 %%% @doc Top-level supervisor for full_otp_app.
 %%%
-%%% Supervises three children demonstrating different OTP behaviours:
-%%%   1. kv_server       - gen_server  (key-value store)
-%%%   2. event_bus        - gen_event   (event manager)
-%%%   3. traffic_light    - gen_statem  (traffic light FSM)
+%%% Supervises four children demonstrating different OTP behaviours:
+%%%   1. kv_server        - gen_server  (key-value store)
+%%%   2. event_bus         - gen_event   (event manager)
+%%%   3. traffic_light     - gen_statem  (traffic light FSM)
+%%%   4. data_store_sup    - supervisor  (data persistence sub-tree)
 %%%
 %%% Strategy: one_for_one - if one child crashes, only that child restarts.
 -module(full_otp_app_sup).
@@ -28,9 +29,10 @@ start_link() ->
 %% @doc Initialize the supervisor with child specifications.
 %%
 %% Children:
-%%   - kv_server:      a gen_server that stores key-value pairs
-%%   - event_bus:      a gen_event manager for publishing/subscribing events
-%%   - traffic_light:  a gen_statem implementing a traffic light FSM
+%%   - kv_server:       a gen_server that stores key-value pairs
+%%   - event_bus:       a gen_event manager for publishing/subscribing events
+%%   - traffic_light:   a gen_statem implementing a traffic light FSM
+%%   - data_store_sup:  a sub-supervisor for data persistence (DETS + ETS cache)
 %%--------------------------------------------------------------------
 init([]) ->
     SupFlags = #{
@@ -65,6 +67,16 @@ init([]) ->
             shutdown => 5000,
             type     => worker,
             modules  => [traffic_light]
+        },
+        %% Child 4: supervisor - Data Persistence Sub-tree
+        %%   data_store_sup supervises: data_store (DETS) + data_cache (ETS)
+        #{
+            id       => data_store_sup,
+            start    => {data_store_sup, start_link, []},
+            restart  => permanent,
+            shutdown => infinity,
+            type     => supervisor,
+            modules  => [data_store_sup]
         }
     ],
     {ok, {SupFlags, ChildSpecs}}.
