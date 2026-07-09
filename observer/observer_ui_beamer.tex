@@ -9,7 +9,7 @@
 \usepackage{fontspec}
 \setmonofont{Menlo}[Scale=0.82]
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning, calc, shapes.geometric}
+\usetikzlibrary{arrows.meta, positioning, calc, shapes.geometric, shadows.blur}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{array}
@@ -28,6 +28,7 @@
 \definecolor{codebg}{HTML}{F7F7FA}
 \definecolor{erlred}{HTML}{D63031}
 \definecolor{erlblue}{HTML}{0984E3}
+\definecolor{nodegreen}{HTML}{00A884}
 
 % ── Beamer theme ───────────────────────────────────────────────────
 \setbeamercolor{normal text}{fg=dark,bg=white}
@@ -47,14 +48,15 @@
 \newcommand{\keypoint}[1]{\textbf{\color{primary}#1}}
 \newcommand{\good}[1]{\textbf{\color{accent!80!black}#1}}
 \newcommand{\warn}[1]{\textbf{\color{warning}#1}}
+\newcommand{\bad}[1]{\textbf{\color{erlred}#1}}
 \newcommand{\code}[1]{\texttt{#1}}
 \newcommand{\imgslide}[3]{%
   \begin{frame}{#1}
     \begin{columns}[T,onlytextwidth]
-      \column{0.57\textwidth}
+      \column{0.58\textwidth}
       \centering
       \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{#2}
-      \column{0.39\textwidth}
+      \column{0.38\textwidth}
       #3
     \end{columns}
   \end{frame}
@@ -82,67 +84,124 @@
   tabsize=2
 }
 
-\title{Erlang Observer 可视化入门}
-\subtitle{Observer UI：从图形界面理解 OTP 运行时结构}
+\title{Erlang Observer UI}
+\subtitle{内置运行时可视化：从 application 看见 BEAM 进程世界}
 \author{}
 \date{}
 
 \begin{document}
 
+% ── Title ──────────────────────────────────────────────────────────
 \begin{frame}[plain]
   \begin{tikzpicture}[remember picture, overlay]
     \fill[primary!8] (current page.north west) rectangle (current page.south east);
     \fill[primary!15] (current page.north west) ++(1.7,-1.3) circle (2.7cm);
     \fill[accent!12]  (current page.south east) ++(-2.1,1.6) circle (3.0cm);
-    \node[anchor=center, font=\fontsize{25}{31}\selectfont\bfseries, text=dark]
-      at ([yshift=1.7cm]current page.center) {Erlang Observer UI};
+    \node[anchor=center, font=\fontsize{26}{32}\selectfont\bfseries, text=dark]
+      at ([yshift=1.75cm]current page.center) {Erlang Observer UI};
     \node[anchor=center, font=\Large, text=primary!80]
-      at ([yshift=0.55cm]current page.center) {用图形界面看见 application / supervisor / process};
+      at ([yshift=0.55cm]current page.center) {内置运行时可视化：看见 application / supervisor / process};
     \node[anchor=center, font=\large\bfseries, text=accent!80!black]
-      at ([yshift=-0.35cm]current page.center) {从运行时结构反推 OTP 代码结构};
+      at ([yshift=-0.35cm]current page.center) {很多产品和语言生态没有的“协程级别”观察能力};
     \draw[accent, line width=1.5pt]
-      ([yshift=-1.15cm, xshift=-4.5cm]current page.center)
-      -- ([yshift=-1.15cm, xshift=4.5cm]current page.center);
+      ([yshift=-1.15cm, xshift=-4.8cm]current page.center)
+      -- ([yshift=-1.15cm, xshift=4.8cm]current page.center);
     \node[anchor=south, font=\scriptsize, text=dark!45]
       at ([yshift=0.4cm]current page.south)
-      {基于 full\_otp\_app demo 与 observer\_tutorial\_body.tex 整理};
+      {重点：Applications 页面 \enspace|\enspace OTP 层级 \enspace|\enspace BEAM 进程视角};
   \end{tikzpicture}
 \end{frame}
 
-\begin{frame}{为什么先讲 Observer UI？}
+% ── Importance ─────────────────────────────────────────────────────
+\begin{frame}{为什么 Observer 值得先讲？}
   \begin{columns}[T,onlytextwidth]
     \column{0.52\textwidth}
-    \begin{alertblock}{直接从 callback 开始，容易学成 API 清单}
-      \code{application}、\code{supervisor}、\code{gen\_server}、\code{gen\_statem} 都是运行时结构。
-      只看代码，不容易建立整体图像。
+    \begin{alertblock}{这不是普通监控面板}
+      很多语言生态也有 metrics、trace、profiler，但通常看到的是 OS 线程、HTTP 请求、堆内存或业务指标。
+      \keypoint{Observer 直接站在 BEAM 运行时内部看系统。}
     \end{alertblock}
-    \begin{block}{Observer 的价值}
+    \begin{block}{它能看到 Erlang 的核心建模单位}
       \begin{itemize}
-        \item 看见当前 BEAM 节点
-        \item 看见 application 列表
-        \item 展开 supervisor tree
-        \item 双击 process 查看状态、消息、调用栈
+        \item Erlang process 是语言级轻量进程
+        \item 概念上接近 Go goroutine，但属于 BEAM VM
+        \item 每个 process 有 mailbox、state、links、reductions
+        \item Observer 把这些运行时对象直接展示出来
       \end{itemize}
     \end{block}
     \column{0.44\textwidth}
-    \begin{exampleblock}{学习路线}
+    \begin{exampleblock}{一句话定位}
       \centering
-      \code{启动 OTP 应用}\par
-      $\downarrow$\par
-      \code{Observer 看 application}\par
-      $\downarrow$\par
-      \code{展开 supervisor tree}\par
-      $\downarrow$\par
-      \code{回到代码理解 callback}
+      \Large
+      Erlang 的并发模型\par
+      不是“猜出来”的，\par
+      是可以\good{直接看见}的。
     \end{exampleblock}
   \end{columns}
 \end{frame}
 
+\begin{frame}{和常见语言工具相比，Observer 特别在哪里？}
+  \small
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{常见产品/语言工具更多看到}
+      \begin{itemize}
+        \item OS process / OS thread
+        \item request latency / QPS
+        \item heap / GC / CPU profile
+        \item log / trace / span
+        \item 外部采集后的指标视角
+      \end{itemize}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{exampleblock}{Observer 直接看到}
+      \begin{itemize}
+        \item BEAM node 内部资源
+        \item application 列表
+        \item supervisor tree
+        \item 每个 Erlang process
+        \item mailbox / state / stack trace
+        \item ETS / DETS 表
+      \end{itemize}
+    \end{exampleblock}
+  \end{columns}
+  \vspace{0.25cm}
+  \centering
+  \warn{关键差异：Observer 的观察粒度直接下沉到 Erlang process 级别。}
+\end{frame}
+
+\begin{frame}{Erlang process：类似 goroutine，但可观察性更内置}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{类比 Go goroutine}
+      \begin{itemize}
+        \item 都是轻量级并发单元
+        \item 都不是手工创建 OS thread
+        \item 都由运行时调度
+        \item 都适合海量并发建模
+      \end{itemize}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{exampleblock}{Erlang + Observer 的特殊组合}
+      \begin{itemize}
+        \item process 有 mailbox
+        \item process 有独立状态
+        \item process 之间 link / monitor
+        \item supervisor 管理 process 生命周期
+        \item Observer 把这些关系可视化
+      \end{itemize}
+    \end{exampleblock}
+  \end{columns}
+  \vspace{0.25cm}
+  \centering
+  \good{这就是为什么讲 OTP 之前，先讲 Observer。}
+\end{frame}
+
+% ── Start ──────────────────────────────────────────────────────────
 \begin{frame}[fragile]{启动 demo 应用和 Observer}
   \begin{columns}[T,onlytextwidth]
     \column{0.50\textwidth}
     \begin{block}{启动 demo 节点}
-\begin{lstlisting}[language=bash]
+\begin{lstlisting}
 cd bilibili_erlang/observer/full_otp_app
 rebar3 shell --sname application_demo
 \end{lstlisting}
@@ -159,236 +218,252 @@ observer:start().
   \end{columns}
 \end{frame}
 
-\imgslide{System：先看节点整体状态}{System.png}{%
-  \begin{block}{先建立节点级视角}
+\imgslide{System：先确认我们在看一个 BEAM node}{System.png}{%
+  \begin{block}{节点级资源}
     \begin{itemize}
-      \item 当前 Erlang node 名称
-      \item OTP / ERTS 版本
-      \item 进程数量、端口、ETS、timer
-      \item memory 和 scheduler 概览
+      \item node name / OTP version
+      \item process / port / ETS / timer
+      \item memory / scheduler
+      \item atom / binary / code 信息
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{讲课重点}
-    BEAM VM 不是黑盒。Observer 直接展示节点内部资源。
-  \end{exampleblock}
-}
-
-\imgslide{Load Charts：观察运行时负载}{Load_Charts.png}{%
-  \begin{block}{适合解释 BEAM 调度}
-    \begin{itemize}
-      \item Scheduler Utilization
-      \item Run Queue
-      \item IO / Memory 趋势
-    \end{itemize}
-  \end{block}
-  \begin{alertblock}{不要讲太深}
-    入门阶段只需要知道：大量 Erlang process 由 BEAM scheduler 调度。
+  \begin{alertblock}{讲课重点}
+    先告诉观众：Observer 不是外部猜测，而是直接连到 BEAM node。
   \end{alertblock}
 }
 
-\imgslide{Applications：从 application 开始}{Applications.png}{%
-  \begin{block}{Observer UI 的核心页面}
+% ── Applications as focus ──────────────────────────────────────────
+\begin{frame}{本讲重点：Applications 页面}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{为什么重点讲 Applications？}
+      \begin{itemize}
+        \item OTP 是从 application 组织系统
+        \item application 下面是 supervisor tree
+        \item supervisor 管理 worker process
+        \item gen\_server / gen\_statem 都落到 process
+      \end{itemize}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{exampleblock}{Applications 页面给出主线}
+      \centering
+      \code{application}\par
+      $\downarrow$\par
+      \code{supervisor tree}\par
+      $\downarrow$\par
+      \code{worker process}\par
+      $\downarrow$\par
+      \code{mailbox + state}
+    \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Application 层级：从产品视角到 BEAM process}
+  \centering
+  \begin{tikzpicture}[
+    scale=0.82, transform shape,
+    node distance=0.75cm and 1.05cm,
+    app/.style={rounded corners=6pt, draw=primary!65, fill=primary!12, minimum width=3.3cm, minimum height=0.75cm, align=center, font=\small\bfseries, blur shadow},
+    sup/.style={rounded corners=6pt, draw=accent!65, fill=accent!12, minimum width=2.8cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
+    worker/.style={rounded corners=5pt, draw=erlblue!65, fill=erlblue!10, minimum width=2.45cm, minimum height=0.62cm, align=center, font=\scriptsize},
+    detail/.style={rounded corners=5pt, draw=warning!65, fill=warning!10, minimum width=2.7cm, minimum height=0.56cm, align=center, font=\tiny},
+    arrow/.style={-{Latex[length=2.5mm]}, thick, color=muted}
+  ]
+    \node[app] (app) {full\_otp\_app\\\footnotesize application};
+
+    \node[sup, below=of app] (root) {full\_otp\_app\_sup\\root supervisor};
+
+    \node[worker, below left=1.0cm and 2.6cm of root] (kv) {kv\_server\\gen\_server};
+    \node[worker, below left=1.0cm and 0.75cm of root] (event) {event\_bus\\gen\_event};
+    \node[worker, below right=1.0cm and 0.75cm of root] (traffic) {traffic\_light\\gen\_statem};
+    \node[sup, below right=1.0cm and 2.6cm of root] (dataSup) {data\_store\_sup\\child supervisor};
+
+    \node[worker, below left=0.85cm and 0.55cm of dataSup] (store) {data\_store\\gen\_server + DETS};
+    \node[worker, below right=0.85cm and 0.55cm of dataSup] (cache) {data\_cache\\gen\_server + ETS};
+
+    \node[detail, below=0.75cm of kv] (kvState) {mailbox + state\\private process data};
+    \node[detail, below=0.75cm of traffic] (fsmState) {current state\\red / green / yellow};
+
+    \draw[arrow] (app) -- (root);
+    \draw[arrow] (root) -- (kv);
+    \draw[arrow] (root) -- (event);
+    \draw[arrow] (root) -- (traffic);
+    \draw[arrow] (root) -- (dataSup);
+    \draw[arrow] (dataSup) -- (store);
+    \draw[arrow] (dataSup) -- (cache);
+    \draw[arrow, dashed] (kv) -- (kvState);
+    \draw[arrow, dashed] (traffic) -- (fsmState);
+  \end{tikzpicture}
+
+  \vspace{0.2cm}
+  \good{Observer 的 Applications 页面，就是把这张图变成真实运行中的可点击对象。}
+\end{frame}
+
+\imgslide{Applications：从 application 开始观察 OTP}{Applications.png}{%
+  \begin{block}{左侧 application 列表}
     \begin{itemize}
-      \item 左侧列出已启动 application
-      \item 右侧展示 application 信息
-      \item 可以进入 supervision tree
+      \item 系统 application：\code{kernel}、\code{stdlib}、\code{ssl}
+      \item 业务 application：\code{full\_otp\_app}
+      \item 每个 application 都是 OTP 系统组织单位
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{自顶向下入口}
-    先看 application，再看 supervisor，再看 worker process。
+  \begin{exampleblock}{本页要强调}
+    讲 OTP 不要先从函数开始，而是先从 application 这个运行时入口开始。
   \end{exampleblock}
 }
 
-\imgslide{full\_otp\_app：连接 demo 代码}{Applications_app.png}{%
-  \begin{block}{demo 应用结构}
+\imgslide{full\_otp\_app：把代码映射到运行时}{Applications_app.png}{%
+  \begin{block}{选中 demo application 后}
     \begin{itemize}
-      \item \code{full\_otp\_app\_sup}
-      \item \code{kv\_server}
-      \item \code{event\_bus}
-      \item \code{traffic\_light}
-      \item \code{data\_store\_sup}
+      \item 看 application 状态
+      \item 看启动信息和依赖
+      \item 进入 supervision tree
+      \item 连接到 \code{.app.src} 配置
     \end{itemize}
   \end{block}
-  \begin{alertblock}{讲解方式}
-    不先背源码，先在 UI 中看到结构。
+  \begin{alertblock}{核心讲法}
+    先让观众在 UI 中看到 \code{full\_otp\_app}，再回到源码解释 application。
   \end{alertblock}
 }
 
-\imgslide{Supervisor Tree：OTP 结构可视化}{Applications_app_supervisor.png}{%
-  \begin{block}{这张图最适合讲 OTP}
+\imgslide{Supervisor Tree：Applications 页面最重要的能力}{Applications_app_supervisor.png}{%
+  \begin{block}{为什么这张图最关键？}
     \begin{itemize}
-      \item supervisor 也是一个 Erlang process
-      \item worker 是被 supervisor 管理的 process
-      \item application 通过 supervision tree 组织运行时
+      \item application 下面是 root supervisor
+      \item supervisor 管理 worker process
+      \item worker 对应 gen\_server / gen\_statem
+      \item OTP 的容错结构直接可视化
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{关键结论}
-    OTP 不是抽象概念，它在运行时就是一棵可观察的进程树。
+  \begin{exampleblock}{一句话结论}
+    supervisor tree 不是概念图，而是正在运行的进程关系图。
   \end{exampleblock}
 }
 
-\imgslide{Nested Supervisor：子监督树}{Applications_app_supervisor_second.png}{%
+\imgslide{Nested Supervisor：OTP 可以分层组织系统}{Applications_app_supervisor_second.png}{%
   \begin{block}{data\_store\_sup}
     \begin{itemize}
-      \item 子 supervisor 可以继续管理 worker
-      \item demo 中使用 \code{rest\_for\_one}
-      \item 展示 OTP 可以分层组织系统
+      \item 子 supervisor 继续管理子系统
+      \item \code{data\_store} 负责 DETS
+      \item \code{data\_cache} 负责 ETS cache
+      \item 对应 \code{rest\_for\_one} 策略
     \end{itemize}
   \end{block}
-  \begin{alertblock}{从 UI 回到代码}
-    对应 \code{data\_store\_sup:init/1} 中的 child specs。
+  \begin{alertblock}{应用层级的意义}
+    大系统不是一堆散乱进程，而是 application + supervisor tree 组织起来。
   \end{alertblock}
 }
 
-\imgslide{Processes：所有运行中进程}{Applications_process_list.png}{%
-  \begin{block}{进程列表视角}
+% ── Process deep dive ──────────────────────────────────────────────
+\imgslide{Processes：从 application 走到 Erlang process}{Applications_process_list.png}{%
+  \begin{block}{进程视角}
     \begin{itemize}
-      \item 每个 OTP behaviour 最终都是 BEAM process
-      \item 可以按内存、reductions、消息队列等观察
-      \item 适合引出 Process Information
+      \item 每个 worker 都是 BEAM process
+      \item 可观察 memory / reductions / MsgQ
+      \item 可以双击进入 Process Information
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{心智模型}
-    Erlang 系统是很多隔离进程通过消息协作。
+  \begin{exampleblock}{和 goroutine 类比}
+    这里看到的是语言级并发单元，而不是 OS thread。
   \end{exampleblock}
 }
 
-\imgslide{Process Information：supervisor 也是进程}{Applications_app_start.png}{%
-  \begin{block}{双击 supervisor process}
+\imgslide{gen\_server：查看 kv\_server 进程}{Applications_app_gen_server_process.png}{%
+  \begin{block}{Process Information}
     \begin{itemize}
-      \item 查看 registered name
-      \item 查看 links / monitors
-      \item 查看 message queue
-      \item 查看当前状态
+      \item PID / registered name
+      \item links / monitors
+      \item message queue
+      \item reductions / memory
     \end{itemize}
   \end{block}
   \begin{alertblock}{教学重点}
-    supervisor 不是配置文件，而是活着的进程。
+    \code{gen\_server} 不是对象，它是有 mailbox 和私有状态的进程。
   \end{alertblock}
 }
 
-\imgslide{gen\_server：查看 kv\_server}{Applications_app_gen_server_process.png}{%
-  \begin{block}{gen\_server 进程信息}
+\imgslide{State：看见 gen\_server 的私有状态}{Applications_app_gen_server_state.png}{%
+  \begin{block}{State tab}
     \begin{itemize}
-      \item PID / registered name
-      \item reductions / memory
-      \item links / monitors
-      \item message queue length
+      \item 展示当前 process state
+      \item callback 返回的新 state 会反映到这里
+      \item 适合演示 \code{kv\_server:put/2}
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{回到代码}
-    对应 \code{kv\_server.erl} 中的 \code{init/1} 和 callback。
+  \begin{exampleblock}{Observer 的教学价值}
+    学生可以把 callback 返回值和运行时状态直接对应起来。
   \end{exampleblock}
 }
 
-\imgslide{State：观察 gen\_server 私有状态}{Applications_app_gen_server_state.png}{%
-  \begin{block}{状态不是对象字段}
-    \begin{itemize}
-      \item state 属于某个 Erlang process
-      \item callback 返回新 state
-      \item Observer 可以直接查看当前 state
-    \end{itemize}
-  \end{block}
-  \begin{alertblock}{演示建议}
-    执行 \code{kv\_server:put/2} 后再刷新 State。
-  \end{alertblock}
-}
-
-\imgslide{gen\_statem：观察 traffic\_light}{Applications_app_traffic_light_state.png}{%
-  \begin{block}{状态机特别适合可视化}
+\imgslide{gen\_statem：状态机也能直接观察}{Applications_app_traffic_light_state.png}{%
+  \begin{block}{traffic\_light}
     \begin{itemize}
       \item 当前状态：red / green / yellow
       \item 状态数据：map
-      \item timeout / event 驱动状态切换
+      \item timeout / event 触发状态迁移
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{演示命令}
-    \code{traffic\_light:next().}\quad \code{traffic\_light:emergency().}
-  \end{exampleblock}
+  \begin{alertblock}{适合课堂演示}
+    执行 \code{traffic\_light:next().} 后刷新 State，状态变化一目了然。
+  \end{alertblock}
 }
 
-\imgslide{Messages / Dictionary / Stack Trace}{Process_Messages.png}{%
-  \begin{block}{深入进程内部}
+\imgslide{Messages / Dictionary / Stack Trace：继续深入进程}{Process_Messages.png}{%
+  \begin{block}{进程内部三件事}
     \begin{itemize}
       \item Messages：mailbox 中未处理消息
       \item Dictionary：进程字典
       \item Stack Trace：当前调用栈
     \end{itemize}
   \end{block}
-  \begin{alertblock}{排查价值}
-    消息堆积、调用卡住、异常状态，都可以从这里开始定位。
-  \end{alertblock}
-}
-
-\imgslide{Table Viewer：查看 ETS / DETS}{Table_Viewer.png}{%
-  \begin{block}{表数据也能观察}
-    \begin{itemize}
-      \item ETS table
-      \item DETS table
-      \item cache / storage 类模块常用
-    \end{itemize}
-  \end{block}
-  \begin{exampleblock}{和 demo 对应}
-    \code{data\_cache} 使用 ETS，\code{data\_store} 使用 DETS。
+  \begin{exampleblock}{排查意义}
+    消息堆积、进程卡住、状态异常，都能从 process 级别继续向内看。
   \end{exampleblock}
 }
 
-\begin{frame}{从 Observer 回到代码}
-  \small
-  \begin{columns}[T,onlytextwidth]
-    \column{0.48\textwidth}
-    \begin{block}{UI 中看到的结构}
-      \begin{itemize}
-        \item application
-        \item root supervisor
-        \item child supervisor
-        \item gen\_server worker
-        \item gen\_statem worker
-      \end{itemize}
-    \end{block}
-    \column{0.48\textwidth}
-    \begin{exampleblock}{代码中对应的位置}
-      \begin{itemize}
-        \item \code{full\_otp\_app.app.src}
-        \item \code{full\_otp\_app\_sup:init/1}
-        \item \code{data\_store\_sup:init/1}
-        \item \code{kv\_server:init/1}
-        \item \code{traffic\_light:init/1}
-      \end{itemize}
-    \end{exampleblock}
-  \end{columns}
-  \vspace{0.25cm}
-  \centering
-  \good{Observer UI 的作用：把 OTP 的代码结构和运行时结构连接起来。}
-\end{frame}
+\imgslide{Table Viewer：进程之外还能看 ETS / DETS}{Table_Viewer.png}{%
+  \begin{block}{表数据观察}
+    \begin{itemize}
+      \item ETS table
+      \item DETS table
+      \item cache / storage 模块常用
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{和 Applications 主线的关系}
+    \code{data\_cache}、\code{data\_store} 这类 worker 背后的表数据也能继续观察。
+  \end{alertblock}
+}
 
-\begin{frame}{课堂演示顺序}
+% ── Demo flow ──────────────────────────────────────────────────────
+\begin{frame}{推荐课堂演示顺序：Applications 作为主线}
   \small
   \begin{enumerate}
     \item 启动 \code{rebar3 shell --sname application\_demo}
     \item 执行 \code{observer:start().}
-    \item 看 \code{System}，说明 Observer 是节点观察工具
-    \item 切到 \code{Applications}，选中 \code{full\_otp\_app}
-    \item 展开 supervision tree
-    \item 双击 \code{full\_otp\_app\_sup}，说明 supervisor 也是进程
-    \item 双击 \code{kv\_server}，查看 Process Information 和 State
-    \item 双击 \code{traffic\_light}，观察 gen\_statem 当前状态
-    \item 打开 \code{Table Viewer}，查看 ETS / DETS
+    \item 先看 \code{System}，说明 Observer 是 BEAM node 内置观察入口
+    \item 切到 \code{Applications}，强调这是本讲重点
+    \item 选中 \code{full\_otp\_app}，解释 application 是 OTP 顶层组织单位
+    \item 展开 supervision tree，对照 TikZ 层级图
+    \item 双击 \code{kv\_server}，说明 gen\_server 是 process
+    \item 查看 \code{State}，执行 \code{kv\_server:put/2} 后观察变化
+    \item 双击 \code{traffic\_light}，说明 gen\_statem 当前状态可观察
+    \item 用 \code{Messages} / \code{Stack Trace} / \code{Table Viewer} 补充排查视角
   \end{enumerate}
 \end{frame}
 
-\begin{frame}{小结}
-  \begin{block}{本集结论}
+\begin{frame}{小结：Observer UI 的真正意义}
+  \begin{block}{它让 Erlang/OTP 的核心抽象可见}
     \begin{itemize}
-      \item application 可以在 Observer 中看到
-      \item supervisor tree 是运行时真实存在的进程树
-      \item gen\_server 是有 mailbox 和 state 的 process
-      \item gen\_statem 可以直接观察当前状态
-      \item Table Viewer 可以辅助观察 ETS / DETS
+      \item application 不只是配置名，可以在 UI 中选中
+      \item supervisor 不只是策略，它本身是 process
+      \item gen\_server / gen\_statem 不只是 callback，它们是有状态、有 mailbox 的进程
+      \item Erlang process 作为并发基本单位，可以被直接观察
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{下一步}
-    在无 GUI、服务器、容器或 SSH 环境中，用 \code{observer\_cli} 获取类似的运行时视角。
+  \begin{exampleblock}{最重要的一句话}
+    \centering
+    \Large
+    Observer 把 OTP 从“代码里的抽象”变成了\good{运行时的一览无余}。
   \end{exampleblock}
 \end{frame}
 
