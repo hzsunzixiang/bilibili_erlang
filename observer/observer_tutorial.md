@@ -390,27 +390,92 @@ traffic_light:resume().
 
 ---
 
-## 14. Messages / Dictionary / Stack Trace 怎么讲
+## 14. Messages / Dictionary / Stack Trace：继续深入进程内部
 
-进程详情窗口里还有几个 tab：
+进程详情窗口里除了 `State`，还有几个非常适合调试的 tab：
 
-| Tab | 用途 |
-|-----|------|
-| Messages | 查看当前进程 mailbox 中还没处理的消息 |
-| Dictionary | 查看进程字典 |
-| Stack Trace | 查看当前调用栈 |
-| State | 查看 OTP behaviour 的状态 |
+| Tab | 用途 | 课堂讲解重点 |
+|-----|------|--------------|
+| Messages | 查看当前进程 mailbox 中还没处理的消息 | 进程不是函数调用栈，而是靠消息驱动 |
+| Dictionary | 查看进程字典 | 进程可以携带局部字典，但业务代码不要滥用 |
+| Stack Trace | 查看当前调用栈 | 判断进程当前卡在哪个调用路径上 |
+| State | 查看 OTP behaviour 的状态 | 本课重点，用来观察 `gen_server` / `gen_statem` 状态 |
 
-入门课建议这样处理：
+### 14.1 Messages：观察 mailbox
 
-- `Messages`：配合 `MsgQ` 讲消息队列，适合调试积压。
-- `Dictionary`：告诉学习者进程字典存在，但一般业务代码不要滥用。
-- `Stack Trace`：适合调试进程卡在哪里。
-- `State`：本课重点，用来观察 `gen_server` / `gen_statem` 状态。
+![Process Messages](images/Process_Messages.png)
+
+`Messages` tab 对应进程邮箱中尚未处理的消息。它适合和进程列表里的 `MsgQ` 一起讲：
+
+```text
+MsgQ 数值变大
+  -> 说明消息进入速度可能大于处理速度
+      -> 双击进程进入 Messages
+          -> 观察具体积压了哪些消息
+```
+
+录课时可以强调：Erlang 进程之间不是共享内存，而是通过消息通信。`Messages` 页面就是把这种运行时通信方式可视化。
+
+### 14.2 Dictionary：观察进程字典
+
+![Process Dictionary](images/Process_Dictionary.png)
+
+`Dictionary` tab 展示当前进程的 process dictionary。
+
+进程字典可以理解为“挂在某个进程上的局部键值表”。它有调试价值，但入门课要提醒学习者：普通业务逻辑不要把它当成全局变量或对象字段来滥用，否则代码会变得隐式、难测试。
+
+这一页适合点到为止：知道 Observer 能看到它即可，不建议在前期课程里深入使用。
+
+### 14.3 Stack Trace：观察进程当前调用栈
+
+![Process Stack Trace](images/Process_Stack_Trace.png)
+
+`Stack Trace` tab 用来查看进程当前正在执行的调用路径。
+
+它适合用于这些场景：
+
+- 某个进程 CPU 占用异常，想知道它正在跑什么代码。
+- 某个 `gen_server` 响应慢，想判断是否卡在某个函数里。
+- 教学时说明：BEAM 进程虽然轻量，但仍然是有当前执行栈的运行实体。
+
+入门课可以把它和 `State` 区分开：
+
+```text
+State       -> 这个 OTP 进程保存了什么业务状态
+Stack Trace -> 这个进程此刻正在执行什么调用路径
+Messages    -> 这个进程还有哪些消息没处理
+```
 
 ---
 
-## 15. 从 Observer 回到代码
+## 15. Table Viewer：查看 ETS / DETS 表
+
+![Table Viewer](images/Table_Viewer.png)
+
+`Table Viewer` 用来查看节点里的 ETS / DETS 表。对于本 demo 来说，它可以和 `data_store` / `data_cache` 放在一起讲：
+
+- `data_cache` 更适合对应 ETS 这类内存表概念。
+- `data_store` 更适合对应 DETS 这类磁盘表概念。
+- Observer 让“进程状态”和“表数据”可以分开观察。
+
+教学时可以这样连接：
+
+```text
+Applications / Processes
+  -> 看 OTP 进程结构
+
+Process Information / State
+  -> 看某个 gen_server 的内部状态
+
+Table Viewer
+  -> 看节点里的表数据，例如 ETS / DETS
+```
+
+这样学习者会更容易理解：OTP 系统不只是一些模块文件，而是由进程、消息、状态、表数据一起组成的运行时系统。
+
+---
+
+## 16. 从 Observer 回到代码
 
 Observer 不是为了替代代码阅读，而是帮助我们建立代码和运行时之间的映射。
 
@@ -435,7 +500,7 @@ Observer 不是为了替代代码阅读，而是帮助我们建立代码和运�
 
 ---
 
-## 16. 课堂演示建议
+## 17. 课堂演示建议
 
 建议录课时按这个顺序演示：
 
@@ -449,14 +514,16 @@ Observer 不是为了替代代码阅读，而是帮助我们建立代码和运�
 8. 双击 `full_otp_app_sup`，说明 supervisor 也是进程。
 9. 双击 `kv_server`，说明 `gen_server` 进程信息。
 10. 切到 `kv_server` 的 `State`，执行 `kv_server:put/2` 后观察状态变化。
-11. 双击 `traffic_light`，切到 `State`，观察 `gen_statem` 当前状态。
-12. 执行 `traffic_light:next().`，再观察状态变化。
-13. 展示 `Processes` 页面，说明所有进程都在同一个节点里。
-14. 结尾说明：后续会加入 `observer_cli`，用于命令行环境观察节点。
+11. 切到 `Messages`、`Dictionary`、`Stack Trace`，说明进程还可以继续向内观察。
+12. 双击 `traffic_light`，切到 `State`，观察 `gen_statem` 当前状态。
+13. 执行 `traffic_light:next().`，再观察状态变化。
+14. 打开 `Table Viewer`，说明 ETS / DETS 这类表数据也能在 Observer 中查看。
+15. 展示 `Processes` 页面，说明所有进程都在同一个节点里。
+16. 结尾说明：后续会加入 `observer_cli`，用于命令行环境观察节点。
 
 ---
 
-## 17. Observer 和 observer_cli 的关系
+## 18. Observer 和 observer_cli 的关系
 
 本篇先讲 GUI Observer。
 
@@ -486,7 +553,7 @@ observer_cli  -> 命令行界面，适合远程服务器和生产环境排查
 
 ---
 
-## 18. 当前已有截图清单
+## 19. 当前已有截图清单
 
 当前 `images/` 目录已有这些截图，可以支撑本文：
 
@@ -510,19 +577,19 @@ observer_cli  -> 命令行界面，适合远程服务器和生产环境排查
 | `Applications_app_gen_server_process_data_store_state.png` | data_cache/data_store State |
 | `Applications_app_traffic_light_process.png` | traffic_light 进程详情 |
 | `Applications_app_traffic_light_state.png` | traffic_light State |
+| `Process_Messages.png` | Process Information 的 Messages tab |
+| `Process_Dictionary.png` | Process Information 的 Dictionary tab |
+| `Process_Stack_Trace.png` | Process Information 的 Stack Trace tab |
+| `Table_Viewer.png` | Table Viewer 页面，查看 ETS / DETS 表数据 |
 
 ---
 
-## 19. 建议补充截图
+## 20. 建议补充截图
 
-目前图片已经能完成 Observer GUI 入门讲解。为了后续文档更完整，建议补充以下截图：
+目前图片已经能完成 Observer GUI 入门讲解。后续如果要扩展命令行观察方式，建议补充以下 `observer_cli` 截图：
 
 | 建议文件名 | 截图内容 | 用途 |
 |------------|----------|------|
-| `Table_Viewer.png` | Observer 的 Table Viewer 页面 | 如果要讲 ETS/DETS，可展示表数据 |
-| `Process_Messages.png` | 某个进程 Messages tab | 展示 mailbox 中未处理消息 |
-| `Process_Dictionary.png` | 某个进程 Dictionary tab | 展示进程字典 |
-| `Process_Stack_Trace.png` | 某个进程 Stack Trace tab | 展示调用栈 |
 | `observer_cli_start.png` | 终端启动 observer_cli | 后续 observer_cli 章节使用 |
 | `observer_cli_processes.png` | observer_cli 进程列表 | 对比 GUI Processes 页面 |
 | `observer_cli_memory.png` | observer_cli 内存页面 | 对比 GUI System / Memory 页面 |
@@ -530,7 +597,7 @@ observer_cli  -> 命令行界面，适合远程服务器和生产环境排查
 
 ---
 
-## 20. 小结
+## 21. 小结
 
 Observer 是学习 Erlang/OTP 的非常重要的入口。它让我们不只是阅读代码，而是直接观察运行中的系统。
 
