@@ -2,36 +2,59 @@
 % Shared TikZ source used by observer_ui_beamer.tex and standalone preview.
 
 \begin{tikzpicture}[
-  scale=0.82, transform shape,
-  node distance=0.75cm and 1.05cm,
-  app/.style={rounded corners=6pt, draw=primary!65, fill=primary!12, minimum width=3.3cm, minimum height=0.75cm, align=center, font=\small\bfseries, blur shadow},
-  sup/.style={rounded corners=6pt, draw=accent!65, fill=accent!12, minimum width=2.8cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
-  worker/.style={rounded corners=5pt, draw=erlblue!65, fill=erlblue!10, minimum width=2.45cm, minimum height=0.62cm, align=center, font=\scriptsize},
-  detail/.style={rounded corners=5pt, draw=warning!65, fill=warning!10, minimum width=2.7cm, minimum height=0.56cm, align=center, font=\tiny},
-  arrow/.style={-{Latex[length=2.5mm]}, thick, color=muted}
+  scale=0.74, transform shape,
+  >=Latex,
+  every node/.style={font=\sffamily},
+  app/.style={rounded corners=8pt, draw=primary!70, fill=primary!10,
+    minimum width=3.8cm, minimum height=0.86cm, align=center,
+    font=\small\bfseries, blur shadow},
+  sup/.style={rounded corners=7pt, draw=accent!75!black, fill=accent!12,
+    minimum width=3.35cm, minimum height=0.78cm, align=center,
+    font=\scriptsize\bfseries},
+  worker/.style={rounded corners=6pt, draw=erlblue!75, fill=erlblue!9,
+    minimum width=2.55cm, minimum height=0.70cm, align=center,
+    font=\scriptsize},
+  detail/.style={rounded corners=6pt, draw=warning!75, fill=warning!8,
+    minimum width=2.85cm, minimum height=0.58cm, align=center,
+    font=\tiny},
+  label/.style={font=\tiny\bfseries, text=muted, fill=white, inner sep=1.2pt},
+  arrow/.style={-{Latex[length=2.2mm]}, line width=0.75pt, color=muted},
+  weakarrow/.style={-{Latex[length=2.0mm]}, line width=0.65pt, color=muted, dashed}
 ]
-  \node[app] (app) {full\_otp\_app\\\footnotesize application};
+  % ── Main application and root supervisor ──────────────────────────
+  \node[app] (app) at (0, 0) {full\_otp\_app\\[-1pt]\footnotesize application};
+  \node[sup] (root) at (0, -1.65) {full\_otp\_app\_sup\\[-1pt]root supervisor};
 
-  \node[sup, below=of app] (root) {full\_otp\_app\_sup\\root supervisor};
+  % ── Root supervisor children: keep a clean horizontal row ─────────
+  \node[worker] (kv)      at (-5.1, -3.45) {kv\_server\\[-1pt]gen\_server};
+  \node[worker] (event)   at (-1.75, -3.45) {event\_bus\\[-1pt]gen\_event};
+  \node[worker] (traffic) at ( 1.75, -3.45) {traffic\_light\\[-1pt]gen\_statem};
+  \node[sup]    (dataSup) at ( 5.1, -3.45) {data\_store\_sup\\[-1pt]child supervisor};
 
-  \node[worker, below left=1.0cm and 2.6cm of root] (kv) {kv\_server\\gen\_server};
-  \node[worker, below left=1.0cm and 0.75cm of root] (event) {event\_bus\\gen\_event};
-  \node[worker, below right=1.0cm and 0.75cm of root] (traffic) {traffic\_light\\gen\_statem};
-  \node[sup, below right=1.0cm and 2.6cm of root] (dataSup) {data\_store\_sup\\child supervisor};
+  % ── Child supervisor branch: placed lower, separated from callouts ─
+  \node[worker] (store) at (3.65, -5.35) {data\_store\\[-1pt]gen\_server + DETS};
+  \node[worker] (cache) at (6.55, -5.35) {data\_cache\\[-1pt]gen\_server + ETS};
 
-  \node[worker, below left=0.85cm and 0.55cm of dataSup] (store) {data\_store\\gen\_server + DETS};
-  \node[worker, below right=0.85cm and 0.55cm of dataSup] (cache) {data\_cache\\gen\_server + ETS};
+  % ── Runtime details: callouts below their owning process ───────────
+  \node[detail] (kvState)  at (-5.1, -5.10) {mailbox + state\\[-1pt]private process data};
+  \node[detail] (fsmState) at ( 1.75, -5.10) {current state\\[-1pt]red / green / yellow};
 
-  \node[detail, below=0.75cm of kv] (kvState) {mailbox + state\\private process data};
-  \node[detail, below=0.75cm of traffic] (fsmState) {current state\\red / green / yellow};
+  % ── Application hierarchy arrows ──────────────────────────────────
+  \draw[arrow] (app) -- node[label, right] {starts} (root);
 
-  \draw[arrow] (app) -- (root);
-  \draw[arrow] (root) -- (kv);
-  \draw[arrow] (root) -- (event);
-  \draw[arrow] (root) -- (traffic);
-  \draw[arrow] (root) -- (dataSup);
-  \draw[arrow] (dataSup) -- (store);
-  \draw[arrow] (dataSup) -- (cache);
-  \draw[arrow, dashed] (kv) -- (kvState);
-  \draw[arrow, dashed] (traffic) -- (fsmState);
+  \draw[arrow] (root.south) -- ++(0, -0.36) -| (kv.north);
+  \draw[arrow] (root.south) -- ++(0, -0.36) -| (event.north);
+  \draw[arrow] (root.south) -- ++(0, -0.36) -| (traffic.north);
+  \draw[arrow] (root.south) -- ++(0, -0.36) -| (dataSup.north);
+
+  \draw[arrow] (dataSup.south) -- ++(0, -0.34) -| (store.north);
+  \draw[arrow] (dataSup.south) -- ++(0, -0.34) -| (cache.north);
+
+  % ── Process introspection arrows ──────────────────────────────────
+  \draw[weakarrow] (kv.south) -- (kvState.north);
+  \draw[weakarrow] (traffic.south) -- (fsmState.north);
+
+  % ── Visual legend ─────────────────────────────────────────────────
+  \node[anchor=west, font=\tiny, text=muted] at (-6.45, -6.25)
+    {\textbf{Applications 页面观察路径：} application $\rightarrow$ supervisor $\rightarrow$ worker process $\rightarrow$ state / mailbox};
 \end{tikzpicture}

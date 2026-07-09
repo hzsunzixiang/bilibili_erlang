@@ -258,6 +258,33 @@ observer:start().
   \end{columns}
 \end{frame}
 
+\begin{frame}{full\_otp\_app：一个完整 OTP 小工程}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.52\textwidth}
+    \begin{block}{为什么用这个 demo？}
+      \begin{itemize}
+        \item \code{full\_otp\_app} 是一个 application
+        \item 入口进程是 root supervisor
+        \item supervisor 下面既有 worker，也有 child supervisor
+        \item 方便在 Observer 里看到真实 supervisor tree
+      \end{itemize}
+    \end{block}
+
+    \column{0.44\textwidth}
+    \begin{exampleblock}{覆盖的 OTP 组件}
+      \begin{itemize}
+        \item \code{application}
+        \item \code{supervisor} / 子 \code{supervisor}
+        \item \code{gen\_server}
+        \item \code{gen\_statem}
+      \end{itemize}
+    \end{exampleblock}
+  \end{columns}
+
+  \vspace{0.15cm}
+  \good{这不是为了业务复杂度，而是为了把常见 OTP 运行时结构一次性展示出来。}
+\end{frame}
+
 \begin{frame}{Application 层级：从产品视角到 BEAM process}
   \centering
   \input{tikz/application-hierarchy-body.tex}
