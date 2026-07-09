@@ -7,17 +7,17 @@
   every node/.style={font=\sffamily},
   app/.style={rounded corners=8pt, draw=primary!70, fill=primary!10,
     minimum width=3.8cm, minimum height=0.86cm, align=center,
-    font=\small\bfseries, blur shadow},
+    font=\sffamily\small\bfseries, blur shadow},
   sup/.style={rounded corners=7pt, draw=accent!75!black, fill=accent!12,
     minimum width=3.35cm, minimum height=0.78cm, align=center,
-    font=\scriptsize\bfseries},
+    font=\sffamily\scriptsize\bfseries},
   worker/.style={rounded corners=6pt, draw=erlblue!75, fill=erlblue!9,
     minimum width=2.55cm, minimum height=0.70cm, align=center,
-    font=\scriptsize},
+    font=\sffamily\scriptsize},
   detail/.style={rounded corners=6pt, draw=warning!75, fill=warning!8,
     minimum width=2.85cm, minimum height=0.58cm, align=center,
-    font=\tiny},
-  label/.style={font=\tiny\bfseries, text=muted, fill=white, inner sep=1.2pt},
+    font=\sffamily\tiny},
+  label/.style={font=\sffamily\tiny\bfseries, text=muted, fill=white, inner sep=1.2pt},
   arrow/.style={-{Latex[length=2.2mm]}, line width=0.75pt, color=muted},
   weakarrow/.style={-{Latex[length=2.0mm]}, line width=0.65pt, color=muted, dashed}
 ]
@@ -31,13 +31,13 @@
   \node[worker] (traffic) at ( 1.75, -3.45) {traffic\_light\\[-1pt]gen\_statem};
   \node[sup]    (dataSup) at ( 5.1, -3.45) {data\_store\_sup\\[-1pt]child supervisor};
 
-  % ── Child supervisor branch: placed lower, separated from callouts ─
-  \node[worker] (store) at (3.65, -5.35) {data\_store\\[-1pt]gen\_server + DETS};
-  \node[worker] (cache) at (6.55, -5.35) {data\_cache\\[-1pt]gen\_server + ETS};
+  % ── Child supervisor branch: pushed lower to avoid state callout overlap ─
+  \node[worker] (store) at (3.70, -6.15) {data\_store\\[-1pt]gen\_server + DETS};
+  \node[worker] (cache) at (6.70, -6.15) {data\_cache\\[-1pt]gen\_server + ETS};
 
-  % ── Runtime details: callouts below their owning process ───────────
-  \node[detail] (kvState)  at (-5.1, -5.10) {mailbox + state\\[-1pt]private process data};
-  \node[detail] (fsmState) at ( 1.75, -5.10) {current state\\[-1pt]red / green / yellow};
+  % ── Runtime details: callouts stay below their owning process only ───────
+  \node[detail] (kvState)  at (-5.1, -5.18) {mailbox + state\\[-1pt]private process data};
+  \node[detail] (fsmState) at ( 1.75, -5.18) {current state\\[-1pt]red / green / yellow};
 
   % ── Application hierarchy arrows ──────────────────────────────────
   \draw[arrow] (app) -- node[label, right] {starts} (root);
@@ -47,14 +47,14 @@
   \draw[arrow] (root.south) -- ++(0, -0.36) -| (traffic.north);
   \draw[arrow] (root.south) -- ++(0, -0.36) -| (dataSup.north);
 
-  \draw[arrow] (dataSup.south) -- ++(0, -0.34) -| (store.north);
-  \draw[arrow] (dataSup.south) -- ++(0, -0.34) -| (cache.north);
+  \draw[arrow] (dataSup.south) -- ++(0, -1.00) -| (store.north);
+  \draw[arrow] (dataSup.south) -- ++(0, -1.00) -| (cache.north);
 
   % ── Process introspection arrows ──────────────────────────────────
   \draw[weakarrow] (kv.south) -- (kvState.north);
   \draw[weakarrow] (traffic.south) -- (fsmState.north);
 
   % ── Visual legend ─────────────────────────────────────────────────
-  \node[anchor=west, font=\tiny, text=muted] at (-6.45, -6.25)
+  \node[anchor=west, font=\sffamily\tiny, text=muted] at (-6.45, -7.08)
     {\textbf{Applications 页面观察路径：} application $\rightarrow$ supervisor $\rightarrow$ worker process $\rightarrow$ state / mailbox};
 \end{tikzpicture}

@@ -112,6 +112,20 @@
   \end{tikzpicture}
 \end{frame}
 
+\imgslide{System：打开 Observer 后的第一印象}{System.png}{%
+  \begin{block}{打开后先看到 BEAM node}
+    \begin{itemize}
+      \item node name / OTP version
+      \item process / port / ETS / timer
+      \item memory / scheduler
+      \item atom / binary / code 信息
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{先给观众直观印象}
+    这一页是 Observer 打开后就能看到的系统总览：先看见 BEAM node，再进入后面的具体页面。
+  \end{alertblock}
+}
+
 % ── Importance ─────────────────────────────────────────────────────
 \begin{frame}{为什么 Observer 值得先讲？}
   \begin{columns}[T,onlytextwidth]
@@ -217,20 +231,6 @@ observer:start().
     \includegraphics[width=\linewidth,height=0.63\textheight,keepaspectratio]{observer_start.png}
   \end{columns}
 \end{frame}
-
-\imgslide{System：先确认我们在看一个 BEAM node}{System.png}{%
-  \begin{block}{节点级资源}
-    \begin{itemize}
-      \item node name / OTP version
-      \item process / port / ETS / timer
-      \item memory / scheduler
-      \item atom / binary / code 信息
-    \end{itemize}
-  \end{block}
-  \begin{alertblock}{讲课重点}
-    先告诉观众：Observer 不是外部猜测，而是直接连到 BEAM node。
-  \end{alertblock}
-}
 
 % ── Applications as focus ──────────────────────────────────────────
 \begin{frame}{本讲重点：Applications 页面}
