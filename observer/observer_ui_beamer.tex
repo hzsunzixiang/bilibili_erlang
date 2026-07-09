@@ -112,7 +112,7 @@
   \end{tikzpicture}
 \end{frame}
 
-\imgslide{System：打开 Observer 后的第一印象}{System.png}{%
+\imgslide{打开Observer 后的第一印象}{System.png}{%
   \begin{block}{打开后先看到 BEAM node}
     \begin{itemize}
       \item node name / OTP version
@@ -121,7 +121,7 @@
       \item atom / binary / code 信息
     \end{itemize}
   \end{block}
-  \begin{alertblock}{先给观众直观印象}
+  \begin{alertblock}{先建立Observe的直观印象}
     这一页是 Observer 打开后就能看到的系统总览：先看见 BEAM node，再进入后面的具体页面。
   \end{alertblock}
 }
@@ -210,6 +210,20 @@
   \good{这就是为什么讲 OTP 之前，先讲 Observer。}
 \end{frame}
 
+\imgslide{Processes：先看见 Erlang process}{Applications_process_list.png}{%
+  \begin{block}{进程为什么重要？}
+    \begin{itemize}
+      \item Erlang process 是 BEAM 里的并发建模单位
+      \item worker 最终都会落到具体 BEAM process
+      \item 可观察 memory / reductions / MsgQ
+      \item 可以双击进入 Process Information
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{过渡到 Applications}
+    先知道 Observer 能看到 process，再从 application / supervisor tree 追到这些 process。
+  \end{exampleblock}
+}
+
 % ── Start ──────────────────────────────────────────────────────────
 \begin{frame}[fragile]{启动 demo 应用和 Observer}
   \begin{columns}[T,onlytextwidth]
@@ -253,7 +267,7 @@ observer:start().
       $\downarrow$\par
       \code{worker process}\par
       $\downarrow$\par
-      \code{mailbox + state}
+      \code{mailbox + state + tables}
     \end{exampleblock}
   \end{columns}
 \end{frame}
@@ -349,18 +363,30 @@ observer:start().
 }
 
 % ── Process deep dive ──────────────────────────────────────────────
-\imgslide{Processes：从 application 走到 Erlang process}{Applications_process_list.png}{%
-  \begin{block}{进程视角}
-    \begin{itemize}
-      \item 每个 worker 都是 BEAM process
-      \item 可观察 memory / reductions / MsgQ
-      \item 可以双击进入 Process Information
-    \end{itemize}
-  \end{block}
-  \begin{exampleblock}{和 goroutine 类比}
-    这里看到的是语言级并发单元，而不是 OS thread。
-  \end{exampleblock}
-}
+\begin{frame}{进程相关部分：从 worker process 继续展开}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{进程内部}
+      \begin{itemize}
+        \item Process Information：PID / links / monitors
+        \item State：callback 返回后的私有状态
+        \item Messages：mailbox 里的未处理消息
+        \item Dictionary / Stack Trace：排查进程现场
+      \end{itemize}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{exampleblock}{进程关联资源}
+      \begin{itemize}
+        \item worker 可能拥有 ETS table
+        \item worker 可能打开 DETS table
+        \item Table Viewer 是从进程继续看数据面的补充
+      \end{itemize}
+    \end{exampleblock}
+  \end{columns}
+  \vspace{0.2cm}
+  \centering
+  \good{Applications 追到 worker process 后，不只看进程身份，还要继续看进程状态、消息和它背后的表数据。}
+\end{frame}
 
 \imgslide{gen\_server：查看 kv\_server 进程}{Applications_app_gen_server_process.png}{%
   \begin{block}{Process Information}
@@ -402,7 +428,7 @@ observer:start().
   \end{alertblock}
 }
 
-\imgslide{Messages / Dictionary / Stack Trace：继续深入进程}{Process_Messages.png}{%
+\imgslide{Process Internals：Messages / Dictionary / Stack Trace}{Process_Messages.png}{%
   \begin{block}{进程内部三件事}
     \begin{itemize}
       \item Messages：mailbox 中未处理消息
@@ -415,7 +441,7 @@ observer:start().
   \end{exampleblock}
 }
 
-\imgslide{Table Viewer：进程之外还能看 ETS / DETS}{Table_Viewer.png}{%
+\imgslide{Process Data：通过 Table Viewer 看 ETS / DETS}{Table_Viewer.png}{%
   \begin{block}{表数据观察}
     \begin{itemize}
       \item ETS table
@@ -423,8 +449,8 @@ observer:start().
       \item cache / storage 模块常用
     \end{itemize}
   \end{block}
-  \begin{alertblock}{和 Applications 主线的关系}
-    \code{data\_cache}、\code{data\_store} 这类 worker 背后的表数据也能继续观察。
+  \begin{alertblock}{和进程主线的关系}
+    \code{data\_cache}、\code{data\_store} 这类 worker process 背后的表数据，也属于进程观察继续深入的一部分。
   \end{alertblock}
 }
 
@@ -440,8 +466,9 @@ observer:start().
     \item 展开 supervision tree，对照 TikZ 层级图
     \item 双击 \code{kv\_server}，说明 gen\_server 是 process
     \item 查看 \code{State}，执行 \code{kv\_server:put/2} 后观察变化
+    \item 继续看 \code{Messages} / \code{Dictionary} / \code{Stack Trace}，深入进程现场
+    \item 打开 \code{Table Viewer}，观察 worker process 背后的 ETS / DETS 数据
     \item 双击 \code{traffic\_light}，说明 gen\_statem 当前状态可观察
-    \item 用 \code{Messages} / \code{Stack Trace} / \code{Table Viewer} 补充排查视角
   \end{enumerate}
 \end{frame}
 
@@ -451,7 +478,8 @@ observer:start().
       \item application 不只是配置名，可以在 UI 中选中
       \item supervisor 不只是策略，它本身是 process
       \item gen\_server / gen\_statem 不只是 callback，它们是有状态、有 mailbox 的进程
-      \item Erlang process 作为并发基本单位，可以被直接观察
+      \item Messages / Dictionary / Stack Trace 是继续深入进程现场
+      \item Table Viewer 能接着观察 worker process 背后的 ETS / DETS 数据
     \end{itemize}
   \end{block}
   \begin{exampleblock}{最重要的一句话}
