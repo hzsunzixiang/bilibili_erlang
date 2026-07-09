@@ -251,6 +251,23 @@
 }
 
 % ── Start ──────────────────────────────────────────────────────────
+\begin{frame}{从进程视角进入 OTP 应用观察}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+    \begin{block}{前面已经建立的视角}
+      \begin{itemize}
+        \item Observer 可以直接看到 Erlang process
+        \item process 有 mailbox、state、stack trace
+        \item worker process 背后还可能关联 ETS / DETS
+      \end{itemize}
+    \end{block}
+    \column{0.46\textwidth}
+    \begin{exampleblock}{现在正式开始}
+      接下来启动一个完整 OTP demo application，正式介绍 Observer 的启动方式，以及它如何应用到 application / supervisor / worker process 的观察上。
+    \end{exampleblock}
+  \end{columns}
+\end{frame}
+
 \begin{frame}[fragile]{启动 demo 应用和 Observer}
   \begin{columns}[T,onlytextwidth]
     \column{0.50\textwidth}
