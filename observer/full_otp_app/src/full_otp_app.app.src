@@ -13,7 +13,8 @@
   {mod, {full_otp_app_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    observer_cli
    ]},
   {env, []},
   {modules, []},
