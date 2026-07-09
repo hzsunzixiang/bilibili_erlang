@@ -14,7 +14,8 @@
   {applications,
    [kernel,
     stdlib,
-    observer_cli
+    observer_cli,
+    recon
    ]},
   {env, []},
   {modules, []},
