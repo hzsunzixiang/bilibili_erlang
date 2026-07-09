@@ -1,0 +1,395 @@
+\documentclass[aspectratio=169, 9pt]{beamer}
+\usetheme{metropolis}
+
+\usepackage{xeCJK}
+\setCJKmainfont{PingFang SC}
+\setCJKsansfont{PingFang SC}
+\setCJKmonofont{PingFang SC}
+
+\usepackage{fontspec}
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, shapes.geometric}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\graphicspath{{images/}}
+
+% ── Color palette ──────────────────────────────────────────────────
+\definecolor{primary}{HTML}{6C5CE7}
+\definecolor{accent}{HTML}{00B894}
+\definecolor{warning}{HTML}{E17055}
+\definecolor{dark}{HTML}{2D3436}
+\definecolor{light}{HTML}{DFE6E9}
+\definecolor{muted}{HTML}{636E72}
+\definecolor{codebg}{HTML}{F7F7FA}
+\definecolor{erlred}{HTML}{D63031}
+\definecolor{erlblue}{HTML}{0984E3}
+
+% ── Beamer theme ───────────────────────────────────────────────────
+\setbeamercolor{normal text}{fg=dark,bg=white}
+\setbeamercolor{frametitle}{fg=white,bg=primary}
+\setbeamercolor{progress bar}{fg=accent,bg=light}
+\setbeamercolor{alerted text}{fg=warning}
+\setbeamercolor{block title}{fg=white,bg=primary}
+\setbeamercolor{block body}{fg=dark,bg=primary!7}
+\setbeamercolor{block title example}{fg=white,bg=accent}
+\setbeamercolor{block body example}{fg=dark,bg=accent!7}
+\setbeamertemplate{itemize item}{\color{accent}$\blacktriangleright$}
+\setbeamertemplate{itemize subitem}{\color{primary}$\bullet$}
+\setbeamertemplate{enumerate item}{\color{accent}\insertenumlabel.}
+\metroset{progressbar=frametitle, numbering=fraction}
+
+% ── Macros ─────────────────────────────────────────────────────────
+\newcommand{\keypoint}[1]{\textbf{\color{primary}#1}}
+\newcommand{\good}[1]{\textbf{\color{accent!80!black}#1}}
+\newcommand{\warn}[1]{\textbf{\color{warning}#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\imgslide}[3]{%
+  \begin{frame}{#1}
+    \begin{columns}[T,onlytextwidth]
+      \column{0.57\textwidth}
+      \centering
+      \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{#2}
+      \column{0.39\textwidth}
+      #3
+    \end{columns}
+  \end{frame}
+}
+
+\lstdefinelanguage{Erlang2}{
+  keywords={module,export,application,supervisor,gen_server,gen_statem,case,of,end,fun,receive,after,true,false},
+  sensitive=true,
+  morecomment=[l]{\%},
+  morestring=[b]",
+  morestring=[b]'
+}
+\lstset{
+  language=Erlang2,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{primary}\bfseries,
+  commentstyle=\color{muted}\itshape,
+  stringstyle=\color{accent!70!black},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  framesep=1.5mm,
+  rulecolor=\color{light},
+  showstringspaces=false,
+  breaklines=true,
+  tabsize=2
+}
+
+\title{Erlang Observer 可视化入门}
+\subtitle{Observer UI：从图形界面理解 OTP 运行时结构}
+\author{}
+\date{}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[primary!8] (current page.north west) rectangle (current page.south east);
+    \fill[primary!15] (current page.north west) ++(1.7,-1.3) circle (2.7cm);
+    \fill[accent!12]  (current page.south east) ++(-2.1,1.6) circle (3.0cm);
+    \node[anchor=center, font=\fontsize{25}{31}\selectfont\bfseries, text=dark]
+      at ([yshift=1.7cm]current page.center) {Erlang Observer UI};
+    \node[anchor=center, font=\Large, text=primary!80]
+      at ([yshift=0.55cm]current page.center) {用图形界面看见 application / supervisor / process};
+    \node[anchor=center, font=\large\bfseries, text=accent!80!black]
+      at ([yshift=-0.35cm]current page.center) {从运行时结构反推 OTP 代码结构};
+    \draw[accent, line width=1.5pt]
+      ([yshift=-1.15cm, xshift=-4.5cm]current page.center)
+      -- ([yshift=-1.15cm, xshift=4.5cm]current page.center);
+    \node[anchor=south, font=\scriptsize, text=dark!45]
+      at ([yshift=0.4cm]current page.south)
+      {基于 full\_otp\_app demo 与 observer\_tutorial\_body.tex 整理};
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{为什么先讲 Observer UI？}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.52\textwidth}
+    \begin{alertblock}{直接从 callback 开始，容易学成 API 清单}
+      \code{application}、\code{supervisor}、\code{gen\_server}、\code{gen\_statem} 都是运行时结构。
+      只看代码，不容易建立整体图像。
+    \end{alertblock}
+    \begin{block}{Observer 的价值}
+      \begin{itemize}
+        \item 看见当前 BEAM 节点
+        \item 看见 application 列表
+        \item 展开 supervisor tree
+        \item 双击 process 查看状态、消息、调用栈
+      \end{itemize}
+    \end{block}
+    \column{0.44\textwidth}
+    \begin{exampleblock}{学习路线}
+      \centering
+      \code{启动 OTP 应用}\par
+      $\downarrow$\par
+      \code{Observer 看 application}\par
+      $\downarrow$\par
+      \code{展开 supervisor tree}\par
+      $\downarrow$\par
+      \code{回到代码理解 callback}
+    \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{启动 demo 应用和 Observer}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+    \begin{block}{启动 demo 节点}
+\begin{lstlisting}[language=bash]
+cd bilibili_erlang/observer/full_otp_app
+rebar3 shell --sname application_demo
+\end{lstlisting}
+    \end{block}
+    \begin{block}{启动 Observer}
+\begin{lstlisting}
+application:ensure_all_started(full_otp_app).
+observer:start().
+\end{lstlisting}
+    \end{block}
+    \column{0.46\textwidth}
+    \centering
+    \includegraphics[width=\linewidth,height=0.63\textheight,keepaspectratio]{observer_start.png}
+  \end{columns}
+\end{frame}
+
+\imgslide{System：先看节点整体状态}{System.png}{%
+  \begin{block}{先建立节点级视角}
+    \begin{itemize}
+      \item 当前 Erlang node 名称
+      \item OTP / ERTS 版本
+      \item 进程数量、端口、ETS、timer
+      \item memory 和 scheduler 概览
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{讲课重点}
+    BEAM VM 不是黑盒。Observer 直接展示节点内部资源。
+  \end{exampleblock}
+}
+
+\imgslide{Load Charts：观察运行时负载}{Load_Charts.png}{%
+  \begin{block}{适合解释 BEAM 调度}
+    \begin{itemize}
+      \item Scheduler Utilization
+      \item Run Queue
+      \item IO / Memory 趋势
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{不要讲太深}
+    入门阶段只需要知道：大量 Erlang process 由 BEAM scheduler 调度。
+  \end{alertblock}
+}
+
+\imgslide{Applications：从 application 开始}{Applications.png}{%
+  \begin{block}{Observer UI 的核心页面}
+    \begin{itemize}
+      \item 左侧列出已启动 application
+      \item 右侧展示 application 信息
+      \item 可以进入 supervision tree
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{自顶向下入口}
+    先看 application，再看 supervisor，再看 worker process。
+  \end{exampleblock}
+}
+
+\imgslide{full\_otp\_app：连接 demo 代码}{Applications_app.png}{%
+  \begin{block}{demo 应用结构}
+    \begin{itemize}
+      \item \code{full\_otp\_app\_sup}
+      \item \code{kv\_server}
+      \item \code{event\_bus}
+      \item \code{traffic\_light}
+      \item \code{data\_store\_sup}
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{讲解方式}
+    不先背源码，先在 UI 中看到结构。
+  \end{alertblock}
+}
+
+\imgslide{Supervisor Tree：OTP 结构可视化}{Applications_app_supervisor.png}{%
+  \begin{block}{这张图最适合讲 OTP}
+    \begin{itemize}
+      \item supervisor 也是一个 Erlang process
+      \item worker 是被 supervisor 管理的 process
+      \item application 通过 supervision tree 组织运行时
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{关键结论}
+    OTP 不是抽象概念，它在运行时就是一棵可观察的进程树。
+  \end{exampleblock}
+}
+
+\imgslide{Nested Supervisor：子监督树}{Applications_app_supervisor_second.png}{%
+  \begin{block}{data\_store\_sup}
+    \begin{itemize}
+      \item 子 supervisor 可以继续管理 worker
+      \item demo 中使用 \code{rest\_for\_one}
+      \item 展示 OTP 可以分层组织系统
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{从 UI 回到代码}
+    对应 \code{data\_store\_sup:init/1} 中的 child specs。
+  \end{alertblock}
+}
+
+\imgslide{Processes：所有运行中进程}{Applications_process_list.png}{%
+  \begin{block}{进程列表视角}
+    \begin{itemize}
+      \item 每个 OTP behaviour 最终都是 BEAM process
+      \item 可以按内存、reductions、消息队列等观察
+      \item 适合引出 Process Information
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{心智模型}
+    Erlang 系统是很多隔离进程通过消息协作。
+  \end{exampleblock}
+}
+
+\imgslide{Process Information：supervisor 也是进程}{Applications_app_start.png}{%
+  \begin{block}{双击 supervisor process}
+    \begin{itemize}
+      \item 查看 registered name
+      \item 查看 links / monitors
+      \item 查看 message queue
+      \item 查看当前状态
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{教学重点}
+    supervisor 不是配置文件，而是活着的进程。
+  \end{alertblock}
+}
+
+\imgslide{gen\_server：查看 kv\_server}{Applications_app_gen_server_process.png}{%
+  \begin{block}{gen\_server 进程信息}
+    \begin{itemize}
+      \item PID / registered name
+      \item reductions / memory
+      \item links / monitors
+      \item message queue length
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{回到代码}
+    对应 \code{kv\_server.erl} 中的 \code{init/1} 和 callback。
+  \end{exampleblock}
+}
+
+\imgslide{State：观察 gen\_server 私有状态}{Applications_app_gen_server_state.png}{%
+  \begin{block}{状态不是对象字段}
+    \begin{itemize}
+      \item state 属于某个 Erlang process
+      \item callback 返回新 state
+      \item Observer 可以直接查看当前 state
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{演示建议}
+    执行 \code{kv\_server:put/2} 后再刷新 State。
+  \end{alertblock}
+}
+
+\imgslide{gen\_statem：观察 traffic\_light}{Applications_app_traffic_light_state.png}{%
+  \begin{block}{状态机特别适合可视化}
+    \begin{itemize}
+      \item 当前状态：red / green / yellow
+      \item 状态数据：map
+      \item timeout / event 驱动状态切换
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{演示命令}
+    \code{traffic\_light:next().}\quad \code{traffic\_light:emergency().}
+  \end{exampleblock}
+}
+
+\imgslide{Messages / Dictionary / Stack Trace}{Process_Messages.png}{%
+  \begin{block}{深入进程内部}
+    \begin{itemize}
+      \item Messages：mailbox 中未处理消息
+      \item Dictionary：进程字典
+      \item Stack Trace：当前调用栈
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{排查价值}
+    消息堆积、调用卡住、异常状态，都可以从这里开始定位。
+  \end{alertblock}
+}
+
+\imgslide{Table Viewer：查看 ETS / DETS}{Table_Viewer.png}{%
+  \begin{block}{表数据也能观察}
+    \begin{itemize}
+      \item ETS table
+      \item DETS table
+      \item cache / storage 类模块常用
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{和 demo 对应}
+    \code{data\_cache} 使用 ETS，\code{data\_store} 使用 DETS。
+  \end{exampleblock}
+}
+
+\begin{frame}{从 Observer 回到代码}
+  \small
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{UI 中看到的结构}
+      \begin{itemize}
+        \item application
+        \item root supervisor
+        \item child supervisor
+        \item gen\_server worker
+        \item gen\_statem worker
+      \end{itemize}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{exampleblock}{代码中对应的位置}
+      \begin{itemize}
+        \item \code{full\_otp\_app.app.src}
+        \item \code{full\_otp\_app\_sup:init/1}
+        \item \code{data\_store\_sup:init/1}
+        \item \code{kv\_server:init/1}
+        \item \code{traffic\_light:init/1}
+      \end{itemize}
+    \end{exampleblock}
+  \end{columns}
+  \vspace{0.25cm}
+  \centering
+  \good{Observer UI 的作用：把 OTP 的代码结构和运行时结构连接起来。}
+\end{frame}
+
+\begin{frame}{课堂演示顺序}
+  \small
+  \begin{enumerate}
+    \item 启动 \code{rebar3 shell --sname application\_demo}
+    \item 执行 \code{observer:start().}
+    \item 看 \code{System}，说明 Observer 是节点观察工具
+    \item 切到 \code{Applications}，选中 \code{full\_otp\_app}
+    \item 展开 supervision tree
+    \item 双击 \code{full\_otp\_app\_sup}，说明 supervisor 也是进程
+    \item 双击 \code{kv\_server}，查看 Process Information 和 State
+    \item 双击 \code{traffic\_light}，观察 gen\_statem 当前状态
+    \item 打开 \code{Table Viewer}，查看 ETS / DETS
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{小结}
+  \begin{block}{本集结论}
+    \begin{itemize}
+      \item application 可以在 Observer 中看到
+      \item supervisor tree 是运行时真实存在的进程树
+      \item gen\_server 是有 mailbox 和 state 的 process
+      \item gen\_statem 可以直接观察当前状态
+      \item Table Viewer 可以辅助观察 ETS / DETS
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{下一步}
+    在无 GUI、服务器、容器或 SSH 环境中，用 \code{observer\_cli} 获取类似的运行时视角。
+  \end{exampleblock}
+\end{frame}
+
+\end{document}

@@ -1,0 +1,401 @@
+\documentclass[aspectratio=169, 9pt]{beamer}
+\usetheme{metropolis}
+
+\usepackage{xeCJK}
+\setCJKmainfont{PingFang SC}
+\setCJKsansfont{PingFang SC}
+\setCJKmonofont{PingFang SC}
+
+\usepackage{fontspec}
+\setmonofont{Menlo}[Scale=0.82]
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, shapes.geometric}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\graphicspath{{images/}}
+
+% ── Color palette ──────────────────────────────────────────────────
+\definecolor{primary}{HTML}{6C5CE7}
+\definecolor{accent}{HTML}{00B894}
+\definecolor{warning}{HTML}{E17055}
+\definecolor{dark}{HTML}{2D3436}
+\definecolor{light}{HTML}{DFE6E9}
+\definecolor{muted}{HTML}{636E72}
+\definecolor{codebg}{HTML}{F7F7FA}
+\definecolor{erlred}{HTML}{D63031}
+\definecolor{erlblue}{HTML}{0984E3}
+
+% ── Beamer theme ───────────────────────────────────────────────────
+\setbeamercolor{normal text}{fg=dark,bg=white}
+\setbeamercolor{frametitle}{fg=white,bg=primary}
+\setbeamercolor{progress bar}{fg=accent,bg=light}
+\setbeamercolor{alerted text}{fg=warning}
+\setbeamercolor{block title}{fg=white,bg=primary}
+\setbeamercolor{block body}{fg=dark,bg=primary!7}
+\setbeamercolor{block title example}{fg=white,bg=accent}
+\setbeamercolor{block body example}{fg=dark,bg=accent!7}
+\setbeamertemplate{itemize item}{\color{accent}$\blacktriangleright$}
+\setbeamertemplate{itemize subitem}{\color{primary}$\bullet$}
+\setbeamertemplate{enumerate item}{\color{accent}\insertenumlabel.}
+\metroset{progressbar=frametitle, numbering=fraction}
+
+% ── Macros ─────────────────────────────────────────────────────────
+\newcommand{\keypoint}[1]{\textbf{\color{primary}#1}}
+\newcommand{\good}[1]{\textbf{\color{accent!80!black}#1}}
+\newcommand{\warn}[1]{\textbf{\color{warning}#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\imgslide}[3]{%
+  \begin{frame}{#1}
+    \begin{columns}[T,onlytextwidth]
+      \column{0.57\textwidth}
+      \centering
+      \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{#2}
+      \column{0.39\textwidth}
+      #3
+    \end{columns}
+  \end{frame}
+}
+
+\lstdefinelanguage{Erlang2}{
+  keywords={module,export,application,supervisor,gen_server,gen_statem,case,of,end,fun,receive,after,true,false},
+  sensitive=true,
+  morecomment=[l]{\%},
+  morestring=[b]",
+  morestring=[b]'
+}
+\lstset{
+  language=Erlang2,
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{primary}\bfseries,
+  commentstyle=\color{muted}\itshape,
+  stringstyle=\color{accent!70!black},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  framesep=1.5mm,
+  rulecolor=\color{light},
+  showstringspaces=false,
+  breaklines=true,
+  tabsize=2
+}
+
+\title{Erlang observer\_cli 入门}
+\subtitle{终端环境下观察 BEAM 节点、application、process 和 ETS}
+\author{}
+\date{}
+
+\begin{document}
+
+\begin{frame}[plain]
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[primary!8] (current page.north west) rectangle (current page.south east);
+    \fill[primary!15] (current page.north west) ++(1.7,-1.3) circle (2.7cm);
+    \fill[accent!12]  (current page.south east) ++(-2.1,1.6) circle (3.0cm);
+    \node[anchor=center, font=\fontsize{25}{31}\selectfont\bfseries, text=dark]
+      at ([yshift=1.7cm]current page.center) {observer\_cli};
+    \node[anchor=center, font=\Large, text=primary!80]
+      at ([yshift=0.55cm]current page.center) {没有 GUI 时怎样观察 Erlang 节点};
+    \node[anchor=center, font=\large\bfseries, text=accent!80!black]
+      at ([yshift=-0.35cm]current page.center) {SSH、容器、服务器环境中的 BEAM 运行时视角};
+    \draw[accent, line width=1.5pt]
+      ([yshift=-1.15cm, xshift=-4.5cm]current page.center)
+      -- ([yshift=-1.15cm, xshift=4.5cm]current page.center);
+    \node[anchor=south, font=\scriptsize, text=dark!45]
+      at ([yshift=0.4cm]current page.south)
+      {基于 full\_otp\_app demo 与 observer\_tutorial\_body.tex 整理};
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Observer UI 和 observer\_cli 的关系}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{Observer UI}
+      \begin{itemize}
+        \item 图形界面
+        \item 适合本地开发和教学截图
+        \item 强项是 application / supervisor tree
+        \item 可以双击进入进程详情
+      \end{itemize}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{exampleblock}{observer\_cli}
+      \begin{itemize}
+        \item 终端界面
+        \item 适合 SSH、容器、无桌面环境
+        \item 强项是指标和排序
+        \item 可以查看 process / ETS / system / network
+      \end{itemize}
+    \end{exampleblock}
+  \end{columns}
+  \vspace{0.3cm}
+  \centering
+  \good{两者都在观察同一个 BEAM 运行时，只是交互方式和重点不同。}
+\end{frame}
+
+\begin{frame}[fragile]{依赖和启动方式}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{rebar.config}
+\begin{lstlisting}
+{deps, [
+    {observer_cli, "1.8.8"},
+    {recon, "2.5.6"}
+]}.
+\end{lstlisting}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{block}{启动 demo 和 observer\_cli}
+\begin{lstlisting}[language=bash]
+cd bilibili_erlang/observer/full_otp_app
+rebar3 shell --sname application_demo
+\end{lstlisting}
+\begin{lstlisting}
+observer_cli:start().
+\end{lstlisting}
+    \end{block}
+  \end{columns}
+\end{frame}
+
+\imgslide{Home：启动后的主界面}{observer_cli_start.png}{%
+  \begin{block}{顶部菜单}
+    \begin{itemize}
+      \item \code{Home(H)}
+      \item \code{Network(N)}
+      \item \code{System(S)}
+      \item \code{Ets(E)}
+      \item \code{App(A)}
+      \item \code{Doc(D)} / \code{Plugin(P)}
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{常用按键}
+    \code{H} 回 Home，\code{A} 看 application，\code{E} 看 ETS，\code{q} 退出。
+  \end{exampleblock}
+}
+
+\begin{frame}{Home 页面适合看什么？}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+    \begin{block}{节点级信息}
+      \begin{itemize}
+        \item Process count
+        \item Memory
+        \item Scheduler / run queue
+        \item Ports / ETS / atoms
+      \end{itemize}
+    \end{block}
+    \column{0.46\textwidth}
+    \begin{exampleblock}{进程列表}
+      \begin{itemize}
+        \item 按 memory 排序
+        \item 按 reductions 排序
+        \item 按 message queue 排序
+        \item 输入行号进入进程详情
+      \end{itemize}
+    \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\imgslide{App(A)：查看所有 application}{observer_cli_application.png}{%
+  \begin{block}{App 页面展示聚合指标}
+    \begin{itemize}
+      \item \code{App}
+      \item \code{ProcessCount}
+      \item \code{Memory}
+      \item \code{Reductions}
+      \item \code{MsgQ}
+      \item \code{Status} / \code{Version}
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{适合看资源消耗}
+    例如观察 \code{full\_otp\_app} 是否 Started，以及它占用多少进程和内存。
+  \end{alertblock}
+}
+
+\begin{frame}{App 页面不能像 GUI 一样展开 application}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{Observer GUI Applications}
+      \centering
+      \code{application}\par
+      $\downarrow$\par
+      \code{supervisor}\par
+      $\downarrow$\par
+      \code{worker process}\par
+      \vspace{0.2cm}
+      \good{适合讲结构}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{alertblock}{observer\_cli App(A)}
+      \centering
+      \code{application}\par
+      $\downarrow$\par
+      \code{ProcessCount / Memory}\par
+      \code{Reductions / MsgQ}\par
+      \vspace{0.2cm}
+      \warn{不能展开 supervisor tree}
+    \end{alertblock}
+  \end{columns}
+  \vspace{0.25cm}
+  \centering
+  App 页面里的行号是表格编号，不是进入 application 的菜单项。
+\end{frame}
+
+\begin{frame}[fragile]{命令行查看监督树仍然用 Erlang API}
+  \begin{block}{如果想在终端看 full\_otp\_app 的子进程}
+\begin{lstlisting}
+supervisor:which_children(full_otp_app_sup).
+supervisor:which_children(data_store_sup).
+\end{lstlisting}
+  \end{block}
+  \begin{exampleblock}{解释}
+    \code{observer\_cli} 的 App 页面做 application 级别聚合。监督树结构仍然可以用 Erlang shell 或脚本直接调用 OTP API 查看。
+  \end{exampleblock}
+\end{frame}
+
+\imgslide{Processes：进程列表和进程详情}{observer_cli_processes.png}{%
+  \begin{block}{进程列表可以进入详情}
+    \begin{itemize}
+      \item \code{m} 按 memory 排序
+      \item \code{r} 按 reductions 排序
+      \item \code{mq} 按 message queue 排序
+      \item 输入进程行号打开详情
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{和 App 页面不同}
+    Process 行号可以进入详情；App 行号不能进入 application 详情。
+  \end{alertblock}
+}
+
+\begin{frame}{教学时重点找这些 demo 进程}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{supervisor}
+      \begin{itemize}
+        \item \code{full\_otp\_app\_sup}
+        \item \code{data\_store\_sup}
+      \end{itemize}
+    \end{block}
+    \begin{block}{gen\_server}
+      \begin{itemize}
+        \item \code{kv\_server}
+        \item \code{data\_store}
+        \item \code{data\_cache}
+      \end{itemize}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{exampleblock}{其他 behaviour}
+      \begin{itemize}
+        \item \code{event\_bus}
+        \item \code{traffic\_light}
+      \end{itemize}
+    \end{exampleblock}
+    \begin{alertblock}{进程详情信息}
+      registered name、links、monitors、message queue、dictionary、current stack、state。
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\imgslide{Ets(E)：查看 ETS 表指标}{observer_ets.png}{%
+  \begin{block}{ETS 页面适合线上排查}
+    \begin{itemize}
+      \item 表数量
+      \item 表大小
+      \item owner process
+      \item memory / object count
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{和 GUI Table Viewer 对比}
+    GUI 适合教学看表数据，CLI 适合服务器终端看表指标。
+  \end{exampleblock}
+}
+
+\begin{frame}{observer\_cli 背后不是魔法}
+  \begin{block}{它本质上依赖 BEAM 可观测 API}
+    \begin{itemize}
+      \item \code{erlang:system\_info/1}
+      \item \code{erlang:memory/0}
+      \item \code{application:which\_applications/0}
+      \item \code{erlang:processes/0}
+      \item \code{erlang:process\_info/2}
+      \item \code{ets:all/0} / \code{ets:info/1}
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{demo 中的辅助脚本}
+    \code{full\_otp\_app/scripts/observer\_cli\_snapshot.escript} 直接调用这些 API 采集一次快照。
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]{远程节点参数：node name，不是 OS PID}
+  \begin{block}{获取当前节点名和 cookie}
+\begin{lstlisting}
+node().
+erlang:get_cookie().
+\end{lstlisting}
+  \end{block}
+  \begin{block}{脚本远程采集形式}
+\begin{lstlisting}[language=bash]
+scripts/observer_cli_snapshot.escript application_demo@HOST COOKIE
+\end{lstlisting}
+  \end{block}
+  \begin{alertblock}{关键点}
+    参数是 Erlang node name 和 cookie，不是 BEAM 的操作系统进程 PID。
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{什么时候用 observer\_cli？}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{推荐场景}
+      \begin{itemize}
+        \item SSH 到服务器
+        \item 容器内排查
+        \item 没有图形界面
+        \item 想快速按指标排序
+        \item 看 ETS / process / memory
+      \end{itemize}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{alertblock}{不适合场景}
+      \begin{itemize}
+        \item 教初学者看 supervisor tree
+        \item 希望像 GUI 一样展开 application
+        \item 需要大量截图标注结构
+      \end{itemize}
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{课堂演示顺序}
+  \small
+  \begin{enumerate}
+    \item 启动 \code{rebar3 shell --sname application\_demo}
+    \item 执行 \code{observer\_cli:start().}
+    \item 看 Home 页面，说明这是终端版运行时观察工具
+    \item 按 \code{A} 看所有 application 的聚合指标
+    \item 说明 App 页面不能展开 supervisor tree
+    \item 回到 Home，按 memory / reductions / message queue 排序进程
+    \item 输入进程行号查看进程详情
+    \item 按 \code{E} 查看 ETS 页面
+    \item 最后引出 Erlang API 和 \code{observer\_cli\_snapshot.escript}
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{小结}
+  \begin{block}{本集结论}
+    \begin{itemize}
+      \item \code{observer\_cli} 是终端环境下的 BEAM 观察工具
+      \item App 页面看 application 聚合指标，不展开监督树
+      \item Process 列表可以进入进程详情
+      \item ETS 页面适合服务器排查表指标
+      \item 它背后依赖 Erlang runtime introspection API
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{和 Observer UI 配合}
+    UI 版讲结构，CLI 版讲线上观察和指标排查，两者互补。
+  \end{exampleblock}
+\end{frame}
+
+\end{document}
