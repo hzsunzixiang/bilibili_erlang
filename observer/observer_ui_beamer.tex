@@ -260,40 +260,7 @@ observer:start().
 
 \begin{frame}{Application 层级：从产品视角到 BEAM process}
   \centering
-  \begin{tikzpicture}[
-    scale=0.82, transform shape,
-    node distance=0.75cm and 1.05cm,
-    app/.style={rounded corners=6pt, draw=primary!65, fill=primary!12, minimum width=3.3cm, minimum height=0.75cm, align=center, font=\small\bfseries, blur shadow},
-    sup/.style={rounded corners=6pt, draw=accent!65, fill=accent!12, minimum width=2.8cm, minimum height=0.7cm, align=center, font=\scriptsize\bfseries},
-    worker/.style={rounded corners=5pt, draw=erlblue!65, fill=erlblue!10, minimum width=2.45cm, minimum height=0.62cm, align=center, font=\scriptsize},
-    detail/.style={rounded corners=5pt, draw=warning!65, fill=warning!10, minimum width=2.7cm, minimum height=0.56cm, align=center, font=\tiny},
-    arrow/.style={-{Latex[length=2.5mm]}, thick, color=muted}
-  ]
-    \node[app] (app) {full\_otp\_app\\\footnotesize application};
-
-    \node[sup, below=of app] (root) {full\_otp\_app\_sup\\root supervisor};
-
-    \node[worker, below left=1.0cm and 2.6cm of root] (kv) {kv\_server\\gen\_server};
-    \node[worker, below left=1.0cm and 0.75cm of root] (event) {event\_bus\\gen\_event};
-    \node[worker, below right=1.0cm and 0.75cm of root] (traffic) {traffic\_light\\gen\_statem};
-    \node[sup, below right=1.0cm and 2.6cm of root] (dataSup) {data\_store\_sup\\child supervisor};
-
-    \node[worker, below left=0.85cm and 0.55cm of dataSup] (store) {data\_store\\gen\_server + DETS};
-    \node[worker, below right=0.85cm and 0.55cm of dataSup] (cache) {data\_cache\\gen\_server + ETS};
-
-    \node[detail, below=0.75cm of kv] (kvState) {mailbox + state\\private process data};
-    \node[detail, below=0.75cm of traffic] (fsmState) {current state\\red / green / yellow};
-
-    \draw[arrow] (app) -- (root);
-    \draw[arrow] (root) -- (kv);
-    \draw[arrow] (root) -- (event);
-    \draw[arrow] (root) -- (traffic);
-    \draw[arrow] (root) -- (dataSup);
-    \draw[arrow] (dataSup) -- (store);
-    \draw[arrow] (dataSup) -- (cache);
-    \draw[arrow, dashed] (kv) -- (kvState);
-    \draw[arrow, dashed] (traffic) -- (fsmState);
-  \end{tikzpicture}
+  \input{tikz/application-hierarchy-body.tex}
 
   \vspace{0.2cm}
   \good{Observer 的 Applications 页面，就是把这张图变成真实运行中的可点击对象。}
