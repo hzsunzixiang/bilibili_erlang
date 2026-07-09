@@ -1,5 +1,4 @@
 % observer_tutorial.tex — Erlang Observer 可视化入门
-% Source Markdown: observer_tutorial.md
 % Build: latexmk -xelatex observer_tutorial.tex
 \documentclass[a4paper,11pt]{article}
 
@@ -89,20 +88,20 @@
 % ---- Graphics ----
 \graphicspath{{images/}}
 \makeatletter
-\newsavebox\pandoc@box
-\newcommand*\pandocbounded[1]{%
-  \sbox\pandoc@box{#1}%
-  \Gscale@div\@tempa{0.82\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
-  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+\newsavebox\imagefit@box
+\newcommand*\fitimage[1]{%
+  \sbox\imagefit@box{#1}%
+  \Gscale@div\@tempa{0.82\textheight}{\dimexpr\ht\imagefit@box+\dp\imagefit@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\imagefit@box}%
   \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi%
-  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
-  \else\usebox{\pandoc@box}%
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\imagefit@box}%
+  \else\usebox{\imagefit@box}%
   \fi%
 }
 \def\fps@figure{htbp}
 \makeatother
 
-% ---- Pandoc table/list helpers ----
+% ---- Table/list helpers ----
 \makeatletter
 \patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
 \makeatother
@@ -115,7 +114,7 @@
 \setlength{\LTpost}{8pt}
 \renewcommand{\arraystretch}{1.18}
 
-% ---- Pandoc syntax highlighting helpers ----
+% ---- Syntax highlighting helpers ----
 \newcommand{\VerbBar}{|}
 \newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
 \DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\},fontsize=\small,breaklines=true,breakanywhere=true}
