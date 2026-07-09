@@ -525,19 +525,13 @@ Observer 不是为了替代代码阅读，而是帮助我们建立代码和运�
 
 ## 18. Observer 和 observer_cli 的关系
 
-本篇先讲 GUI Observer。
-
-后续可以单独增加 `observer_cli` 部分，因为它适合：
-
-- SSH 到服务器后查看节点。
-- 没有图形界面的容器或远程环境。
-- 线上排查进程、内存、ETS、scheduler 等问题。
+GUI Observer 适合本地开发、教学录屏和截图讲解；`observer_cli` 适合 SSH 到服务器、容器环境或没有图形界面的远程节点。
 
 简单理解：
 
 ```text
-Observer      -> 图形界面，适合教学、本地开发、截图讲解
-observer_cli  -> 命令行界面，适合远程服务器和生产环境排查
+Observer      -> 图形界面，适合讲结构：application / supervisor / worker
+observer_cli  -> 命令行界面，适合看指标：进程数、内存、reductions、MsgQ、ETS
 ```
 
 当前 demo 已经在 `rebar.config` 中加入：
@@ -549,7 +543,140 @@ observer_cli  -> 命令行界面，适合远程服务器和生产环境排查
 ]}.
 ```
 
-后续文档可以继续补充 `observer_cli` 的启动方式和常用界面。
+### 18.1 启动 observer_cli
+
+![observer_cli start](images/observer_cli_start.png)
+
+在 `rebar3 shell` 中启动：
+
+```erlang
+observer_cli:start().
+```
+
+启动后默认进入 Home 页面。顶部菜单可以看到：
+
+```text
+Home(H) | Network(N) | System(S) | Ets(E) | App(A) | Doc(D) | Plugin(P)
+```
+
+常用按键：
+
+| 按键 | 用途 |
+|------|------|
+| `H` | 回到 Home 页面 |
+| `A` | 查看 application 聚合信息 |
+| `E` | 查看 ETS 信息 |
+| `S` | 查看系统信息 |
+| `N` | 查看网络信息 |
+| `F` / `B` | 下一页 / 上一页 |
+| `q` | 退出 |
+
+### 18.2 App(A)：查看所有 application
+
+![observer_cli application](images/observer_cli_application.png)
+
+按 `A` 进入 App 页面后，可以看到所有 application 的聚合指标：
+
+| 列 | 含义 |
+|----|------|
+| `App` | application 名称 |
+| `ProcessCount(p)` | 归属到该 application 的进程数量 |
+| `Memory(m)` | 聚合内存占用 |
+| `Reductions(r)` | 聚合 reductions |
+| `MsgQ(mq)` | 聚合消息队列长度 |
+| `Status` | `Started` / `Loaded` 等状态 |
+| `version` | application 版本 |
+
+这里可以重点观察 demo 应用：
+
+```text
+full_otp_app
+```
+
+例如截图中 `full_otp_app` 处于 `Started` 状态，并且能看到进程数量、内存和 reductions。
+
+需要特别说明：`observer_cli` 的 App 页面不能像 GUI Observer 那样选中某个 application 后展开 supervisor tree。这里的行号只是表格编号，不是可进入的菜单项。它适合看 application 资源聚合，不适合讲 supervision tree 结构。
+
+对比关系是：
+
+```text
+Observer GUI Applications
+  -> application -> supervisor -> worker
+  -> 适合讲结构
+
+observer_cli App(A)
+  -> application -> ProcessCount / Memory / Reductions / MsgQ
+  -> 适合看资源指标
+```
+
+如果要在命令行查看 `full_otp_app` 的监督树，仍然使用 Erlang shell：
+
+```erlang
+supervisor:which_children(full_otp_app_sup).
+supervisor:which_children(data_store_sup).
+```
+
+### 18.3 Processes：查看进程列表和进程详情
+
+![observer_cli processes](images/observer_cli_processes.png)
+
+Home 页面下半部分就是进程列表。它按当前选择的指标排序，例如 memory、reductions、binary memory、message queue。
+
+常用按键：
+
+| 按键 | 用途 |
+|------|------|
+| `m` | 按 memory 排序 |
+| `r` | 按 reductions 排序 |
+| `mq` | 按 message queue 排序 |
+| `F` / `B` | 下一页 / 上一页 |
+| 输入进程行号 | 打开该进程详情 |
+
+这一点和 App 页面不同：进程列表中的行号可以进入进程详情，App 页面中的 application 行号不能进入详情。
+
+教学时可以查找这些 demo 进程：
+
+```text
+full_otp_app_sup
+kv_server
+event_bus
+traffic_light
+data_store_sup
+data_store
+data_cache
+```
+
+进入进程详情后，可以看到 `process_info/2` 能拿到的很多运行时信息，例如 registered name、links、monitors、message queue、dictionary、current stack 和 state。
+
+### 18.4 Ets(E)：查看 ETS 表
+
+![observer_cli ets](images/observer_ets.png)
+
+按 `E` 可以进入 ETS 页面。它适合和 GUI Observer 的 `Table Viewer` 对比：
+
+```text
+GUI Observer Table Viewer
+  -> 图形化查看 ETS / DETS
+
+observer_cli Ets(E)
+  -> 终端中查看 ETS 表指标
+```
+
+对于线上排查，`observer_cli` 的 ETS 页面更实用，因为它不依赖桌面环境，可以直接在服务器终端里看表数量、表大小和相关指标。
+
+### 18.5 用 Erlang API 获取 observer_cli 类似数据
+
+为了说明 `observer_cli` 不是魔法，本 demo 额外提供了一个脚本：
+
+```text
+full_otp_app/scripts/observer_cli_snapshot.escript
+```
+
+这个脚本直接调用 Erlang runtime introspection API，采集一次类似 `observer_cli` 的快照数据。它的使用方式、参数含义和实现原理已经拆到独立文档：
+
+```text
+observer_cli_snapshot_escript.md
+```
 
 ---
 
@@ -581,19 +708,22 @@ observer_cli  -> 命令行界面，适合远程服务器和生产环境排查
 | `Process_Dictionary.png` | Process Information 的 Dictionary tab |
 | `Process_Stack_Trace.png` | Process Information 的 Stack Trace tab |
 | `Table_Viewer.png` | Table Viewer 页面，查看 ETS / DETS 表数据 |
+| `observer_cli_start.png` | 启动 observer_cli |
+| `observer_cli_application.png` | observer_cli 的 App(A) 页面 |
+| `observer_cli_processes.png` | observer_cli 的进程列表 |
+| `observer_ets.png` | observer_cli 的 Ets(E) 页面 |
 
 ---
 
 ## 20. 建议补充截图
 
-目前图片已经能完成 Observer GUI 入门讲解。后续如果要扩展命令行观察方式，建议补充以下 `observer_cli` 截图：
+目前图片已经能完成 Observer GUI 和 `observer_cli` 入门讲解。后续如果要继续扩展，可以补充更细的进程详情截图：
 
 | 建议文件名 | 截图内容 | 用途 |
 |------------|----------|------|
-| `observer_cli_start.png` | 终端启动 observer_cli | 后续 observer_cli 章节使用 |
-| `observer_cli_processes.png` | observer_cli 进程列表 | 对比 GUI Processes 页面 |
-| `observer_cli_memory.png` | observer_cli 内存页面 | 对比 GUI System / Memory 页面 |
-| `observer_cli_ets.png` | observer_cli ETS 页面 | 对比 Table Viewer |
+| `observer_cli_process_info.png` | observer_cli 中输入进程行号后的进程详情 | 对比 GUI Process Information |
+| `observer_cli_system.png` | observer_cli 的 System(S) 页面 | 对比 GUI System 页面 |
+| `observer_cli_network.png` | observer_cli 的 Network(N) 页面 | 讲远程节点或网络 IO 时使用 |
 
 ---
 
