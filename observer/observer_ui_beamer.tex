@@ -219,9 +219,35 @@
       \item 可以双击进入 Process Information
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{过渡到 Applications}
-    先知道 Observer 能看到 process，再从 application / supervisor tree 追到这些 process。
+  \begin{exampleblock}{先做进程整体讲解}
+    先知道 Observer 能看到 process，再继续看 process 内部现场和 process 背后的表数据。
   \end{exampleblock}
+}
+
+\imgslide{Process Internals：Messages / Dictionary / Stack Trace}{Process_Messages.png}{%
+  \begin{block}{进程内部三件事}
+    \begin{itemize}
+      \item Messages：mailbox 中未处理消息
+      \item Dictionary：进程字典
+      \item Stack Trace：当前调用栈
+    \end{itemize}
+  \end{block}
+  \begin{exampleblock}{排查意义}
+    消息堆积、进程卡住、状态异常，都能从 process 级别继续向内看。
+  \end{exampleblock}
+}
+
+\imgslide{Process Data：通过 Table Viewer 看 ETS / DETS}{Table_Viewer.png}{%
+  \begin{block}{表数据观察}
+    \begin{itemize}
+      \item ETS table
+      \item DETS table
+      \item cache / storage 模块常用
+    \end{itemize}
+  \end{block}
+  \begin{alertblock}{和进程主线的关系}
+    \code{data\_cache}、\code{data\_store} 这类 worker process 背后的表数据，也属于进程观察继续深入的一部分。
+  \end{alertblock}
 }
 
 % ── Start ──────────────────────────────────────────────────────────
@@ -428,46 +454,21 @@ observer:start().
   \end{alertblock}
 }
 
-\imgslide{Process Internals：Messages / Dictionary / Stack Trace}{Process_Messages.png}{%
-  \begin{block}{进程内部三件事}
-    \begin{itemize}
-      \item Messages：mailbox 中未处理消息
-      \item Dictionary：进程字典
-      \item Stack Trace：当前调用栈
-    \end{itemize}
-  \end{block}
-  \begin{exampleblock}{排查意义}
-    消息堆积、进程卡住、状态异常，都能从 process 级别继续向内看。
-  \end{exampleblock}
-}
-
-\imgslide{Process Data：通过 Table Viewer 看 ETS / DETS}{Table_Viewer.png}{%
-  \begin{block}{表数据观察}
-    \begin{itemize}
-      \item ETS table
-      \item DETS table
-      \item cache / storage 模块常用
-    \end{itemize}
-  \end{block}
-  \begin{alertblock}{和进程主线的关系}
-    \code{data\_cache}、\code{data\_store} 这类 worker process 背后的表数据，也属于进程观察继续深入的一部分。
-  \end{alertblock}
-}
-
 % ── Demo flow ──────────────────────────────────────────────────────
-\begin{frame}{推荐课堂演示顺序：Applications 作为主线}
+\begin{frame}{推荐课堂演示顺序：先进程整体，再展开 Applications}
   \small
   \begin{enumerate}
     \item 启动 \code{rebar3 shell --sname application\_demo}
     \item 执行 \code{observer:start().}
     \item 先看 \code{System}，说明 Observer 是 BEAM node 内置观察入口
-    \item 切到 \code{Applications}，强调这是本讲重点
+    \item 切到 \code{Processes}，先建立 Erlang process 级别观察
+    \item 继续看 \code{Messages} / \code{Dictionary} / \code{Stack Trace}，深入进程现场
+    \item 打开 \code{Table Viewer}，观察 worker process 背后的 ETS / DETS 数据
+    \item 再切到 \code{Applications}，从 application 展开 OTP 运行时结构
     \item 选中 \code{full\_otp\_app}，解释 application 是 OTP 顶层组织单位
     \item 展开 supervision tree，对照 TikZ 层级图
     \item 双击 \code{kv\_server}，说明 gen\_server 是 process
     \item 查看 \code{State}，执行 \code{kv\_server:put/2} 后观察变化
-    \item 继续看 \code{Messages} / \code{Dictionary} / \code{Stack Trace}，深入进程现场
-    \item 打开 \code{Table Viewer}，观察 worker process 背后的 ETS / DETS 数据
     \item 双击 \code{traffic\_light}，说明 gen\_statem 当前状态可观察
   \end{enumerate}
 \end{frame}
