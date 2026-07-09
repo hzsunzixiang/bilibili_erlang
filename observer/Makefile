@@ -1,32 +1,25 @@
 # observer/Makefile — compile observer_tutorial.pdf
-# Pattern follows wikipedia_storage/storage_full/Makefile: generate dependencies first,
-# then build the master TeX document with latexmk + xelatex.
+# Pattern follows wikipedia_storage/storage_full/Makefile: build the master TeX
+# document with latexmk + xelatex.
 #
 # Usage:
-#   make           — regenerate observer_tutorial_body.tex and build PDF
-#   make tex       — regenerate observer_tutorial_body.tex only
+#   make           — build PDF from observer_tutorial.tex and observer_tutorial_body.tex
 #   make clean     — remove intermediate files
-#   make distclean — remove all generated files including PDF/body TeX
+#   make distclean — remove generated PDF only
 
 MASTER = observer_tutorial
-MD = observer_tutorial.md
 BODY = observer_tutorial_body.tex
 
-.PHONY: all tex clean distclean
+.PHONY: all clean distclean
 
 all: $(BODY)
 	latexmk -f -xelatex -interaction=nonstopmode $(MASTER).tex
 	latexmk -c
 	@echo "==== Done: $(MASTER).pdf ===="
 
-tex: $(BODY)
-
-$(BODY): $(MD)
-	pandoc -f markdown -t latex $(MD) -o $(BODY)
-
 clean:
 	latexmk -C 2>/dev/null || true
 
-# Keep the hand-written master TeX file; remove only generated artifacts.
+# Keep the hand-written TeX files; remove only generated PDF artifacts.
 distclean: clean
-	rm -f $(MASTER).pdf $(BODY)
+	rm -f $(MASTER).pdf
