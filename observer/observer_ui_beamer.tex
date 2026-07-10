@@ -85,7 +85,7 @@
 }
 
 \title{Erlang Observer UI}
-\subtitle{内置运行时可视化：从 application 看见 BEAM 进程世界}
+\subtitle{从 Erlang Process 看见 BEAM，再进入 OTP 应用结构}
 \author{}
 \date{}
 
@@ -100,114 +100,148 @@
     \node[anchor=center, font=\fontsize{26}{32}\selectfont\bfseries, text=dark]
       at ([yshift=1.75cm]current page.center) {Erlang Observer UI};
     \node[anchor=center, font=\Large, text=primary!80]
-      at ([yshift=0.55cm]current page.center) {内置运行时可视化：看见 application / supervisor / process};
+      at ([yshift=0.55cm]current page.center) {先看见 Erlang Process，再理解 OTP 如何组织它们};
     \node[anchor=center, font=\large\bfseries, text=accent!80!black]
-      at ([yshift=-0.35cm]current page.center) {很多产品和语言生态没有的“协程级别”观察能力};
+      at ([yshift=-0.35cm]current page.center) {Erlang 最大的特色，是可以被运行时直接观察的轻量级 Process};
     \draw[accent, line width=1.5pt]
       ([yshift=-1.15cm, xshift=-4.8cm]current page.center)
       -- ([yshift=-1.15cm, xshift=4.8cm]current page.center);
     \node[anchor=south, font=\scriptsize, text=dark!45]
       at ([yshift=0.4cm]current page.south)
-      {重点：Applications 页面 \enspace|\enspace OTP 层级 \enspace|\enspace BEAM 进程视角};
+      {故事线：Process \enspace|\enspace Observer \enspace|\enspace 为什么需要 OTP \enspace|\enspace Applications};
   \end{tikzpicture}
 \end{frame}
 
-\imgslide{打开Observer 后的第一印象}{System.png}{%
-  \begin{block}{打开后先看到 BEAM node}
-    \begin{itemize}
-      \item node name / OTP version
-      \item process / port / ETS / timer
-      \item memory / scheduler
-      \item atom / binary / code 信息
-    \end{itemize}
-  \end{block}
-  \begin{alertblock}{先建立Observe的直观印象}
-    这一页是 Observer 打开后就能看到的系统总览：先看见 BEAM node，再进入后面的具体页面。
-  \end{alertblock}
-}
-
-% ── Importance ─────────────────────────────────────────────────────
-\begin{frame}{为什么 Observer 值得先讲？}
+% ── Process first ──────────────────────────────────────────────────
+\begin{frame}{今天先不讲 OTP}
   \begin{columns}[T,onlytextwidth]
     \column{0.52\textwidth}
-    \begin{alertblock}{这不是普通监控面板}
-      很多语言生态也有 metrics、trace、profiler，但通常看到的是 OS 线程、HTTP 请求、堆内存或业务指标。
-      \keypoint{Observer 直接站在 BEAM 运行时内部看系统。}
+    \begin{alertblock}{先认识 Erlang 最核心的抽象}
+      Erlang 最大的特色，不是语法，不是模式匹配，而是 \keypoint{Erlang Process}。
     \end{alertblock}
-    \begin{block}{它能看到 Erlang 的核心建模单位}
+    \begin{block}{为什么它重要？}
       \begin{itemize}
-        \item Erlang process 是语言级轻量进程
-        \item 概念上接近 Go goroutine，但属于 BEAM VM
-        \item 每个 process 有 mailbox、state、links、reductions
-        \item Observer 把这些运行时对象直接展示出来
+        \item Erlang 能支撑大量连接，核心不是靠大量 OS thread
+        \item BEAM VM 内部运行的是大量 Erlang process
+        \item 它们是 Erlang 并发模型的基本单位
       \end{itemize}
     \end{block}
-    \column{0.44\textwidth}
-    \begin{exampleblock}{一句话定位}
+    \column{0.42\textwidth}
+    \begin{exampleblock}{先建立直觉}
       \centering
       \Large
-      Erlang 的并发模型\par
-      不是“猜出来”的，\par
-      是可以\good{直接看见}的。
+      先看 Process 是什么\par
+      再看怎么观察它\par
+      最后再问：\par
+      \good{这么多 Process 怎么管理？}
     \end{exampleblock}
   \end{columns}
 \end{frame}
 
-\begin{frame}{和常见语言工具相比，Observer 特别在哪里？}
-  \small
+\begin{frame}{一个 Erlang VM 里可以有很多 Process}
+  \centering
+  \begin{tikzpicture}[
+    box/.style={draw, rounded corners=2mm, thick, fill=primary!7, minimum width=3.2cm, minimum height=0.75cm},
+    proc/.style={draw, rounded corners=1.5mm, thick, fill=accent!10, minimum width=1.9cm, minimum height=0.55cm, font=\small},
+    label/.style={font=\bfseries\large, text=dark}
+  ]
+    \node[label] at (-3.8,2.2) {Linux};
+    \node[box] (chrome) at (-3.8,1.1) {Chrome};
+    \node[box] (redis) at (-3.8,0.0) {Redis};
+    \node[box] (nginx) at (-3.8,-1.1) {Nginx};
+    \node[font=\small, text=muted] at (-3.8,-2.0) {OS Process};
+
+    \draw[very thick, primary!50] (0,-2.4) -- (0,2.6);
+
+    \node[label] at (3.6,2.2) {Erlang VM};
+    \foreach \x/\y in {2.3/1.2,3.6/1.2,4.9/1.2,2.3/0.25,3.6/0.25,4.9/0.25,2.3/-0.7,3.6/-0.7,4.9/-0.7,2.95/-1.65,4.25/-1.65} {
+      \node[proc] at (\x,\y) {Process};
+    }
+    \node[font=\small, text=muted, align=center] at (3.6,-2.35) {几十万甚至上百万个\par Erlang Process};
+  \end{tikzpicture}
+
+  \vspace{0.25cm}
+  \good{一个 Erlang VM 内部，可以同时运行大量 Erlang Process。}
+\end{frame}
+
+\begin{frame}{它叫 Process，但不是操作系统进程}
   \begin{columns}[T,onlytextwidth]
     \column{0.48\textwidth}
-    \begin{block}{常见产品/语言工具更多看到}
+    \begin{block}{OS Process / OS Thread}
       \begin{itemize}
-        \item OS process / OS thread
-        \item request latency / QPS
-        \item heap / GC / CPU profile
-        \item log / trace / span
-        \item 外部采集后的指标视角
+        \item 操作系统管理
+        \item 相对重量级
+        \item 上下文切换成本更高
+        \item 资源隔离边界更强
       \end{itemize}
     \end{block}
     \column{0.48\textwidth}
-    \begin{exampleblock}{Observer 直接看到}
+    \begin{exampleblock}{Erlang Process}
       \begin{itemize}
-        \item BEAM node 内部资源
-        \item application 列表
-        \item supervisor tree
-        \item 每个 Erlang process
-        \item mailbox / state / stack trace
-        \item ETS / DETS 表
+        \item 语言级并发实体
+        \item 由 BEAM VM 调度
+        \item 非常轻量
+        \item 适合海量并发建模
       \end{itemize}
     \end{exampleblock}
   \end{columns}
   \vspace{0.25cm}
   \centering
-  \warn{关键差异：Observer 的观察粒度直接下沉到 Erlang process 级别。}
+  \warn{可以近似理解为 Go goroutine 或协程，但更准确地说：它是 BEAM 管理的 lightweight process。}
 \end{frame}
 
-\begin{frame}{Erlang process：类似 goroutine，但可观察性更内置}
+\begin{frame}{为什么说 Erlang Process 很神奇？}
   \begin{columns}[T,onlytextwidth]
-    \column{0.48\textwidth}
-    \begin{block}{类比 Go goroutine}
+    \column{0.44\textwidth}
+    \centering
+    \begin{tikzpicture}[
+      part/.style={draw, rounded corners=1.5mm, thick, fill=accent!8, minimum width=3.5cm, minimum height=0.58cm, font=\small}
+    ]
+      \node[draw, rounded corners=2mm, thick, fill=primary!10, minimum width=4.1cm, minimum height=4.5cm] (p) at (0,0) {};
+      \node[font=\bfseries\large, text=primary] at (0,1.85) {Process};
+      \node[part] at (0,1.05) {Mailbox};
+      \node[part] at (0,0.35) {State};
+      \node[part] at (0,-0.35) {Heap};
+      \node[part] at (0,-1.05) {Stack};
+      \node[part] at (0,-1.75) {PID};
+    \end{tikzpicture}
+    \column{0.52\textwidth}
+    \begin{block}{每个 Process 都有自己的运行现场}
       \begin{itemize}
-        \item 都是轻量级并发单元
-        \item 都不是手工创建 OS thread
-        \item 都由运行时调度
-        \item 都适合海量并发建模
+        \item 自己的邮箱：接收消息
+        \item 自己的状态：保存业务上下文
+        \item 自己的堆和栈：独立执行
+        \item 自己的 PID：可以被定位和通信
       \end{itemize}
     \end{block}
-    \column{0.48\textwidth}
-    \begin{exampleblock}{Erlang + Observer 的特殊组合}
+    \begin{alertblock}{通信方式}
+      Process 之间不共享内存，主要通过消息传递协作。
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{最神奇的地方：不仅有 Process，而且还能直接看到它}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+    \begin{block}{Observer 能看到运行现场}
       \begin{itemize}
-        \item process 有 mailbox
-        \item process 有独立状态
-        \item process 之间 link / monitor
-        \item supervisor 管理 process 生命周期
-        \item Observer 把这些关系可视化
+        \item Processes 列表
+        \item PID / registered name
+        \item Mailbox / MsgQ
+        \item Memory / reductions
+        \item Stack Trace / Current Function
       \end{itemize}
+    \end{block}
+    \column{0.46\textwidth}
+    \begin{exampleblock}{这句话很关键}
+      \centering
+      \Large
+      很多语言都有“轻量并发”。\par\vspace{0.2cm}
+      但很少有语言，\par
+      把并发单元的运行现场\par
+      \good{原生展示出来}。
     \end{exampleblock}
   \end{columns}
-  \vspace{0.25cm}
-  \centering
-  \good{这就是为什么讲 OTP 之前，先讲 Observer。}
 \end{frame}
 
 \imgslide{Processes：先看见 Erlang process}{Applications_process_list.png}{%
@@ -219,8 +253,8 @@
       \item 可以双击进入 Process Information
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{先做进程整体讲解}
-    先知道 Observer 能看到 process，再继续看 process 内部现场和 process 背后的表数据。
+  \begin{exampleblock}{这不是 Debugger}
+    这是运行中的现场：每个 process 的 PID、内存、消息队列和当前执行信息都可以被直接观察。
   \end{exampleblock}
 }
 
@@ -251,24 +285,31 @@
 }
 
 % ── Start ──────────────────────────────────────────────────────────
-\begin{frame}{从进程视角进入 OTP 应用观察}
+\begin{frame}{如果有几十万个 Process，怎么办？}
   \begin{columns}[T,onlytextwidth]
     \column{0.50\textwidth}
-    \begin{block}{前面已经建立的视角}
+    \begin{alertblock}{自然产生的问题}
+      每个 Process 都要自己管理？谁负责启动？谁负责重启？谁负责组织依赖关系？
+    \end{alertblock}
+    \begin{block}{答案不是手写一堆管理代码}
       \begin{itemize}
-        \item Observer 可以直接看到 Erlang process
-        \item process 有 mailbox、state、stack trace
-        \item worker process 背后还可能关联 ETS / DETS
+        \item \code{application} 负责组织系统
+        \item \code{supervisor} 负责管理进程生命周期
+        \item \code{worker} 真正执行业务
       \end{itemize}
     \end{block}
     \column{0.46\textwidth}
-    \begin{exampleblock}{现在正式开始}
-      接下来启动一个完整 OTP demo application，正式介绍 Observer 的启动方式，以及它如何应用到 application / supervisor / worker process 的观察上。
+    \begin{exampleblock}{这时再引出 OTP}
+      \centering
+      \Large
+      Process 是并发基本单位。\par
+      OTP 解决的是：\par
+      \good{大量 Process 如何组织和容错}。
     \end{exampleblock}
   \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{启动 demo 应用和 Observer}
+\begin{frame}[fragile]{启动 demo：用 Observer 观察一个 OTP 应用}
   \begin{columns}[T,onlytextwidth]
     \column{0.50\textwidth}
     \begin{block}{启动 demo 节点}
@@ -277,7 +318,7 @@ cd bilibili_erlang/observer/full_otp_app
 rebar3 shell --sname application_demo
 \end{lstlisting}
     \end{block}
-    \begin{block}{启动 Observer}
+    \begin{block}{启动应用和 Observer}
 \begin{lstlisting}
 application:ensure_all_started(full_otp_app).
 observer:start().
@@ -290,15 +331,16 @@ observer:start().
 \end{frame}
 
 % ── Applications as focus ──────────────────────────────────────────
-\begin{frame}{本讲重点：Applications 页面}
+\begin{frame}{正式进入 OTP：从 Applications 看 Process 如何被组织}
   \begin{columns}[T,onlytextwidth]
     \column{0.48\textwidth}
-    \begin{block}{为什么重点讲 Applications？}
+    \begin{block}{为什么现在看 Applications？}
       \begin{itemize}
-        \item OTP 是从 application 组织系统
+        \item 刚才的问题是：大量 process 怎么管理？
+        \item OTP 从 application 组织系统
         \item application 下面是 supervisor tree
         \item supervisor 管理 worker process
-        \item gen\_server / gen\_statem 都落到 process
+        \item gen\_server / gen\_statem 最终都落到 process
       \end{itemize}
     \end{block}
     \column{0.48\textwidth}
@@ -342,15 +384,15 @@ observer:start().
   \good{这不是为了业务复杂度，而是为了把常见 OTP 运行时结构一次性展示出来。}
 \end{frame}
 
-\begin{frame}{Application 层级：从产品视角到 BEAM process}
+\begin{frame}{OTP 层级：从 Application 组织到 BEAM Process}
   \centering
   \input{tikz/application-hierarchy-body.tex}
 
   \vspace{0.2cm}
-  \good{Observer 的 Applications 页面，就是把这张图变成真实运行中的可点击对象。}
+  \good{OTP 的意义，是把大量 Process 组织成可以启动、监督、重启的系统结构。}
 \end{frame}
 
-\imgslide{Applications：从 application 开始观察 OTP}{Applications.png}{%
+\imgslide{Applications：看 OTP 如何组织运行中的 Process}{Applications.png}{%
   \begin{block}{左侧 application 列表}
     \begin{itemize}
       \item 系统 application：\code{kernel}、\code{stdlib}、\code{ssl}
@@ -359,7 +401,7 @@ observer:start().
     \end{itemize}
   \end{block}
   \begin{exampleblock}{本页要强调}
-    讲 OTP 不要先从函数开始，而是先从 application 这个运行时入口开始。
+    Applications 页面不是起点，而是答案：它告诉我们大量 Process 在 OTP 里如何被组织成一个系统。
   \end{exampleblock}
 }
 
@@ -372,8 +414,8 @@ observer:start().
       \item 连接到 \code{.app.src} 配置
     \end{itemize}
   \end{block}
-  \begin{alertblock}{核心讲法}
-    先让观众在 UI 中看到 \code{full\_otp\_app}，再回到源码解释 application。
+  \begin{alertblock}{这一页的意义}
+    \code{full\_otp\_app} 不是一个静态配置名，而是运行中的 OTP application，可以继续展开到 supervisor 和 worker process。
   \end{alertblock}
 }
 
@@ -405,8 +447,8 @@ observer:start().
   \end{alertblock}
 }
 
-% ── Process deep dive ──────────────────────────────────────────────
-\begin{frame}{进程相关部分：从 worker process 继续展开}
+% ── Worker process deep dive ───────────────────────────────────────
+\begin{frame}{从 OTP worker 回到具体 Process}
   \begin{columns}[T,onlytextwidth]
     \column{0.48\textwidth}
     \begin{block}{进程内部}
@@ -428,7 +470,7 @@ observer:start().
   \end{columns}
   \vspace{0.2cm}
   \centering
-  \good{Applications 追到 worker process 后，不只看进程身份，还要继续看进程状态、消息和它背后的表数据。}
+  \good{前面先认识了 Process；现在从 Applications 追到 worker，是把 OTP 结构重新落回具体 Process。}
 \end{frame}
 
 \imgslide{gen\_server：查看 kv\_server 进程}{Applications_app_gen_server_process.png}{%
@@ -471,20 +513,20 @@ observer:start().
   \end{alertblock}
 }
 
-\begin{frame}{小结：Observer UI 的真正意义}
-  \begin{block}{它让 Erlang/OTP 的核心抽象可见}
+\begin{frame}{小结：这条故事线是什么？}
+  \begin{block}{从 Process 到 OTP，再回到 Observer}
     \begin{itemize}
-      \item application 不只是配置名，可以在 UI 中选中
-      \item supervisor 不只是策略，它本身是 process
-      \item gen\_server / gen\_statem 不只是 callback，它们是有状态、有 mailbox 的进程
-      \item Messages / Dictionary / Stack Trace 是继续深入进程现场
-      \item Table Viewer 能接着观察 worker process 背后的 ETS / DETS 数据
+      \item Erlang Process 是 BEAM 的轻量级并发实体，不是 OS process
+      \item Observer 能直接看到 process 的运行现场
+      \item 大量 process 需要被组织和管理，于是引出 OTP
+      \item application / supervisor / worker 把 process 组织成系统
+      \item Applications 页面把这个 OTP 结构变成运行时可见对象
     \end{itemize}
   \end{block}
   \begin{exampleblock}{最重要的一句话}
     \centering
     \Large
-    Observer 把 OTP 从“代码里的抽象”变成了\good{运行时的一览无余}。
+    Observer 把 Erlang Process 和 OTP 结构，变成了\good{运行时可见的系统}。
   \end{exampleblock}
 \end{frame}
 
