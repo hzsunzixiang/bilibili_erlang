@@ -476,44 +476,6 @@ supervisor:which_children(data_store_sup).
   \end{exampleblock}
 \end{frame}
 
-\begin{frame}[fragile]{远程节点参数：node name，不是 OS PID}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.50\textwidth}
-    \begin{block}{获取当前节点名和 cookie}
-\begin{lstlisting}
-node().
-erlang:get_cookie().
-\end{lstlisting}
-    \end{block}
-    \column{0.46\textwidth}
-    \begin{block}{脚本远程采集形式}
-\begin{lstlisting}[language=bash]
-scripts/observer_cli_snapshot.escript application_demo@HOST COOKIE
-\end{lstlisting}
-    \end{block}
-  \end{columns}
-  \vspace{0.25cm}
-  \begin{alertblock}{关键点}
-    参数是 Erlang node name 和 cookie，不是 BEAM 的操作系统进程 PID。
-  \end{alertblock}
-\end{frame}
-
-% ── Teaching flow ──────────────────────────────────────────────────
-\begin{frame}{课堂演示顺序}
-  \small
-  \begin{enumerate}
-    \item 回顾 UI 版结论：Process 是 BEAM 运行时观察的核心对象
-    \item 启动 \code{full\_otp\_app}，执行 \code{observer\_cli:start().}
-    \item 看 Home 页面，说明这是终端版运行时仪表盘
-    \item 按 \code{A} 看 application 聚合指标，并说明它不展开 supervisor tree
-    \item 用 \code{supervisor:which\_children/1} 补充查看监督树
-    \item 回到 process 列表，按 memory / reductions / message queue 排序
-    \item 输入进程行号查看进程详情，把指标落回 process
-    \item 按 \code{E} 查看 ETS 页面，从 table owner 回到 process
-    \item 最后引出 Erlang runtime introspection API 和 snapshot 脚本
-  \end{enumerate}
-\end{frame}
-
 \begin{frame}{什么时候用 observer\_cli？}
   \begin{columns}[T,onlytextwidth]
     \column{0.48\textwidth}
