@@ -351,19 +351,20 @@ supervisor:which_children(data_store_sup).
 % ── Processes ──────────────────────────────────────────────────────
 \begin{frame}{Processes：按指标找到具体 Erlang Process}
   \centering
-  \includegraphics[width=0.94\linewidth,height=0.49\textheight,keepaspectratio]{observer_cli_processes.png}
-  \vspace{0.18cm}
+  \includegraphics[width=0.98\linewidth,height=0.58\textheight,keepaspectratio]{observer_cli_processes.png}
+  \vspace{0.08cm}
   \begin{columns}[T,onlytextwidth]
     \column{0.58\textwidth}
     \begin{block}{进程列表的核心用途}
+      {\scriptsize
       \begin{itemize}
         \item 按 \code{memory} / \code{reductions} / \code{MsgQ} 排序缩小范围
-        \item 输入进程行号进入 process 详情
-      \end{itemize}
+        \item 输入行号进入 process 详情
+      \end{itemize}}
     \end{block}
     \column{0.38\textwidth}
     \begin{alertblock}{回到 UI 版的主线}
-      这里看到的不是 OS process，而是 BEAM 管理的 Erlang process。
+      {\scriptsize 这里不是 OS process，而是 BEAM 管理的 Erlang process。}
     \end{alertblock}
   \end{columns}
 \end{frame}
