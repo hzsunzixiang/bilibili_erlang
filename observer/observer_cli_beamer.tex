@@ -471,9 +471,6 @@ supervisor:which_children(data_store_sup).
       \item \code{ets:all/0} / \code{ets:info/1}
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{demo 中的辅助脚本}
-    \code{full\_otp\_app/scripts/observer\_cli\_snapshot.escript} 直接调用这些 API 采集一次快照。
-  \end{exampleblock}
 \end{frame}
 
 \begin{frame}{什么时候用 observer\_cli？}
@@ -510,12 +507,13 @@ supervisor:which_children(data_store_sup).
       \item 背后依赖 Erlang runtime introspection API
     \end{itemize}
   \end{block}
-  \begin{exampleblock}{和 Observer UI 配合}
+  \begin{exampleblock}{回到 OTP 主线}
     \centering
     \Large
-    UI 版讲清楚\good{系统结构}。\par\vspace{0.2cm}
-    CLI 版训练\good{终端排查路径}。\par\vspace{0.2cm}
-    这块可视化很有用，建议大家\good{亲自跑一次 demo}。
+    Observer 不是终点，\par
+    它是理解 \good{OTP 运行结构} 的入口。\par\vspace{0.2cm}
+    下一集开始讲 \good{application}，\par
+    再逐步展开 \good{gen\_server} 和 \good{gen\_statem}。
   \end{exampleblock}
 \end{frame}
 
