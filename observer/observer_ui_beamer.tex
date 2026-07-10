@@ -122,6 +122,7 @@
     \begin{block}{为什么它重要？}
       \begin{itemize}
         \item Erlang 能支撑大量连接，核心不是靠大量 OS thread
+        \item Erlang 是面向进程编程：连接、会话、任务、状态都可以建模成 process
         \item BEAM VM 内部运行的是大量 Erlang process
         \item 它们是 Erlang 并发模型的基本单位
       \end{itemize}
@@ -161,7 +162,7 @@
   \end{tikzpicture}
 
   \vspace{0.25cm}
-  \good{一个 Erlang VM 内部，可以同时运行大量 Erlang Process。}
+  \good{因为 Erlang 鼓励用 Process 建模系统，一个 VM 内部自然可能出现大量 Erlang Process。}
 \end{frame}
 
 \begin{frame}{它叫 Process，但不是操作系统进程}
@@ -288,6 +289,9 @@
 \begin{frame}{如果有几十万个 Process，怎么办？}
   \begin{columns}[T,onlytextwidth]
     \column{0.50\textwidth}
+    \begin{alertblock}{为什么会有这么多 Process？}
+      Erlang 是面向进程编程：一个连接、一个会话、一个 worker、一个状态持有者，都可以是独立 process。
+    \end{alertblock}
     \begin{alertblock}{自然产生的问题}
       每个 Process 都要自己管理？谁负责启动？谁负责重启？谁负责组织依赖关系？
     \end{alertblock}
