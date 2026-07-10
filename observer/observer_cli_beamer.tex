@@ -369,35 +369,6 @@ supervisor:which_children(data_store_sup).
   \end{columns}
 \end{frame}
 
-\begin{frame}{教学时重点找这些 demo 进程}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.48\textwidth}
-    \begin{block}{supervisor process}
-      \begin{itemize}
-        \item \code{full\_otp\_app\_sup}
-        \item \code{data\_store\_sup}
-      \end{itemize}
-    \end{block}
-    \begin{block}{gen\_server process}
-      \begin{itemize}
-        \item \code{kv\_server}
-        \item \code{data\_store}
-        \item \code{data\_cache}
-      \end{itemize}
-    \end{block}
-    \column{0.48\textwidth}
-    \begin{exampleblock}{其他 behaviour}
-      \begin{itemize}
-        \item \code{event\_bus}
-        \item \code{traffic\_light}
-      \end{itemize}
-    \end{exampleblock}
-    \begin{alertblock}{详情页重点}
-      registered name、links、monitors、message queue、dictionary、current stack、state。
-    \end{alertblock}
-  \end{columns}
-\end{frame}
-
 \begin{frame}{从列表进入详情：把指标落回运行现场}
   \begin{columns}[T,onlytextwidth]
     \column{0.50\textwidth}
