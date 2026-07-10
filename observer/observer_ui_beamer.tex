@@ -108,16 +108,16 @@
       -- ([yshift=-1.15cm, xshift=4.8cm]current page.center);
     \node[anchor=south, font=\scriptsize, text=dark!45]
       at ([yshift=0.4cm]current page.south)
-      {故事线：Process \enspace|\enspace Observer \enspace|\enspace 为什么需要 OTP \enspace|\enspace Applications};
+      {理解路径：Process \enspace|\enspace Observer \enspace|\enspace 为什么需要 OTP \enspace|\enspace Applications};
   \end{tikzpicture}
 \end{frame}
 
 % ── Process first ──────────────────────────────────────────────────
-\begin{frame}{今天先不讲 OTP}
+\begin{frame}{进入 OTP 之前，先看 Erlang Process}
   \begin{columns}[T,onlytextwidth]
     \column{0.52\textwidth}
-    \begin{alertblock}{先认识 Erlang 最核心的抽象}
-      Erlang 最大的特色，不是语法，不是模式匹配，而是 \keypoint{Erlang Process}。
+    \begin{alertblock}{先从可视化的运行时对象开始}
+      要理解 Observer 如何可视化 OTP，先认识 Erlang 最核心的抽象：\keypoint{Erlang Process}。
     \end{alertblock}
     \begin{block}{为什么它重要？}
       \begin{itemize}
@@ -550,7 +550,7 @@ observer:start().
   \end{alertblock}
 }
 
-\begin{frame}{小结：这条故事线是什么？}
+\begin{frame}{小结：这条理解路径是什么？}
   \begin{block}{从 Process 到 OTP，再回到 Observer}
     \begin{itemize}
       \item Erlang Process 是 BEAM 的轻量级并发实体，不是 OS process
