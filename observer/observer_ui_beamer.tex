@@ -303,12 +303,12 @@
       \end{itemize}
     \end{block}
     \column{0.46\textwidth}
-    \begin{exampleblock}{这时再引出 OTP}
+    \begin{exampleblock}{OTP 自然诞生}
       \centering
       \Large
       Process 是并发基本单位。\par
-      OTP 解决的是：\par
-      \good{大量 Process 如何组织和容错}。
+      当大量 Process 需要组织和容错，\par
+      \good{OTP 就成为自然答案}。
     \end{exampleblock}
   \end{columns}
 \end{frame}
@@ -555,7 +555,7 @@ observer:start().
     \begin{itemize}
       \item Erlang Process 是 BEAM 的轻量级并发实体，不是 OS process
       \item Observer 能直接看到 process 的运行现场
-      \item 大量 process 需要被组织和管理，于是引出 OTP
+      \item 大量 process 需要被组织和管理，OTP 自然成为系统化答案
       \item application / supervisor / worker 把 process 组织成系统
       \item Applications 页面把这个 OTP 结构变成运行时可见对象
     \end{itemize}
