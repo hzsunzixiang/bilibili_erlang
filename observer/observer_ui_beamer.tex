@@ -309,6 +309,38 @@
   \end{columns}
 \end{frame}
 
+\begin{frame}{Let it crash：不是放任崩溃，而是有人接住}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+    \begin{block}{Application 的角色}
+      \begin{itemize}
+        \item 把一组进程组织成一个可启动的系统
+        \item 定义顶层 supervisor 入口
+        \item 让系统有清晰的运行边界
+      \end{itemize}
+    \end{block}
+    \begin{block}{Supervisor 的角色}
+      \begin{itemize}
+        \item 监控 worker process 是否退出
+        \item 按策略决定重启谁
+        \item 把局部失败限制在可恢复范围内
+      \end{itemize}
+    \end{block}
+    \column{0.46\textwidth}
+    \begin{exampleblock}{核心哲学}
+      \centering
+      \Large
+      Process 负责隔离失败。\par\vspace{0.2cm}
+      Supervisor 负责恢复失败。\par\vspace{0.2cm}
+      Application 负责组织系统。\par\vspace{0.35cm}
+      \good{这才是 let it crash 的工程含义。}
+    \end{exampleblock}
+  \end{columns}
+  \vspace{0.2cm}
+  \centering
+  \warn{后面讲 OTP 时，会展开 supervisor 如何发现退出、选择重启策略、控制重启强度。}
+\end{frame}
+
 \begin{frame}[fragile]{启动 demo：用 Observer 观察一个 OTP 应用}
   \begin{columns}[T,onlytextwidth]
     \column{0.50\textwidth}
@@ -337,9 +369,10 @@ observer:start().
     \begin{block}{为什么现在看 Applications？}
       \begin{itemize}
         \item 刚才的问题是：大量 process 怎么管理？
+        \item 更进一步：process 崩溃后谁来恢复？
         \item OTP 从 application 组织系统
         \item application 下面是 supervisor tree
-        \item supervisor 管理 worker process
+        \item supervisor 管理 worker process 的生命周期
         \item gen\_server / gen\_statem 最终都落到 process
       \end{itemize}
     \end{block}
