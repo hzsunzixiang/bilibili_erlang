@@ -222,19 +222,37 @@ observer_cli:start().
   \end{columns}
 \end{frame}
 
-\imgslide{Home：终端版的运行时仪表盘}{observer_cli_start.png}{%
-  \begin{block}{先看节点级指标}
-    \begin{itemize}
-      \item Process count / process limit
-      \item Memory / binary / ETS memory
-      \item Scheduler / run queue
-      \item Ports / atoms / uptime
-    \end{itemize}
-  \end{block}
-  \begin{exampleblock}{常用入口}
-    \code{H} 回 Home，\code{A} 看 application，\code{E} 看 ETS，\code{S} 看 system，\code{q} 退出。
-  \end{exampleblock}
-}
+\begin{frame}[fragile]{Home：终端版的运行时仪表盘}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.58\textwidth}
+    \begin{block}{从一条通用命令进入}
+\begin{lstlisting}
+(node@host)1> observer_cli:start().
+\end{lstlisting}
+    \end{block}
+    \begin{exampleblock}{Home 页面可以读成四组运行时信号}
+      {\scriptsize
+      \begin{tabular}{@{}p{0.29\linewidth}p{0.63\linewidth}@{}}
+        \textbf{Process} & process count、process limit、run queue \\
+        \textbf{Memory} & total、process、binary、ETS memory \\
+        \textbf{Scheduler} & scheduler utilization、reductions、CPU pressure \\
+        \textbf{Runtime} & uptime、ports、atoms、network / IO overview \\
+      \end{tabular}}
+    \end{exampleblock}
+    \column{0.38\textwidth}
+    \begin{block}{先看节点级指标}
+      \begin{itemize}
+        \item Process count / process limit
+        \item Memory / binary / ETS memory
+        \item Scheduler / run queue
+        \item Ports / atoms / uptime
+      \end{itemize}
+    \end{block}
+    \begin{exampleblock}{常用入口}
+      \code{H} 回 Home，\code{A} 看 application，\code{E} 看 ETS，\code{S} 看 system，\code{q} 退出。
+    \end{exampleblock}
+  \end{columns}
+\end{frame}
 
 \begin{frame}{Home 页面不是截图目录，而是排查入口}
   \begin{columns}[T,onlytextwidth]
