@@ -453,19 +453,13 @@ Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
   \end{columns}
 \end{frame}
 
-\wideimgslide{第六张图：Observer 把启动结果画成 supervision tree}{06-observer-app.png}{
-  \begin{minipage}{0.92\linewidth}
-    \begin{columns}[T,onlytextwidth]
-      \column{0.45\textwidth}
-      \begin{block}{左侧 application 列表}
-        \code{full\_otp\_app}、\code{inets}、\code{kernel}、\code{ssl} 都是当前节点中的 application。
-      \end{block}
-      \column{0.51\textwidth}
-      \begin{exampleblock}{右侧运行时结构}
-        \code{full\_otp\_app\_sup} 下挂着 \code{kv\_server}、\code{event\_bus}、\code{traffic\_light} 和 \code{data\_store\_sup}。
-      \end{exampleblock}
-    \end{columns}
-  \end{minipage}
+\imgslide{第六张图：Observer 把启动结果画成 supervision tree}{06-observer-app.png}{
+  \begin{block}{左侧 application 列表}
+    \code{full\_otp\_app}、\code{inets}、\code{kernel}、\code{ssl} 都是当前节点中的 application。
+  \end{block}
+  \begin{exampleblock}{右侧运行时结构}
+    \code{full\_otp\_app\_sup} 下挂着 \code{kv\_server}、\code{event\_bus}、\code{traffic\_light} 和 \code{data\_store\_sup}。
+  \end{exampleblock}
 }
 
 \begin{frame}{把前六张图串起来}
