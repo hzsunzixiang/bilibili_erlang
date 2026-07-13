@@ -320,36 +320,60 @@ rebar.config
   \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{compile 输出解析：依赖下载之后生成 application 描述文件}
-  \begin{block}{rebar3 compile 终端输出}
+\begin{frame}[fragile]{compile 之后再看目录：app.src 和构建产物出现了}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.58\textwidth}
+    \begin{block}{编译后的目录结构}
 \begin{lstlisting}[
-  basicstyle=\ttfamily\scriptsize\color{terminalfg},
+  basicstyle=\ttfamily\tiny\color{terminalfg},
   backgroundcolor=\color{terminalbg},
   frame=single,
   rulecolor=\color{terminalborder},
-  framesep=2.5mm,
+  framesep=2.0mm,
   keepspaces=true,
   columns=fullflexible,
   escapeinside={(*@}{@*)},
   language={}
 ]
-[ericksun@ERICKSUN-MC1:full_otp_app] (*@\textcolor{warning}{(main)}@*) (*@\textcolor{accent}{\$}@*) rebar3 compile
-(*@\textcolor{nodegreen}{===> Verifying dependencies...}@*)
-(*@\textcolor{nodegreen}{===> Fetching observer\_cli v1.8.8}@*)
-(*@\textcolor{nodegreen}{===> Fetching recon v2.5.6}@*)
-(*@\textcolor{nodegreen}{===> Analyzing applications...}@*)
-(*@\textcolor{nodegreen}{===> Compiling recon}@*)
-(*@\textcolor{nodegreen}{===> Compiling observer\_cli}@*)
-../../../../../../opt/homebrew/Cellar/erlang@26/26.2.5.16/...
+[ericksun@ERICKSUN-MC1:full_otp_app] (*@\textcolor{warning}{(main)}@*) (*@\textcolor{accent}{\$}@*) tree -L 2
+(*@\textcolor{erlblue}{.}@*)
+|-- README.txt
+|-- (*@\textcolor{erlblue}{\_build}@*)
+|   `-- (*@\textcolor{erlblue}{default}@*)
+|-- (*@\textcolor{erlblue}{data}@*)
+|   `-- full_otp_data_store.dets
+|-- rebar.config
+|-- rebar.lock
+`-- (*@\textcolor{erlblue}{src}@*)
+    |-- data_cache.erl
+    |-- data_store.erl
+    |-- data_store_sup.erl
+    |-- demo.erl
+    |-- event_bus.erl
+    |-- event_bus_handler.erl
+    |-- full_otp_app.app.src
+    |-- full_otp_app_app.erl
+    |-- full_otp_app_sup.erl
+    |-- kv_server.erl
+    `-- traffic_light.erl
 
-(*@\textcolor{nodegreen}{===> Analyzing applications...}@*)
-(*@\textcolor{nodegreen}{===> Compiling full\_otp\_app}@*)
+5 directories, 15 files
 \end{lstlisting}
-  \end{block}
-
-  \vspace{0.12cm}
-  \footnotesize
-  \good{这一页只看输出本身：rebar3 先下载依赖，再分析 application，最后编译当前工程；下一页再打开生成出来的 \code{full\_otp\_app.app.src}。}
+    \end{block}
+    \column{0.38\textwidth}
+    \footnotesize
+    \begin{block}{这一页看变化}
+      \begin{itemize}
+        \item \code{\_build/default} 是 rebar3 编译后产生的构建目录。
+        \item \code{rebar.lock} 记录依赖解析结果，让后续构建可重复。
+        \item \code{src/full\_otp\_app.app.src} 现在出现了，下一页就从它进入 OTP application 的入口。
+      \end{itemize}
+    \end{block}
+    \vspace{0.15cm}
+    \begin{exampleblock}{自然过渡}
+      目录已经从“源码骨架”变成“可被工具识别的 application 工程”，所以接下来再打开 \code{full\_otp\_app.app.src}。
+    \end{exampleblock}
+  \end{columns}
 \end{frame}
 
 \begin{frame}[fragile]{再看 OTP 入口：full\_otp\_app.app.src}
@@ -438,7 +462,7 @@ rebar.config
   \end{columns}
   \vspace{0.3cm}
   \centering
-  \Large \keypoint{本集先不背字段清单，只用这些字段串起启动链路。}
+  \Large \keypoint{这些字段不用记忆，全部是由构建工具自动生成}
 \end{frame}
 
 \begin{frame}[fragile]{\code{mod} 字段把配置交给 callback module}
