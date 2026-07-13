@@ -196,14 +196,15 @@
   rulecolor=\color{terminalborder},
   framesep=2.2mm,
   keepspaces=true,
-  columns=fullflexible
+  columns=fullflexible,
+  escapeinside={(*@}{@*)}
 ]
 [ericksun@ERICKSUN-MC1:full_otp_app] (main) $ tree
 .
 |-- README.txt
-|-- data
+|-- (*@\textcolor{erlblue}{data}@*)
 |-- rebar.config
-`-- src
+`-- (*@\textcolor{erlblue}{src}@*)
     |-- data_cache.erl
     |-- data_store.erl
     |-- data_store_sup.erl
