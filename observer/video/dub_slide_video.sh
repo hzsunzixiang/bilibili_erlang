@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORKSPACE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+WORKSPACE_DIR="${SCRIPT_DIR}"
 DEFAULT_CONVERTER_DIR="${SCRIPT_DIR}/text-to-ppt-to-video"
 DEFAULT_DECK_DIR="${SCRIPT_DIR}/slides_01_observer_ui"
 DEFAULT_PYTHON_BIN="/opt/homebrew/Caskroom/miniconda/base/envs/d2l_3.13/bin/python"
@@ -11,7 +11,7 @@ CONVERTER_DIR="${DEFAULT_CONVERTER_DIR}"
 DECK_DIR="${DEFAULT_DECK_DIR}"
 PYTHON_BIN="${DEFAULT_PYTHON_BIN}"
 MODE="edge"
-EDGE_VOICE="zh-CN-YunyangNeural"
+EDGE_VOICE="zh-CN-YunjianNeural"
 EDGE_RATE="+0%"
 QWEN_VOICE="Ethan"
 SPEED="1.3"
@@ -55,7 +55,7 @@ Examples:
   # Specify voice and speed
   bash video/dub_slide_video.sh \
     --deck-dir video/slides_02_observer_cli \
-    --voice zh-CN-YunyangNeural \
+    --voice zh-CN-YunjianNeural \
     --speed 1.3
 
   # Quick preview (first 2 slides)

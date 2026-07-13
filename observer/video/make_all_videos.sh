@@ -11,7 +11,7 @@ DECKS=(
   slides_02_observer_cli
 )
 
-VOICE="${VOICE:-zh-CN-YunyangNeural}"
+VOICE="${VOICE:-zh-CN-YunjianNeural}"
 SPEED="${SPEED:-1.3}"
 MODE="${MODE:-edge}"
 
