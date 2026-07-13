@@ -14,6 +14,7 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{listings}
+\usepackage{alltt}
 \usepackage{xcolor}
 
 \graphicspath{{images/}}
@@ -29,6 +30,9 @@
 \definecolor{erlred}{HTML}{D63031}
 \definecolor{erlblue}{HTML}{0984E3}
 \definecolor{nodegreen}{HTML}{00A884}
+\definecolor{terminalfg}{HTML}{102A3A}
+\definecolor{terminalbg}{HTML}{FBFBFE}
+\definecolor{terminalborder}{HTML}{DFE6E9}
 
 % ── Beamer theme ───────────────────────────────────────────────────
 \setbeamercolor{normal text}{fg=dark,bg=white}
@@ -185,7 +189,15 @@
   \begin{columns}[T,onlytextwidth]
     \column{0.54\textwidth}
     \begin{block}{截图文字化：\code{tree}}
-\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+\begin{lstlisting}[
+  basicstyle=\ttfamily\tiny\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=2.2mm,
+  keepspaces=true,
+  columns=fullflexible
+]
 [ericksun@ERICKSUN-MC1:full_otp_app] (main) $ tree
 .
 |-- README.txt
