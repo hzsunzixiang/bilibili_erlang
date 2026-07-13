@@ -1,45 +1,49 @@
-\frametitle{第十张图：application 模块的入口很集中}
+\frametitle{工具生成的工程骨架，已经把 OTP 入口放好了}
 \begin{columns}[T,onlytextwidth]
     \column{0.54\textwidth}
-    \begin{block}{shell 中输入 application: + Tab}
+    \begin{block}{目录结构}
 \begin{lstlisting}[
-  basicstyle=\ttfamily\scriptsize\color{terminalfg},
+  basicstyle=\ttfamily\tiny\color{terminalfg},
   backgroundcolor=\color{terminalbg},
   frame=single,
   rulecolor=\color{terminalborder},
   framesep=2.2mm,
   keepspaces=true,
   columns=fullflexible,
-  escapeinside={(*@}{@*)},
-  language={}
+  escapeinside={(*@}{@*)}
 ]
-(app_demo@ERICKSUN-MC1)6> (*@\textcolor{primary}{application:}@*)
-behaviour_info/1     ensure_all_started/1,2
-ensure_started/1     get_all_env/1
-get_all_key/1        get_application/1,2
-get_env/1,2,3        get_key/2,3
-get_supervisor/1     info/1
-load/1               loaded_applications/0
-permit/2             set_env/3,4
-(*@\textcolor{accent}{start/1,2}@*)          start_boot/1,2
-start_type/0         (*@\textcolor{accent}{stop/1}@*)
-takeover/2           unload/1
-unset_env/2,3        (*@\textcolor{accent}{which\_applications/0}@*)
+[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ tree
+.
+|-- README.txt
+|-- (*@\textcolor{erlblue}{data}@*)
+|-- rebar.config
+`-- (*@\textcolor{erlblue}{src}@*)
+    |-- data_cache.erl
+    |-- data_store.erl
+    |-- data_store_sup.erl
+    |-- demo.erl
+    |-- event_bus.erl
+    |-- event_bus_handler.erl
+    |-- (*@\textcolor{warning}{full_otp_app.app.src}@*)
+    |-- (*@\textcolor{accent}{full_otp_app_app.erl}@*)
+    |-- (*@\textcolor{accent}{full_otp_app_sup.erl}@*)
+    |-- kv_server.erl
+    `-- traffic_light.erl
+
+3 directories, 13 files
 \end{lstlisting}
     \end{block}
     \column{0.42\textwidth}
     \footnotesize
-    \begin{exampleblock}{入门阶段最常用}
+    \begin{block}{从目录读出三层入口}
       \begin{itemize}
-        \item \code{start/1}
-        \item \code{stop/1}
-        \item \code{ensure\_all\_started/1}
-        \item \code{which\_applications/0}
-        \item \code{get\_env/2} / \code{set\_env/3}
+        \item \code{full\_otp\_app.app.src}: 声明 application 是什么、依赖什么、从哪里启动。
+        \item \code{full\_otp\_app\_app.erl}: application callback module，承接 \code{mod} 字段。
+        \item \code{full\_otp\_app\_sup.erl}: top supervisor，启动后真正管理长期进程。
       \end{itemize}
+    \end{block}
+    \vspace{0.15cm}
+    \begin{exampleblock}{连贯理解}
+      目录不是孤立截图，它是在告诉我们：工具已经把 OTP application 的标准入口组织好了。
     \end{exampleblock}
-    \vspace{0.2cm}
-    \begin{alertblock}{为什么说使用简单}
-      用户入口集中在配置文件和少量 API；复杂实现被 OTP 和工具链包装了。
-    \end{alertblock}
   \end{columns}
