@@ -9,7 +9,7 @@ presentation.pdf: presentation.tex
 
 clean:
 	latexmk -C 2>/dev/null || true
-	rm -f presentation.nav presentation.snm
+	rm -f presentation.nav presentation.snm presentation.vrb
 
 distclean: clean
 	rm -f presentation.pdf
