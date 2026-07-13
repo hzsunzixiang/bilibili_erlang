@@ -320,48 +320,36 @@ rebar.config
   \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{compile 输出解析：rebar3 正在把工程变成 application}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.58\textwidth}
-    \begin{block}{终端输出}
+\begin{frame}[fragile]{compile 输出解析：依赖下载之后生成 application 描述文件}
+  \begin{block}{rebar3 compile 终端输出}
 \begin{lstlisting}[
-  basicstyle=\ttfamily\tiny\color{terminalfg},
+  basicstyle=\ttfamily\scriptsize\color{terminalfg},
   backgroundcolor=\color{terminalbg},
   frame=single,
   rulecolor=\color{terminalborder},
-  framesep=2.2mm,
+  framesep=2.5mm,
   keepspaces=true,
   columns=fullflexible,
   escapeinside={(*@}{@*)},
   language={}
 ]
-[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{rebar3 compile}@*)
+[ericksun@ERICKSUN-MC1:full_otp_app] (*@\textcolor{warning}{(main)}@*) (*@\textcolor{accent}{\$}@*) rebar3 compile
 (*@\textcolor{nodegreen}{===> Verifying dependencies...}@*)
 (*@\textcolor{nodegreen}{===> Fetching observer\_cli v1.8.8}@*)
 (*@\textcolor{nodegreen}{===> Fetching recon v2.5.6}@*)
 (*@\textcolor{nodegreen}{===> Analyzing applications...}@*)
 (*@\textcolor{nodegreen}{===> Compiling recon}@*)
 (*@\textcolor{nodegreen}{===> Compiling observer\_cli}@*)
-../../../../../../opt/homebrew/Cellar/erlang@26/...
+../../../../../../opt/homebrew/Cellar/erlang@26/26.2.5.16/...
 
 (*@\textcolor{nodegreen}{===> Analyzing applications...}@*)
 (*@\textcolor{nodegreen}{===> Compiling full\_otp\_app}@*)
 \end{lstlisting}
-    \end{block}
-    \column{0.38\textwidth}
-    \footnotesize
-    \begin{block}{这段输出要读出三件事}
-      \begin{itemize}
-        \item 先验证依赖，再按 \code{deps} 下载 \code{observer\_cli} 和 \code{recon}。
-        \item 依赖不是普通代码文件，而是一个个 application，所以会出现 \code{Analyzing applications}。
-        \item 最后编译当前工程 \code{full\_otp\_app}，随后生成可描述 application 的 \code{app.src} 文件。
-      \end{itemize}
-    \end{block}
-    \vspace{0.15cm}
-    \begin{exampleblock}{自然过渡}
-      到这里再打开 \code{full\_otp\_app.app.src}，观众看到的就不是孤立配置，而是编译流程产出的 OTP application 入口。
-    \end{exampleblock}
-  \end{columns}
+  \end{block}
+
+  \vspace{0.12cm}
+  \footnotesize
+  \good{这一页只看输出本身：rebar3 先下载依赖，再分析 application，最后编译当前工程；下一页再打开生成出来的 \code{full\_otp\_app.app.src}。}
 \end{frame}
 
 \begin{frame}[fragile]{再看 OTP 入口：full\_otp\_app.app.src}
