@@ -1,27 +1,44 @@
-\frametitle{callback module 通常只做一件事}
+\frametitle{第十张图：application 模块的入口很集中}
 \begin{columns}[T,onlytextwidth]
-    \column{0.52\textwidth}
-    \begin{block}{application callback}
-\begin{lstlisting}
--module(full_otp_app_app).
--behaviour(application).
-
--export([start/2, stop/1]).
-
-start(_StartType, _StartArgs) ->
-    full_otp_app_sup:start_link().
-
-stop(_State) ->
-    ok.
+    \column{0.54\textwidth}
+    \begin{block}{shell 中输入 application: + Tab}
+\begin{lstlisting}[
+  basicstyle=\ttfamily\scriptsize\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=2.2mm,
+  keepspaces=true,
+  columns=fullflexible,
+  escapeinside={(*@}{@*)},
+  language={}
+]
+(app_demo@ERICKSUN-MC1)6> (*@\textcolor{primary}{application:}@*)
+behaviour_info/1     ensure_all_started/1,2
+ensure_started/1     get_all_env/1
+get_all_key/1        get_application/1,2
+get_env/1,2,3        get_key/2,3
+get_supervisor/1     info/1
+load/1               loaded_applications/0
+permit/2             set_env/3,4
+(*@\textcolor{accent}{start/1,2}@*)          start_boot/1,2
+start_type/0         (*@\textcolor{accent}{stop/1}@*)
+takeover/2           unload/1
+unset_env/2,3        (*@\textcolor{accent}{which\_applications/0}@*)
 \end{lstlisting}
     \end{block}
-    \column{0.44\textwidth}
-    \begin{exampleblock}{分工非常清晰}
+    \column{0.42\textwidth}
+    \begin{exampleblock}{入门阶段最常用}
       \begin{itemize}
-        \item application callback 不写业务逻辑
-        \item 它只把系统交给 top supervisor
-        \item 之后长期运行的是 supervisor 和 worker
-        \item 所以 application 是启动边界，不是 main 函数
+        \item \code{start/1}
+        \item \code{stop/1}
+        \item \code{ensure\_all\_started/1}
+        \item \code{which\_applications/0}
+        \item \code{get\_env/2} / \code{set\_env/3}
       \end{itemize}
     \end{exampleblock}
+    \vspace{0.2cm}
+    \begin{alertblock}{为什么说使用简单}
+      用户入口集中在配置文件和少量 API；复杂实现被 OTP 和工具链包装了。
+    \end{alertblock}
   \end{columns}

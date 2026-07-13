@@ -232,23 +232,70 @@
   \end{columns}
 \end{frame}
 
-\wideimgslide{第二张图：rebar3 把启动入口包装在配置里}{02-rebar3-config-dependence.png}{
-  \begin{minipage}{0.92\linewidth}
-    \begin{columns}[T,onlytextwidth]
-      \column{0.48\textwidth}
-      \begin{block}{依赖}
-        \code{observer\_cli} 和 \code{recon} 被声明为 dependencies，构建时会被拉取和编译。
-      \end{block}
-      \column{0.48\textwidth}
-      \begin{exampleblock}{shell 配置}
-        \code{\{apps, [full\_otp\_app]\}} 表示进入 shell 时自动启动这个 application。
-      \end{exampleblock}
-    \end{columns}
-  \end{minipage}
-}
+\begin{frame}[fragile]{第二张图：rebar3 把启动入口包装在配置里}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+    \begin{block}{rebar.config}
+\begin{lstlisting}[
+  basicstyle=\ttfamily\tiny\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=2.2mm,
+  keepspaces=true,
+  columns=fullflexible,
+  escapeinside={(*@}{@*)},
+  language={}
+]
+[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{cat}@*) rebar.config
+{(*@\textcolor{erlblue}{erl\_opts}@*), [debug_info]}.
+{(*@\textcolor{erlblue}{deps}@*), [
+    {(*@\textcolor{accent}{observer\_cli}@*), "1.8.8"},
+    {(*@\textcolor{accent}{recon}@*), "2.5.6"}
+]}.
+{(*@\textcolor{erlblue}{shell}@*), [
+    {(*@\textcolor{accent}{apps}@*), [(*@\textcolor{accent}{full\_otp\_app}@*)]}
+]}.
+\end{lstlisting}
+    \end{block}
+    \column{0.46\textwidth}
+    \begin{block}{依赖}
+      \code{observer\_cli} 和 \code{recon} 被声明为 dependencies，构建时会被拉取和编译。
+    \end{block}
+    \vspace{0.3cm}
+    \begin{exampleblock}{shell 配置}
+      \code{\{apps, [full\_otp\_app]\}} 表示进入 shell 时自动启动这个 application。
+    \end{exampleblock}
+  \end{columns}
+\end{frame}
 
-\wideimgslide{第三张图：compile 阶段已经在分析 application}{03-rebar3-comple.png}{
-  \begin{minipage}{0.92\linewidth}
+\begin{frame}[fragile]{第三张图：compile 阶段已经在分析 application}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.56\textwidth}
+    \begin{block}{rebar3 compile 输出}
+\begin{lstlisting}[
+  basicstyle=\ttfamily\tiny\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=2.2mm,
+  keepspaces=true,
+  columns=fullflexible,
+  escapeinside={(*@}{@*)},
+  language={}
+]
+[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{rebar3 compile}@*)
+(*@\textcolor{erlblue}{Verifying dependencies...}@*)
+(*@\textcolor{warning}{Fetching observer\_cli v1.8.8}@*)
+(*@\textcolor{warning}{Fetching recon v2.5.6}@*)
+(*@\textcolor{erlblue}{Analyzing applications...}@*)
+(*@\textcolor{warning}{Compiling recon}@*)
+(*@\textcolor{warning}{Compiling observer\_cli}@*)
+===> (*@\textcolor{erlblue}{Analyzing applications...}@*)
+(*@\textcolor{warning}{Compiling full\_otp\_app}@*)
+\end{lstlisting}
+    \end{block}
+    \column{0.40\textwidth}
     \begin{block}{截图解析}
       \begin{itemize}
         \item rebar3 先 verifying dependencies，再 fetching 依赖。
@@ -256,33 +303,71 @@
         \item 最后编译 \code{full\_otp\_app} 本身。
       \end{itemize}
     \end{block}
-    \vspace{0.1cm}
-    \centering
-    \good{这说明 application 不是临时概念，而是构建工具认识的工程单元。}
-  \end{minipage}
-}
+  \end{columns}
+  \vspace{0.1cm}
+  \centering
+  \good{这说明 application 不是临时概念，而是构建工具认识的工程单元。}
+\end{frame}
 
-\wideimgslide{第四张图：真正入口在 .app.src 的 mod 字段}{04-rebar3-app.src.png}{
-  \begin{minipage}{0.92\linewidth}
-    \begin{columns}[T,onlytextwidth]
-      \column{0.50\textwidth}
-      \begin{block}{resource file 里最关键的三类信息}
-        \begin{itemize}
-          \item \code{registered}: 这个 app 注册的名字
-          \item \code{mod}: 启动 callback module
-          \item \code{applications}: 依赖哪些 application
-        \end{itemize}
-      \end{block}
-      \column{0.46\textwidth}
-      \begin{alertblock}{runtime application 的关键线索}
-        \centering
-        {\ttfamily \{mod, \{full\_otp\_app\_app, []\}\}}
-        \par\vspace{0.15cm}
-        有 \code{mod}，就意味着 application controller 启动它时，会调用 callback module。
-      \end{alertblock}
-    \end{columns}
-  \end{minipage}
-}
+\begin{frame}[fragile]{第四张图：真正入口在 .app.src 的 mod 字段}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.54\textwidth}
+    \begin{block}{src/full\_otp\_app.app.src}
+\begin{lstlisting}[
+  basicstyle=\ttfamily\tiny\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=1.8mm,
+  keepspaces=true,
+  columns=fullflexible,
+  escapeinside={(*@}{@*)},
+  language={}
+]
+[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{cat}@*) src/full_otp_app.app.src
+{(*@\textcolor{erlblue}{application}@*), full_otp_app,
+ [{description, "...gen_server, gen_event and gen_statem"},
+  {(*@\textcolor{primary}{vsn}@*), "0.1.0"},
+  {(*@\textcolor{erlblue}{registered}@*), [
+      full_otp_app_sup,
+      kv_server,
+      traffic_light,
+      event_bus,
+      data_store_sup,
+      data_store,
+      data_cache
+  ]},
+  {(*@\textcolor{warning}{mod}@*), {full_otp_app_app, []}},
+  {(*@\textcolor{erlblue}{applications}@*), [
+      kernel,
+      stdlib,
+      observer_cli,
+      recon
+  ]},
+  {env, []},
+  {modules, []},
+  {licenses, ["Apache-2.0"]},
+  {links, []}
+ ]}.
+\end{lstlisting}
+    \end{block}
+    \column{0.42\textwidth}
+    \begin{block}{resource file 里最关键的三类信息}
+      \begin{itemize}
+        \item \code{registered}: 这个 app 注册的名字
+        \item \code{mod}: 启动 callback module
+        \item \code{applications}: 依赖哪些 application
+      \end{itemize}
+    \end{block}
+    \vspace{0.15cm}
+    \begin{alertblock}{runtime application 的关键线索}
+      \centering
+      {\ttfamily \{mod, \{full\_otp\_app\_app, []\}\}}
+      \par\vspace{0.15cm}
+      有 \code{mod}，就意味着 application controller 启动它时，会调用 callback module。
+    \end{alertblock}
+  \end{columns}
+\end{frame}
 
 \begin{frame}[fragile]{callback module 通常只做一件事}
   \begin{columns}[T,onlytextwidth]
@@ -313,19 +398,60 @@ stop(_State) ->
   \end{columns}
 \end{frame}
 
-\wideimgslide{第五张图：shell 启动后，full\_otp\_app 已经在列表里}{05-application-lists-command.png}{
-  \begin{minipage}{0.92\linewidth}
+\begin{frame}[fragile]{第五张图：shell 启动后，full\_otp\_app 已经在列表里}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.60\textwidth}
+    \begin{block}{rebar3 shell + application:which\_applications().}
+\begin{lstlisting}[
+  basicstyle=\ttfamily\fontsize{5}{6}\selectfont\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=1.8mm,
+  keepspaces=true,
+  columns=fullflexible,
+  escapeinside={(*@}{@*)},
+  language={}
+]
+[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{rebar3 shell --sname app\_demo}@*)
+(*@\textcolor{erlblue}{Verifying dependencies...}@*)
+(*@\textcolor{erlblue}{Analyzing applications...}@*)
+(*@\textcolor{warning}{Compiling full\_otp\_app}@*)
+Erlang/OTP 26 [erts-14.2.5.12] [64-bit] [smp:12:12] [jit]
+
+Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
+(*@\textcolor{accent}{[full\_otp\_app] starting...}@*)
+(*@\textcolor{accent}{[kv\_server] init: pid=<0.258.0>}@*)
+(*@\textcolor{accent}{[event\_bus\_handler] init}@*)
+(*@\textcolor{accent}{[event\_bus] started with default handler}@*)
+(*@\textcolor{accent}{[traffic\_light] init: starting at red}@*)
+(*@\textcolor{accent}{[data\_store] init: pid=<0.262.0>}@*)
+(*@\textcolor{accent}{[data\_cache] init: ETS cache table created}@*)
+===> (*@\textcolor{accent}{Booted full\_otp\_app}@*)
+(app_demo@ERICKSUN-MC1)1> (*@\textcolor{primary}{application:which\_applications().}@*)
+[{(*@\textcolor{erlblue}{full\_otp\_app}@*), "...gen_server, gen_event and gen_statem", "0.1.0"},
+ {observer_cli, "Visualize Erlang Nodes On The Command Line", "1.8.8"},
+ {recon, "Diagnostic tools for production use", "2.5.6"},
+ {inets, "INETS  CXC 138 49", "9.1.0.4"},
+ {ssl, "Erlang/OTP SSL application", "11.1.4.10"},
+ {crypto, "CRYPTO", "5.4.2.3"},
+ {stdlib, "ERTS  CXC 138 10", "5.2.3.5"},
+ {(*@\textcolor{primary}{kernel}@*), "ERTS  CXC 138 10", "9.2.4.10"}]
+\end{lstlisting}
+    \end{block}
+    \column{0.36\textwidth}
     \begin{block}{截图解析}
       \begin{itemize}
-        \item \code{rebar3 shell --sname app\_demo} 启动节点。
+        \item \code{rebar3 shell --sname} 启动节点。
         \item 日志显示 \code{kv\_server}、\code{event\_bus}、\code{traffic\_light}、\code{data\_store}、\code{data\_cache} 被初始化。
-        \item \code{application:which\_applications().} 中出现 \code{full\_otp\_app}。
+        \item \code{application:which\_applications()} 中出现 \code{full\_otp\_app}。
       \end{itemize}
     \end{block}
+    \vspace{0.15cm}
     \centering
     \good{从 shell 角度看，application 已经启动；从进程角度看，一批 worker 已经存在。}
-  \end{minipage}
-}
+  \end{columns}
+\end{frame}
 
 \wideimgslide{第六张图：Observer 把启动结果画成 supervision tree}{06-observer-app.png}{
   \begin{minipage}{0.92\linewidth}
@@ -362,8 +488,32 @@ stop(_State) ->
   \end{alertblock}
 \end{frame}
 
-\wideimgslide{第七张图：application 可以被 stop 管理}{07-app-stop.png}{
-  \begin{minipage}{0.92\linewidth}
+\begin{frame}[fragile]{第七张图：application 可以被 stop 管理}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.56\textwidth}
+    \begin{block}{shell 中执行 stop}
+\begin{lstlisting}[
+  basicstyle=\ttfamily\scriptsize\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=2.2mm,
+  keepspaces=true,
+  columns=fullflexible,
+  escapeinside={(*@}{@*)},
+  language={}
+]
+(app_demo@ERICKSUN-MC1)3> (*@\textcolor{primary}{application:stop(full\_otp\_app).}@*)
+(*@\textcolor{accent}{[event\_bus\_handler] terminate: reason=stop}@*)
+(*@\textcolor{muted}{[full\_otp\_app] stopped.}@*)
+=INFO REPORT==== ... ===
+    application: full_otp_app
+    exited: stopped
+    type: temporary
+(*@\textcolor{accent}{ok}@*)
+\end{lstlisting}
+    \end{block}
+    \column{0.40\textwidth}
     \begin{block}{截图解析}
       \begin{itemize}
         \item shell 中执行 \code{application:stop(full\_otp\_app).}
@@ -372,8 +522,8 @@ stop(_State) ->
         \item 这说明 application 是可启动、可停止、可管理的 OTP 单元。
       \end{itemize}
     \end{block}
-  \end{minipage}
-}
+  \end{columns}
+\end{frame}
 
 \wideimgslide{第八张图：stop 之后，Observer 中 app 消失}{08-observer-app-stop.png}{
   \begin{minipage}{0.92\linewidth}
@@ -401,23 +551,51 @@ stop(_State) ->
   \end{minipage}
 }
 
-\imgslide{第十张图：application 模块的入口很集中}{10-application-command-list.png}{
-  \begin{block}{截图解析}
-    shell 自动补全展示了 \code{application:} 模块的一组函数。
-  \end{block}
-  \begin{exampleblock}{入门阶段最常用}
-    \begin{itemize}
-      \item \code{start/1}
-      \item \code{stop/1}
-      \item \code{ensure\_all\_started/1}
-      \item \code{which\_applications/0}
-      \item \code{get\_env/2} / \code{set\_env/3}
-    \end{itemize}
-  \end{exampleblock}
-  \begin{alertblock}{为什么说使用简单}
-    用户入口集中在配置文件和少量 API；复杂实现被 OTP 和工具链包装了。
-  \end{alertblock}
-}
+\begin{frame}[fragile]{第十张图：application 模块的入口很集中}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.54\textwidth}
+    \begin{block}{shell 中输入 application: + Tab}
+\begin{lstlisting}[
+  basicstyle=\ttfamily\scriptsize\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=2.2mm,
+  keepspaces=true,
+  columns=fullflexible,
+  escapeinside={(*@}{@*)},
+  language={}
+]
+(app_demo@ERICKSUN-MC1)6> (*@\textcolor{primary}{application:}@*)
+behaviour_info/1     ensure_all_started/1,2
+ensure_started/1     get_all_env/1
+get_all_key/1        get_application/1,2
+get_env/1,2,3        get_key/2,3
+get_supervisor/1     info/1
+load/1               loaded_applications/0
+permit/2             set_env/3,4
+(*@\textcolor{accent}{start/1,2}@*)          start_boot/1,2
+start_type/0         (*@\textcolor{accent}{stop/1}@*)
+takeover/2           unload/1
+unset_env/2,3        (*@\textcolor{accent}{which\_applications/0}@*)
+\end{lstlisting}
+    \end{block}
+    \column{0.42\textwidth}
+    \begin{exampleblock}{入门阶段最常用}
+      \begin{itemize}
+        \item \code{start/1}
+        \item \code{stop/1}
+        \item \code{ensure\_all\_started/1}
+        \item \code{which\_applications/0}
+        \item \code{get\_env/2} / \code{set\_env/3}
+      \end{itemize}
+    \end{exampleblock}
+    \vspace{0.2cm}
+    \begin{alertblock}{为什么说使用简单}
+      用户入口集中在配置文件和少量 API；复杂实现被 OTP 和工具链包装了。
+    \end{alertblock}
+  \end{columns}
+\end{frame}
 
 % ── Summary ────────────────────────────────────────────────────────
 \begin{frame}{runtime application 不是 main 函数}
