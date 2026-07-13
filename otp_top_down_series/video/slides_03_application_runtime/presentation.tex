@@ -301,9 +301,9 @@ full_otp_app.app.src
     |-- demo.erl
     |-- event_bus.erl
     |-- event_bus_handler.erl
-    |-- (*@\textcolor{warning}{full_otp_app.app.src}@*)
-    |-- (*@\textcolor{accent}{full_otp_app_app.erl}@*)
-    |-- (*@\textcolor{accent}{full_otp_app_sup.erl}@*)
+    |-- (*@\textcolor{warning}{full\_otp\_app.app.src}@*)
+    |-- (*@\textcolor{accent}{full\_otp\_app\_app.erl}@*)
+    |-- (*@\textcolor{accent}{full\_otp\_app\_sup.erl}@*)
     |-- kv_server.erl
     `-- traffic_light.erl
 
@@ -342,13 +342,13 @@ full_otp_app.app.src
   language={}
 ]
 [ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{cat}@*) rebar.config
-{(*@\textcolor{erlblue}{erl_opts}@*), [debug_info]}.
+{(*@\textcolor{erlblue}{erl\_opts}@*), [debug_info]}.
 {(*@\textcolor{erlblue}{deps}@*), [
-    {(*@\textcolor{accent}{observer_cli}@*), "1.8.8"},
+    {(*@\textcolor{accent}{observer\_cli}@*), "1.8.8"},
     {(*@\textcolor{accent}{recon}@*), "2.5.6"}
 ]}.
 {(*@\textcolor{erlblue}{shell}@*), [
-    {(*@\textcolor{accent}{apps}@*), [(*@\textcolor{accent}{full_otp_app}@*)]}
+    {(*@\textcolor{accent}{apps}@*), [(*@\textcolor{accent}{full\_otp\_app}@*)]}
 ]}.
 \end{lstlisting}
     \end{block}
@@ -385,13 +385,13 @@ full_otp_app.app.src
 ]
 [ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{rebar3 compile}@*)
 (*@\textcolor{erlblue}{Verifying dependencies...}@*)
-(*@\textcolor{warning}{Fetching observer_cli v1.8.8}@*)
+(*@\textcolor{warning}{Fetching observer\_cli v1.8.8}@*)
 (*@\textcolor{warning}{Fetching recon v2.5.6}@*)
 (*@\textcolor{erlblue}{Analyzing applications...}@*)
 (*@\textcolor{warning}{Compiling recon}@*)
-(*@\textcolor{warning}{Compiling observer_cli}@*)
+(*@\textcolor{warning}{Compiling observer\_cli}@*)
 ===> (*@\textcolor{erlblue}{Analyzing applications...}@*)
-(*@\textcolor{warning}{Compiling full_otp_app}@*)
+(*@\textcolor{warning}{Compiling full\_otp\_app}@*)
 \end{lstlisting}
     \end{block}
     \column{0.40\textwidth}
@@ -457,23 +457,23 @@ stop(_State) ->
   escapeinside={(*@}{@*)},
   language={}
 ]
-[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{rebar3 shell --sname app_demo}@*)
+[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{rebar3 shell --sname app\_demo}@*)
 (*@\textcolor{erlblue}{Verifying dependencies...}@*)
 (*@\textcolor{erlblue}{Analyzing applications...}@*)
-(*@\textcolor{warning}{Compiling full_otp_app}@*)
+(*@\textcolor{warning}{Compiling full\_otp\_app}@*)
 Erlang/OTP 26 [erts-14.2.5.12] [64-bit] [smp:12:12] [jit]
 
 Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
-(*@\textcolor{accent}{[full_otp_app] starting...}@*)
-(*@\textcolor{accent}{[kv_server] init: pid=<0.258.0>}@*)
-(*@\textcolor{accent}{[event_bus_handler] init}@*)
-(*@\textcolor{accent}{[event_bus] started with default handler}@*)
-(*@\textcolor{accent}{[traffic_light] init: starting at red}@*)
-(*@\textcolor{accent}{[data_store] init: pid=<0.262.0>}@*)
-(*@\textcolor{accent}{[data_cache] init: ETS cache table created}@*)
-===> (*@\textcolor{accent}{Booted full_otp_app}@*)
-(app_demo@ERICKSUN-MC1)1> (*@\textcolor{primary}{application:which_applications().}@*)
-[{(*@\textcolor{erlblue}{full_otp_app}@*), "...gen_server, gen_event and gen_statem", "0.1.0"},
+(*@\textcolor{accent}{[full\_otp\_app] starting...}@*)
+(*@\textcolor{accent}{[kv\_server] init: pid=<0.258.0>}@*)
+(*@\textcolor{accent}{[event\_bus\_handler] init}@*)
+(*@\textcolor{accent}{[event\_bus] started with default handler}@*)
+(*@\textcolor{accent}{[traffic\_light] init: starting at red}@*)
+(*@\textcolor{accent}{[data\_store] init: pid=<0.262.0>}@*)
+(*@\textcolor{accent}{[data\_cache] init: ETS cache table created}@*)
+===> (*@\textcolor{accent}{Booted full\_otp\_app}@*)
+(app_demo@ERICKSUN-MC1)1> (*@\textcolor{primary}{application:which\_applications().}@*)
+[{(*@\textcolor{erlblue}{full\_otp\_app}@*), "...gen_server, gen_event and gen_statem", "0.1.0"},
  {observer_cli, "Visualize Erlang Nodes On The Command Line", "1.8.8"},
  {recon, "Diagnostic tools for production use", "2.5.6"},
  {stdlib, "ERTS  CXC 138 10", "5.2.3.5"},
@@ -553,9 +553,9 @@ Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
   escapeinside={(*@}{@*)},
   language={}
 ]
-(app_demo@ERICKSUN-MC1)3> (*@\textcolor{primary}{application:stop(full_otp_app).}@*)
-(*@\textcolor{accent}{[event_bus_handler] terminate: reason=stop}@*)
-(*@\textcolor{muted}{[full_otp_app] stopped.}@*)
+(app_demo@ERICKSUN-MC1)3> (*@\textcolor{primary}{application:stop(full\_otp\_app).}@*)
+(*@\textcolor{accent}{[event\_bus\_handler] terminate: reason=stop}@*)
+(*@\textcolor{muted}{[full\_otp\_app] stopped.}@*)
 =INFO REPORT==== ... ===
     application: full_otp_app
     exited: stopped
@@ -602,20 +602,20 @@ Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
   escapeinside={(*@}{@*)},
   language={}
 ]
-(app_demo@ERICKSUN-MC1)3> (*@\textcolor{primary}{application:which_applications().}@*)
-[{(*@\textcolor{erlblue}{observer_cli}@*), "...", "1.8.8"},
+(app_demo@ERICKSUN-MC1)3> (*@\textcolor{primary}{application:which\_applications().}@*)
+[{(*@\textcolor{erlblue}{observer\_cli}@*), "...", "1.8.8"},
  {(*@\textcolor{erlblue}{recon}@*), "Diagnostic tools ...", "2.5.6"},
  {stdlib, "ERTS  CXC 138 10", "5.2.3.5"},
  {(*@\textcolor{primary}{kernel}@*), "ERTS  CXC 138 10", "9.2.4.10"}]
 
-(app_demo@ERICKSUN-MC1)4> (*@\textcolor{primary}{application:start(full_otp_app).}@*)
-(*@\textcolor{accent}{[full_otp_app] starting...}@*)
-(*@\textcolor{accent}{[kv_server] init: pid=<0.317.0>}@*)
-(*@\textcolor{accent}{[event_bus_handler] init}@*)
-(*@\textcolor{accent}{[event_bus] started with default handler}@*)
-(*@\textcolor{accent}{[traffic_light] init: starting at red}@*)
-(*@\textcolor{accent}{[data_store] init: pid=<0.321.0>}@*)
-(*@\textcolor{accent}{[data_cache] init: ETS cache table created}@*)
+(app_demo@ERICKSUN-MC1)4> (*@\textcolor{primary}{application:start(full\_otp\_app).}@*)
+(*@\textcolor{accent}{[full\_otp\_app] starting...}@*)
+(*@\textcolor{accent}{[kv\_server] init: pid=<0.317.0>}@*)
+(*@\textcolor{accent}{[event\_bus\_handler] init}@*)
+(*@\textcolor{accent}{[event\_bus] started with default handler}@*)
+(*@\textcolor{accent}{[traffic\_light] init: starting at red}@*)
+(*@\textcolor{accent}{[data\_store] init: pid=<0.321.0>}@*)
+(*@\textcolor{accent}{[data\_cache] init: ETS cache table created}@*)
 (*@\textcolor{accent}{ok}@*)
 \end{lstlisting}
     \end{block}
@@ -660,7 +660,7 @@ permit/2             set_env/3,4
 (*@\textcolor{accent}{start/1,2}@*)          start_boot/1,2
 start_type/0         (*@\textcolor{accent}{stop/1}@*)
 takeover/2           unload/1
-unset_env/2,3        (*@\textcolor{accent}{which_applications/0}@*)
+unset_env/2,3        (*@\textcolor{accent}{which\_applications/0}@*)
 \end{lstlisting}
     \end{block}
     \column{0.42\textwidth}
