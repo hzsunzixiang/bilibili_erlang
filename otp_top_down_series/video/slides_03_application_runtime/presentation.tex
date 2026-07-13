@@ -158,35 +158,170 @@
 \end{frame}
 
 
-\begin{frame}[fragile]{这一集只抓一条主线：配置如何变成进程树}
+
+\begin{frame}[fragile]{这一集只抓一条主线：工具配置如何变成 OTP 入口}
   \begin{columns}[T,onlytextwidth]
     \column{0.48\textwidth}
-    \begin{block}{runtime application 的启动链路}
+    \begin{block}{更自然的观察顺序}
 \begin{lstlisting}
-full_otp_app.app.src
-  -> mod: full_otp_app_app
-      -> start/2
-          -> full_otp_app_sup
-              -> worker processes
-                  -> Observer tree
+rebar.config
+  -> project skeleton
+      -> rebar3 compile
+          -> application resource file
+              -> mod callback
+                  -> supervision tree
 \end{lstlisting}
     \end{block}
     \column{0.48\textwidth}
     \footnotesize
     \begin{alertblock}{这一集的讲法}
       \begin{itemize}
-        \item 先看 \code{full\_otp\_app.app.src}，因为它是 application 的声明入口。
-        \item 再看工具链如何自动生成、编译、启动这个入口。
-        \item 最后用 shell 和 Observer 验证：配置确实变成了运行中的进程树。
+        \item 先看 \code{rebar.config}：工具链把依赖和启动行为放在哪里。
+        \item 再看初始化后的目录：此时先理解工程骨架，不急着背配置字段。
+        \item 然后运行 \code{rebar3 compile}，再进入 \code{full\_otp\_app.app.src} 解释 OTP 入口。
       \end{itemize}
     \end{alertblock}
   \end{columns}
   \vspace{0.2cm}
   \centering
-  \warn{目标不是背 application controller 内部实现，而是建立“配置 -> 启动 -> 进程树”的整体图景。}
+  \warn{目标不是从一堆字段开始背，而是顺着工具链看到 application 的入口自然出现。}
 \end{frame}
 
-\begin{frame}[fragile]{先看核心配置：full\_otp\_app.app.src}
+\begin{frame}[fragile]{先看 rebar3 配置：依赖和启动行为都在这里}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.50\textwidth}
+    \begin{block}{rebar.config}
+\begin{lstlisting}[
+  basicstyle=\ttfamily\tiny\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=2.2mm,
+  keepspaces=true,
+  columns=fullflexible,
+  escapeinside={(*@}{@*)},
+  language={}
+]
+[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{cat}@*) rebar.config
+{(*@\textcolor{erlblue}{erl\_opts}@*), [debug_info]}.
+{(*@\textcolor{erlblue}{deps}@*), [
+    {(*@\textcolor{accent}{observer\_cli}@*), "1.8.8"},
+    {(*@\textcolor{accent}{recon}@*), "2.5.6"}
+]}.
+{(*@\textcolor{erlblue}{shell}@*), [
+    {(*@\textcolor{accent}{apps}@*), [(*@\textcolor{accent}{full\_otp\_app}@*)]}
+]}.
+\end{lstlisting}
+    \end{block}
+    \column{0.46\textwidth}
+    \footnotesize
+    \begin{block}{先从工具入口理解 application}
+      \begin{itemize}
+        \item \code{deps} 告诉 rebar3：这个工程依赖哪些 application。
+        \item \code{shell.apps} 告诉 rebar3：进入 shell 时要启动哪个 application。
+        \item 所以用户最常接触到的入口不是 OTP 内部实现，而是工具配置。
+      \end{itemize}
+    \end{block}
+    \vspace{0.15cm}
+    \begin{alertblock}{关键表达}
+      \code{rebar3} 和 \code{erlang.mk} 把 application 的生成、编译、启动做了包装；我们先看配置，是为了知道工具会替我们做什么。
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{第一张图：初始化后的工程骨架}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.54\textwidth}
+    \begin{block}{01-rebar3-app-init.png 文字化}
+\begin{lstlisting}[
+  basicstyle=\ttfamily\tiny\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=2.2mm,
+  keepspaces=true,
+  columns=fullflexible,
+  escapeinside={(*@}{@*)}
+]
+[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ tree
+.
+|-- README.txt
+|-- (*@\textcolor{erlblue}{data}@*)
+|-- (*@\textcolor{accent}{rebar.config}@*)
+`-- (*@\textcolor{erlblue}{src}@*)
+    |-- data_cache.erl
+    |-- data_store.erl
+    |-- data_store_sup.erl
+    |-- demo.erl
+    |-- event_bus.erl
+    |-- event_bus_handler.erl
+    |-- full_otp_app.app.src
+    |-- full_otp_app_app.erl
+    |-- full_otp_app_sup.erl
+    |-- kv_server.erl
+    `-- traffic_light.erl
+
+3 directories, 13 files
+\end{lstlisting}
+    \end{block}
+    \column{0.42\textwidth}
+    \footnotesize
+    \begin{block}{这一页先看骨架，不急着解释字段}
+      \begin{itemize}
+        \item 根目录里的 \code{rebar.config} 是工具入口。
+        \item \code{src/} 是 OTP 代码入口：resource file、callback、supervisor、workers 都在这里。
+        \item 这一步只建立方向感：工程已经按 OTP application 的方式组织好了。
+      \end{itemize}
+    \end{block}
+    \vspace{0.15cm}
+    \begin{exampleblock}{承接下一页}
+      接下来运行 \code{rebar3 compile}，工具会按 application 维度分析、编译并生成可被 VM 使用的 application 描述。
+    \end{exampleblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{运行 rebar3 compile：工具开始按 application 处理工程}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.56\textwidth}
+    \begin{block}{rebar3 compile 输出}
+\begin{lstlisting}[
+  basicstyle=\ttfamily\tiny\color{terminalfg},
+  backgroundcolor=\color{terminalbg},
+  frame=single,
+  rulecolor=\color{terminalborder},
+  framesep=2.2mm,
+  keepspaces=true,
+  columns=fullflexible,
+  escapeinside={(*@}{@*)},
+  language={}
+]
+[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{rebar3 compile}@*)
+(*@\textcolor{erlblue}{Verifying dependencies...}@*)
+(*@\textcolor{warning}{Fetching observer\_cli v1.8.8}@*)
+(*@\textcolor{warning}{Fetching recon v2.5.6}@*)
+(*@\textcolor{erlblue}{Analyzing applications...}@*)
+(*@\textcolor{warning}{Compiling recon}@*)
+(*@\textcolor{warning}{Compiling observer\_cli}@*)
+===> (*@\textcolor{erlblue}{Analyzing applications...}@*)
+(*@\textcolor{warning}{Compiling full\_otp\_app}@*)
+\end{lstlisting}
+    \end{block}
+    \column{0.40\textwidth}
+    \footnotesize
+    \begin{block}{这里发生了什么}
+      \begin{itemize}
+        \item rebar3 先处理 \code{deps} 中声明的依赖。
+        \item \code{Analyzing applications...} 表明它按 OTP application 维度分析工程。
+        \item 编译后，\code{.app.src} 中的信息会进入构建产物，成为 VM 能使用的 application 描述。
+      \end{itemize}
+    \end{block}
+    \vspace{0.15cm}
+    \centering
+    \good{现在再看 \code{full\_otp\_app.app.src}，它就不是孤立文件，而是工具链要处理的 OTP 入口。}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{再看 OTP 入口：full\_otp\_app.app.src}
   \begin{columns}[T,onlytextwidth]
     \column{0.56\textwidth}
     \begin{block}{application resource file}
@@ -229,16 +364,16 @@ full_otp_app.app.src
     \end{block}
     \column{0.40\textwidth}
     \footnotesize
-    \begin{block}{先给读者一个全貌}
+    \begin{block}{为什么现在才重点看它}
       \begin{itemize}
-        \item 这个文件描述一个 OTP application：名字、版本、依赖、启动入口等。
-        \item 后面会逐个解释这些配置项如何影响运行时行为。
-        \item 入门阶段不需要掌握所有字段，只需要抓住几个最常用、最有解释力的字段。
+        \item 前面先看到工具配置和工程骨架，读者知道它从哪里来、会被谁处理。
+        \item 这个文件描述 application 的名字、版本、依赖、启动入口等。
+        \item 后续只抓有用字段，不要求掌握所有配置参数。
       \end{itemize}
     \end{block}
     \vspace{0.15cm}
-    \begin{alertblock}{工具链会替你做大部分事情}
-      \code{rebar3}、\code{erlang.mk} 等构建工具通常会自动生成、校验和打包这类配置。我们看它，是为了理解现象，不是为了手写所有细节。
+    \begin{alertblock}{入门阶段抓住三个字段}
+      \code{mod} 看启动入口，\code{applications} 看依赖，\code{registered} 看系统边界。
     \end{alertblock}
   \end{columns}
 \end{frame}
@@ -273,140 +408,6 @@ full_otp_app.app.src
   \vspace{0.3cm}
   \centering
   \Large \keypoint{本集先不背字段清单，只用这些字段串起启动链路。}
-\end{frame}
-
-\begin{frame}[fragile]{工具生成的工程骨架，已经把 OTP 入口放好了}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.54\textwidth}
-    \begin{block}{目录结构}
-\begin{lstlisting}[
-  basicstyle=\ttfamily\tiny\color{terminalfg},
-  backgroundcolor=\color{terminalbg},
-  frame=single,
-  rulecolor=\color{terminalborder},
-  framesep=2.2mm,
-  keepspaces=true,
-  columns=fullflexible,
-  escapeinside={(*@}{@*)}
-]
-[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ tree
-.
-|-- README.txt
-|-- (*@\textcolor{erlblue}{data}@*)
-|-- rebar.config
-`-- (*@\textcolor{erlblue}{src}@*)
-    |-- data_cache.erl
-    |-- data_store.erl
-    |-- data_store_sup.erl
-    |-- demo.erl
-    |-- event_bus.erl
-    |-- event_bus_handler.erl
-    |-- (*@\textcolor{warning}{full\_otp\_app.app.src}@*)
-    |-- (*@\textcolor{accent}{full\_otp\_app\_app.erl}@*)
-    |-- (*@\textcolor{accent}{full\_otp\_app\_sup.erl}@*)
-    |-- kv_server.erl
-    `-- traffic_light.erl
-
-3 directories, 13 files
-\end{lstlisting}
-    \end{block}
-    \column{0.42\textwidth}
-    \footnotesize
-    \begin{block}{从目录读出三层入口}
-      \begin{itemize}
-        \item \code{full\_otp\_app.app.src}: 声明 application 是什么、依赖什么、从哪里启动。
-        \item \code{full\_otp\_app\_app.erl}: application callback module，承接 \code{mod} 字段。
-        \item \code{full\_otp\_app\_sup.erl}: top supervisor，启动后真正管理长期进程。
-      \end{itemize}
-    \end{block}
-    \vspace{0.15cm}
-    \begin{exampleblock}{连贯理解}
-      目录不是孤立截图，它是在告诉我们：工具已经把 OTP application 的标准入口组织好了。
-    \end{exampleblock}
-  \end{columns}
-\end{frame}
-
-\begin{frame}[fragile]{rebar3 继续把依赖和启动行为收进配置}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.50\textwidth}
-    \begin{block}{rebar.config}
-\begin{lstlisting}[
-  basicstyle=\ttfamily\tiny\color{terminalfg},
-  backgroundcolor=\color{terminalbg},
-  frame=single,
-  rulecolor=\color{terminalborder},
-  framesep=2.2mm,
-  keepspaces=true,
-  columns=fullflexible,
-  escapeinside={(*@}{@*)},
-  language={}
-]
-[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{cat}@*) rebar.config
-{(*@\textcolor{erlblue}{erl\_opts}@*), [debug_info]}.
-{(*@\textcolor{erlblue}{deps}@*), [
-    {(*@\textcolor{accent}{observer\_cli}@*), "1.8.8"},
-    {(*@\textcolor{accent}{recon}@*), "2.5.6"}
-]}.
-{(*@\textcolor{erlblue}{shell}@*), [
-    {(*@\textcolor{accent}{apps}@*), [(*@\textcolor{accent}{full\_otp\_app}@*)]}
-]}.
-\end{lstlisting}
-    \end{block}
-    \column{0.46\textwidth}
-    \footnotesize
-    \begin{block}{这里不是另一条线，而是在服务同一个目标}
-      \begin{itemize}
-        \item \code{deps} 让工具自动拉取、编译依赖 application。
-        \item \code{shell} 里的 \code{apps} 让进入 shell 时自动启动 \code{full\_otp\_app}。
-        \item 对使用者来说，入口仍然很集中：配置文件 + 少量命令。
-      \end{itemize}
-    \end{block}
-    \vspace{0.15cm}
-    \begin{alertblock}{为什么说 application 用起来简单}
-      复杂的生成、依赖、启动顺序被工具链包装；我们只需要知道关键配置在哪里。
-    \end{alertblock}
-  \end{columns}
-\end{frame}
-
-\begin{frame}[fragile]{编译时，rebar3 已经按 application 组织工程}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.56\textwidth}
-    \begin{block}{rebar3 compile 输出}
-\begin{lstlisting}[
-  basicstyle=\ttfamily\tiny\color{terminalfg},
-  backgroundcolor=\color{terminalbg},
-  frame=single,
-  rulecolor=\color{terminalborder},
-  framesep=2.2mm,
-  keepspaces=true,
-  columns=fullflexible,
-  escapeinside={(*@}{@*)},
-  language={}
-]
-[ericksun@ERICKSUN-MC1:full_otp_app] (main) $ (*@\textcolor{accent}{rebar3 compile}@*)
-(*@\textcolor{erlblue}{Verifying dependencies...}@*)
-(*@\textcolor{warning}{Fetching observer\_cli v1.8.8}@*)
-(*@\textcolor{warning}{Fetching recon v2.5.6}@*)
-(*@\textcolor{erlblue}{Analyzing applications...}@*)
-(*@\textcolor{warning}{Compiling recon}@*)
-(*@\textcolor{warning}{Compiling observer\_cli}@*)
-===> (*@\textcolor{erlblue}{Analyzing applications...}@*)
-(*@\textcolor{warning}{Compiling full\_otp\_app}@*)
-\end{lstlisting}
-    \end{block}
-    \column{0.40\textwidth}
-    \footnotesize
-    \begin{block}{这一页证明工具链理解 application}
-      \begin{itemize}
-        \item 先解析依赖，再编译依赖 application。
-        \item \code{Analyzing applications...} 表明 application 是构建单元。
-        \item 最后编译当前工程 \code{full\_otp\_app}。
-      \end{itemize}
-    \end{block}
-    \vspace{0.15cm}
-    \centering
-    \good{到这里，配置已经从“文本文件”进入工具链的处理流程。}
-  \end{columns}
 \end{frame}
 
 \begin{frame}[fragile]{\code{mod} 字段把配置交给 callback module}
