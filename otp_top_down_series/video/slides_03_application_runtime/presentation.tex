@@ -519,15 +519,12 @@ Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
   \end{columns}
 \end{frame}
 
-\wideimgslide{第八张图：stop 之后，Observer 中 app 消失}{08-observer-app-stop.png}{
-  \begin{minipage}{0.92\linewidth}
-    \begin{alertblock}{Observer 证明了 stop 的效果}
-      左侧 application 列表里已经没有 \code{full\_otp\_app}，右侧也不再有 \code{full\_otp\_app\_sup} 这棵 supervision tree。
-    \end{alertblock}
-    \vspace{0.1cm}
-    \centering
-    \good{application:stop/1 管理的不是一个函数调用，而是一整棵运行时结构的生命周期。}
-  \end{minipage}
+\imgslide{第八张图：stop 之后，Observer 中 app 消失}{08-observer-app-stop.png}{
+  \begin{alertblock}{Observer 证明了 stop 的效果}
+    左侧 application 列表里已经没有 \code{full\_otp\_app}，右侧也不再有 \code{full\_otp\_app\_sup} 这棵 supervision tree。
+  \end{alertblock}
+  \vspace{0.2cm}
+  \good{application:stop/1 管理的不是一个函数调用，而是一整棵运行时结构的生命周期。}
 }
 
 \wideimgslide{第九张图：application:start 重新建立进程树}{09-observer-app-start.png}{
