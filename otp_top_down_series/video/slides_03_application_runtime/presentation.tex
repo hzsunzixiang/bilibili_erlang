@@ -177,8 +177,8 @@ rebar.config
     \begin{alertblock}{这一集的讲法}
       \begin{itemize}
         \item 先看 \code{rebar.config}：工具链把依赖和启动行为放在哪里。
-        \item 再看初始化后的目录：此时先理解工程骨架，不急着背配置字段。
-        \item 然后运行 \code{rebar3 compile}，再进入 \code{full\_otp\_app.app.src} 解释 OTP 入口。
+        \item 再看初始化后的目录：此时还没有展开 \code{full\_otp\_app.app.src}，先理解工程骨架。
+        \item 然后运行 \code{rebar3 compile}：下载依赖、分析工程、生成 application resource，再解释 OTP 入口。
       \end{itemize}
     \end{alertblock}
   \end{columns}
@@ -229,10 +229,10 @@ rebar.config
   \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{先建立工程骨架：代码从哪里进入 OTP}
+\begin{frame}[fragile]{先看初始工程：配置和源码骨架已经分开}
   \begin{columns}[T,onlytextwidth]
     \column{0.54\textwidth}
-    \begin{block}{初始化后的目录结构}
+    \begin{block}{编译前的目录结构}
 \begin{lstlisting}[
   basicstyle=\ttfamily\tiny\color{terminalfg},
   backgroundcolor=\color{terminalbg},
@@ -255,13 +255,12 @@ rebar.config
     |-- demo.erl
     |-- event_bus.erl
     |-- event_bus_handler.erl
-    |-- full_otp_app.app.src
     |-- full_otp_app_app.erl
     |-- full_otp_app_sup.erl
     |-- kv_server.erl
     `-- traffic_light.erl
 
-3 directories, 13 files
+3 directories, 12 files
 \end{lstlisting}
     \end{block}
     \column{0.42\textwidth}
@@ -269,18 +268,18 @@ rebar.config
     \begin{block}{这一步只建立方向感}
       \begin{itemize}
         \item 根目录里的 \code{rebar.config} 先承接工具配置。
-        \item \code{src/} 里放 application resource、callback、supervisor 和 worker 模块。
-        \item 先看目录，是为了让后面的 \code{compile} 和 \code{app.src} 不显得突兀。
+        \item \code{src/} 里先看到 callback、supervisor 和 worker 模块。
+        \item 此时先不要急着讲 \code{app.src}；它应该在编译流程之后作为 OTP 入口出现。
       \end{itemize}
     \end{block}
     \vspace{0.15cm}
     \begin{exampleblock}{承接下一页}
-      接下来运行 \code{rebar3 compile}，工具会按 application 维度分析、编译并生成可被 VM 使用的 application 描述。
+      接下来运行 \code{rebar3 compile}，先看工具如何下载依赖、分析工程，再让 \code{full\_otp\_app.app.src} 自然登场。
     \end{exampleblock}
   \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{运行 rebar3 compile：工具开始按 application 处理工程}
+\begin{frame}[fragile]{运行 rebar3 compile：依赖下载之后生成 application 描述}
   \begin{columns}[T,onlytextwidth]
     \column{0.56\textwidth}
     \begin{block}{rebar3 compile 输出}
@@ -310,14 +309,14 @@ rebar.config
     \footnotesize
     \begin{block}{这里发生了什么}
       \begin{itemize}
-        \item rebar3 先处理 \code{deps} 中声明的依赖。
-        \item \code{Analyzing applications...} 表明它按 OTP application 维度分析工程。
-        \item 编译后，\code{.app.src} 中的信息会进入构建产物，成为 VM 能使用的 application 描述。
+        \item rebar3 先处理 \code{deps} 中声明的依赖，下载 \code{observer\_cli} 和 \code{recon}。
+        \item \code{Analyzing applications...} 表明它开始按 OTP application 维度分析工程。
+        \item 编译阶段会生成 / 准备 application resource，让后面的 \code{.app.src} 成为 VM 能识别的 application 描述来源。
       \end{itemize}
     \end{block}
     \vspace{0.15cm}
     \centering
-    \good{现在再看 \code{full\_otp\_app.app.src}，它就不是孤立文件，而是工具链要处理的 OTP 入口。}
+    \good{所以 \code{full\_otp\_app.app.src} 应该放在 compile 之后讲：它是工具链生成 / 处理出来的 OTP 入口。}
   \end{columns}
 \end{frame}
 
