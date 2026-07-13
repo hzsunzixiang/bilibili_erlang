@@ -269,12 +269,12 @@ rebar.config
       \begin{itemize}
         \item 根目录里的 \code{rebar.config} 先承接工具配置。
         \item \code{src/} 里先看到 callback、supervisor 和 worker 模块。
-        \item 此时先不要急着讲 \code{app.src}；它应该在编译流程之后作为 OTP 入口出现。
+        \item 此时还没有生成 \code{app.src} 文件；等 \code{rebar3 compile} 执行之后，它会作为 application 描述文件自动出现。
       \end{itemize}
     \end{block}
     \vspace{0.15cm}
     \begin{exampleblock}{承接下一页}
-      接下来运行 \code{rebar3 compile}，先看工具如何下载依赖、分析工程，再让 \code{full\_otp\_app.app.src} 自然登场。
+      接下来运行 \code{rebar3 compile}，先看工具如何下载依赖、分析工程，然后再打开生成出来的 \code{full\_otp\_app.app.src}。
     \end{exampleblock}
   \end{columns}
 \end{frame}
