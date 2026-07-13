@@ -28,6 +28,7 @@ unset_env/2,3        (*@\textcolor{accent}{which\_applications/0}@*)
 \end{lstlisting}
     \end{block}
     \column{0.42\textwidth}
+    \footnotesize
     \begin{exampleblock}{入门阶段最常用}
       \begin{itemize}
         \item \code{start/1}

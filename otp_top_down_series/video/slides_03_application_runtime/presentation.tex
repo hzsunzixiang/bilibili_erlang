@@ -63,6 +63,7 @@
       \centering
       \includegraphics[width=\linewidth,height=0.72\textheight,keepaspectratio]{#2}
       \column{0.36\textwidth}
+      \footnotesize
       #3
     \end{columns}
   \end{frame}
@@ -140,6 +141,7 @@
       \end{itemize}
     \end{block}
     \column{0.48\textwidth}
+    \footnotesize
     \begin{exampleblock}{library application}
       \begin{itemize}
         \item 也叫 \keypoint{passive application}
@@ -169,6 +171,7 @@
 \end{lstlisting}
     \end{block}
     \column{0.48\textwidth}
+    \footnotesize
     \begin{alertblock}{这一集的重点}
       \begin{itemize}
         \item application 的实现很复杂
@@ -222,6 +225,7 @@
     \end{block}
 
     \column{0.42\textwidth}
+    \footnotesize
     \begin{block}{截图解析}
       \begin{itemize}
         \item 根目录有 \code{rebar.config}，说明项目由 rebar3 管理。
@@ -259,6 +263,7 @@
 \end{lstlisting}
     \end{block}
     \column{0.46\textwidth}
+    \footnotesize
     \begin{block}{依赖}
       \code{observer\_cli} 和 \code{recon} 被声明为 dependencies，构建时会被拉取和编译。
     \end{block}
@@ -296,6 +301,7 @@
 \end{lstlisting}
     \end{block}
     \column{0.40\textwidth}
+    \footnotesize
     \begin{block}{截图解析}
       \begin{itemize}
         \item rebar3 先 verifying dependencies，再 fetching 依赖。
@@ -352,6 +358,7 @@
 \end{lstlisting}
     \end{block}
     \column{0.42\textwidth}
+    \footnotesize
     \begin{block}{resource file 里最关键的三类信息}
       \begin{itemize}
         \item \code{registered}: 这个 app 注册的名字
@@ -387,6 +394,7 @@ stop(_State) ->
 \end{lstlisting}
     \end{block}
     \column{0.44\textwidth}
+    \footnotesize
     \begin{exampleblock}{分工非常清晰}
       \begin{itemize}
         \item application callback 不写业务逻辑
@@ -440,6 +448,7 @@ Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
 \end{lstlisting}
     \end{block}
     \column{0.36\textwidth}
+    \footnotesize
     \begin{block}{截图解析}
       \begin{itemize}
         \item \code{rebar3 shell --sname} 启动节点。
@@ -465,16 +474,29 @@ Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
 \begin{frame}{把前六张图串起来}
   \begin{block}{runtime application 的启动链路}
     \centering
-    \renewcommand{\arraystretch}{1.45}
-    \begin{tabular}{@{}>{\centering\arraybackslash}p{0.16\linewidth}>{\centering\arraybackslash}p{0.04\linewidth}>{\centering\arraybackslash}p{0.18\linewidth}>{\centering\arraybackslash}p{0.04\linewidth}>{\centering\arraybackslash}p{0.18\linewidth}>{\centering\arraybackslash}p{0.04\linewidth}>{\centering\arraybackslash}p{0.18\linewidth}@{}}
-      \keypoint{工程结构} & $\rightarrow$ & \keypoint{工具配置} & $\rightarrow$ & \keypoint{.app.src} & $\rightarrow$ & \keypoint{callback} \\
-      {\ttfamily src/} & & {\ttfamily rebar.config} & & {\ttfamily mod} & & {\ttfamily start/2} \\
-    \end{tabular}
-    \vspace{0.2cm}
-    \begin{tabular}{@{}>{\centering\arraybackslash}p{0.32\linewidth}>{\centering\arraybackslash}p{0.08\linewidth}>{\centering\arraybackslash}p{0.32\linewidth}@{}}
-      \keypoint{top supervisor} & $\rightarrow$ & \keypoint{Observer} \\
-      {\ttfamily full\_otp\_app\_sup} & & {\ttfamily supervision tree} \\
-    \end{tabular}
+    \vspace{0.4cm}
+    \begin{tikzpicture}[
+      node distance=0.7cm,
+      box/.style={
+        rectangle, rounded corners=3pt, draw=primary!60, fill=primary!7,
+        minimum width=2.1cm, minimum height=1.5cm, align=center,
+        font=\footnotesize\bfseries
+      },
+      arrow/.style={->, >=Stealth, line width=1.2pt, color=accent}
+    ]
+    \node[box] (n1) {\keypoint{工程结构}\\[2pt] {\ttfamily\footnotesize\color{muted} src/}};
+    \node[box, right=of n1] (n2) {\keypoint{工具配置}\\[2pt] {\ttfamily\footnotesize\color{muted} rebar.config}};
+    \node[box, right=of n2] (n3) {\keypoint{.app.src}\\[2pt] {\ttfamily\footnotesize\color{muted} mod}};
+    \node[box, right=of n3] (n4) {\keypoint{callback}\\[2pt] {\ttfamily\footnotesize\color{muted} start/2}};
+    \node[box, right=of n4] (n5) {\keypoint{top supervisor}\\[2pt] {\ttfamily\footnotesize\color{muted} full\_otp\_app\_sup}};
+    \node[box, right=of n5] (n6) {\keypoint{Observer}\\[2pt] {\ttfamily\footnotesize\color{muted} supervision tree}};
+
+    \draw[arrow] (n1.east) -- (n2.west);
+    \draw[arrow] (n2.east) -- (n3.west);
+    \draw[arrow] (n3.east) -- (n4.west);
+    \draw[arrow] (n4.east) -- (n5.west);
+    \draw[arrow] (n5.east) -- (n6.west);
+    \end{tikzpicture}
   \end{block}
   \begin{alertblock}{这就是 runtime application 的核心闭环}
     \centering
@@ -508,6 +530,7 @@ Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
 \end{lstlisting}
     \end{block}
     \column{0.40\textwidth}
+    \footnotesize
     \begin{block}{截图解析}
       \begin{itemize}
         \item shell 中执行 \code{application:stop(full\_otp\_app).}
@@ -563,6 +586,7 @@ Eshell V14.2.5.12 (press Ctrl+G to abort, type help(). for help)
 \end{lstlisting}
     \end{block}
     \column{0.40\textwidth}
+    \footnotesize
     \begin{block}{截图解析}
       \begin{itemize}
         \item \code{which\_applications()} 中已经没有 \code{full\_otp\_app} — stop 确实清除了它。
@@ -606,6 +630,7 @@ unset_env/2,3        (*@\textcolor{accent}{which\_applications/0}@*)
 \end{lstlisting}
     \end{block}
     \column{0.42\textwidth}
+    \footnotesize
     \begin{exampleblock}{入门阶段最常用}
       \begin{itemize}
         \item \code{start/1}
@@ -634,6 +659,7 @@ unset_env/2,3        (*@\textcolor{accent}{which\_applications/0}@*)
       \end{itemize}
     \end{block}
     \column{0.48\textwidth}
+    \footnotesize
     \begin{exampleblock}{OTP application 思维}
       \begin{itemize}
         \item 从入口建立运行时结构
@@ -661,6 +687,7 @@ unset_env/2,3        (*@\textcolor{accent}{which\_applications/0}@*)
       \end{itemize}
     \end{block}
     \column{0.46\textwidth}
+    \footnotesize
     \begin{exampleblock}{这一集用截图证明了什么}
       \begin{itemize}
         \item rebar3 认识 application
