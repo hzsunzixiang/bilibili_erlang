@@ -1,0 +1,27 @@
+\frametitle{callback module 通常只做一件事}
+\begin{columns}[T,onlytextwidth]
+    \column{0.52\textwidth}
+    \begin{block}{application callback}
+\begin{lstlisting}
+-module(full_otp_app_app).
+-behaviour(application).
+
+-export([start/2, stop/1]).
+
+start(_StartType, _StartArgs) ->
+    full_otp_app_sup:start_link().
+
+stop(_State) ->
+    ok.
+\end{lstlisting}
+    \end{block}
+    \column{0.44\textwidth}
+    \begin{exampleblock}{分工非常清晰}
+      \begin{itemize}
+        \item application callback 不写业务逻辑
+        \item 它只把系统交给 top supervisor
+        \item 之后长期运行的是 supervisor 和 worker
+        \item 所以 application 是启动边界，不是 main 函数
+      \end{itemize}
+    \end{exampleblock}
+  \end{columns}
