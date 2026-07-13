@@ -157,9 +157,33 @@ at ([yshift=1.75cm]current page.center) {Application（1）runtime application};
   \good{两者都是 OTP application，区别在于是否拥有自己的运行时进程结构。}
 \end{frame}
 
+\begin{frame}{先借用一个熟悉的类比：Application 像“可被运行时管理的包”}
+  \small
+  \begin{columns}[T,onlytextwidth]
+    \column{0.48\textwidth}
+    \begin{block}{其他生态里常见的“包”}
+      \begin{itemize}
+        \item \keypoint{Java}：\code{jar} / \code{war} 把 class、资源和元信息打包。
+        \item \keypoint{Linux}：\code{rpm} / \code{deb} 描述文件、依赖、安装脚本和版本。
+        \item \keypoint{Python}：package / wheel 把 module、依赖和入口组织起来。
+      \end{itemize}
+    \end{block}
+    \column{0.48\textwidth}
+    \begin{exampleblock}{Erlang/OTP 里的 Application}
+      \begin{itemize}
+        \item 也是一个有名字、有版本、有依赖的组织单元。
+        \item 不只是代码包，还可以声明如何被 VM 启动和停止。
+        \item runtime application 还会把 supervisor tree 作为运行时结构带起来。
+      \end{itemize}
+    \end{exampleblock}
+  \end{columns}
+  \vspace{0.25cm}
+\begin{alertblock}{这一集先整体认识 Application}
+    可以先把 Erlang Application 理解成：\keypoint{被 BEAM VM 识别、加载、启动、停止和观察的 OTP 包单元}。
+  \end{alertblock}
+\end{frame}
 
-
-\begin{frame}[fragile]{这一集只抓一条主线：工具配置如何变成 OTP 入口}
+\begin{frame}[fragile]{一条主线：从工具的配置配置文件，到 OTP 的启动入口}
   \begin{columns}[T,onlytextwidth]
     \column{0.48\textwidth}
     \begin{block}{更自然的观察顺序}
@@ -174,7 +198,7 @@ rebar.config
     \end{block}
     \column{0.48\textwidth}
     \footnotesize
-    \begin{alertblock}{这一集的讲法}
+    \begin{alertblock}{这一集的理解思路}
       \begin{itemize}
         \item 先看 \code{rebar.config}：工具链把依赖和启动行为放在哪里。
         \item 再看初始化后的目录：此时还没有展开 \code{full\_otp\_app.app.src}，先理解工程骨架。
@@ -184,7 +208,7 @@ rebar.config
   \end{columns}
   \vspace{0.2cm}
   \centering
-  \warn{目标不是从一堆字段开始背，而是顺着工具链看到 application 的入口自然出现。}
+  \warn{配置字段不用背诵，只需理解，有专门的构建工具来生成}
 \end{frame}
 
 \begin{frame}[fragile]{先看 rebar3 配置：依赖和启动行为都在这里}
@@ -265,7 +289,7 @@ rebar.config
     \end{block}
     \column{0.42\textwidth}
     \footnotesize
-    \begin{block}{这一步只建立方向感}
+\begin{block}{这一步只需要认出关键文件}
       \begin{itemize}
         \item 根目录里的 \code{rebar.config} 先承接工具配置。
         \item \code{src/} 里先看到 callback、supervisor 和 worker 模块。
@@ -501,7 +525,7 @@ stop(_State) ->
   \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{启动 shell 后，配置变成了可观察的 application}
+\begin{frame}[fragile]{启动 BEAM 进程，再用命令查看 Application 的运行状态}
   \begin{columns}[T,onlytextwidth]
     \column{0.60\textwidth}
     \begin{block}{rebar3 shell + application:which\_applications().}
